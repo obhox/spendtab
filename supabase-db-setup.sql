@@ -1,100 +1,44 @@
--- Schema setup for BusinessOS Supabase integration
+CREATE TABLE public.budgets (
+  id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
+  name text NOT NULL,
+  amount numeric NOT NULL,
+  spent numeric NOT NULL DEFAULT 0,
+  period text NOT NULL,
+  category text NOT NULL,
+  startdate date NULL,
+  enddate date NULL,
+  user_id uuid NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT budgets_pkey PRIMARY KEY (id),
+  CONSTRAINT budgets_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
 
--- Enable UUID extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE TABLE public.categories (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  type text NOT NULL,
+  color text NULL,
+  icon text NULL,
+  CONSTRAINT categories_pkey PRIMARY KEY (id),
+  CONSTRAINT categories_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+  CONSTRAINT categories_name_check CHECK ((length(name) >= 2)),
+  CONSTRAINT categories_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text])))
+);
 
--- Create transactions table
-CREATE TABLE IF NOT EXISTS public.transactions (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE public.transactions (
+  id uuid NOT NULL DEFAULT extensions.uuid_generate_v4(),
   date date NOT NULL,
   description text NOT NULL,
   category text NOT NULL,
-  amount decimal NOT NULL,
-  type text NOT NULL CHECK (type IN ('income', 'expense')),
-  notes text,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
+  amount numeric NOT NULL,
+  type text NOT NULL,
+  notes text NULL,
+  user_id uuid NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+  CONSTRAINT transactions_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text])))
 );
-
--- Create budgets table
-CREATE TABLE IF NOT EXISTS public.budgets (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name text NOT NULL,
-  amount decimal NOT NULL,
-  spent decimal NOT NULL DEFAULT 0,
-  period text NOT NULL,
-  category text NOT NULL,
-  startDate date,
-  endDate date,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at timestamp with time zone DEFAULT now() NOT NULL,
-  updated_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
--- Enable RLS (Row Level Security)
-ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
-
--- Create RLS policies for transactions
-CREATE POLICY "Users can view their own transactions"
-  ON public.transactions
-  FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own transactions"
-  ON public.transactions
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own transactions"
-  ON public.transactions
-  FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own transactions"
-  ON public.transactions
-  FOR DELETE
-  USING (auth.uid() = user_id);
-
--- Create RLS policies for budgets
-CREATE POLICY "Users can view their own budgets"
-  ON public.budgets
-  FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own budgets"
-  ON public.budgets
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own budgets"
-  ON public.budgets
-  FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own budgets"
-  ON public.budgets
-  FOR DELETE
-  USING (auth.uid() = user_id);
-
--- Create functions and triggers for updated_at
-CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER set_updated_at_transactions
-BEFORE UPDATE ON public.transactions
-FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
-
-CREATE TRIGGER set_updated_at_budgets
-BEFORE UPDATE ON public.budgets
-FOR EACH ROW
-EXECUTE FUNCTION public.set_updated_at();
