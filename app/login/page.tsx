@@ -27,7 +27,7 @@ export default function LoginPage() {
         title: "Login successful",
         description: "You have been successfully logged in",
       })
-      router.push("/(dashboard)")
+      router.push("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
       toast({

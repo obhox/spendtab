@@ -21,10 +21,13 @@ CREATE TABLE public.categories (
   type text NOT NULL,
   color text NULL,
   icon text NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  is_default boolean NOT NULL DEFAULT false,
   CONSTRAINT categories_pkey PRIMARY KEY (id),
   CONSTRAINT categories_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
   CONSTRAINT categories_name_check CHECK ((length(name) >= 2)),
-  CONSTRAINT categories_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text])))
+  CONSTRAINT categories_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text]))
 );
 
 CREATE TABLE public.transactions (
@@ -40,5 +43,5 @@ CREATE TABLE public.transactions (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT transactions_pkey PRIMARY KEY (id),
   CONSTRAINT transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
-  CONSTRAINT transactions_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text])))
+  CONSTRAINT transactions_type_check CHECK ((type = ANY (ARRAY['income'::text, 'expense'::text]))
 );

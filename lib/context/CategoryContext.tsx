@@ -101,10 +101,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       
       const newCategory = {
         ...category,
-        id: uuidv4(),
         is_default: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       }
       
       const { error } = await supabase
@@ -115,15 +112,29 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      // Optimistically update the UI
-      setCategories(prev => [...prev, { 
-        id: newCategory.id,
-        name: category.name,
-        type: category.type,
-        icon: category.icon,
-        color: category.color,
-        is_default: false
-      }])
+      // Fetch the new category from Supabase
+      const { data: fetchedCategory, error: fetchError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('name', category.name) // Assuming name is unique
+        .single()
+
+      if (fetchError) {
+        console.error('Error fetching new category:', fetchError)
+        setError('Failed to add category')
+        return
+      }
+
+      if (fetchedCategory) {
+        setCategories(prev => [...prev, {
+          id: fetchedCategory.id,
+          name: fetchedCategory.name,
+          type: fetchedCategory.type,
+          icon: fetchedCategory.icon,
+          color: fetchedCategory.color,
+          is_default: fetchedCategory.is_default
+        }])
+      }
       
     } catch (error) {
       console.error('Error adding category:', error)

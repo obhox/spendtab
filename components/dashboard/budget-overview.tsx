@@ -83,7 +83,7 @@ export function BudgetOverview() {
         <p className="text-xs text-muted-foreground mb-4">
           Set up budgets to track your spending against planned allocations
         </p>
-        <Link href="/dashboard/budgets">
+        <Link href="/budgets">
           <Button size="sm" variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             Create Budget
