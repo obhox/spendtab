@@ -103,7 +103,6 @@ async function seedSampleData(manualUserId = null) {
         amount: 2000,
         spent: 500,
         period: 'Monthly',
-        category: 'Marketing',
         startDate: new Date('2023-06-01').toISOString().split('T')[0],
         endDate: new Date('2023-06-30').toISOString().split('T')[0],
         user_id: userId
@@ -114,7 +113,6 @@ async function seedSampleData(manualUserId = null) {
         amount: 300,
         spent: 120.50,
         period: 'Monthly',
-        category: 'Supplies',
         startDate: new Date('2023-06-01').toISOString().split('T')[0],
         endDate: new Date('2023-06-30').toISOString().split('T')[0],
         user_id: userId
@@ -125,7 +123,6 @@ async function seedSampleData(manualUserId = null) {
         amount: 500,
         spent: 79.99,
         period: 'Monthly',
-        category: 'Software',
         startDate: new Date('2023-06-01').toISOString().split('T')[0],
         endDate: new Date('2023-06-30').toISOString().split('T')[0],
         user_id: userId
@@ -136,7 +133,6 @@ async function seedSampleData(manualUserId = null) {
         amount: 1500,
         spent: 1500,
         period: 'Monthly',
-        category: 'Rent',
         startDate: new Date('2023-06-01').toISOString().split('T')[0],
         endDate: new Date('2023-06-30').toISOString().split('T')[0],
         user_id: userId

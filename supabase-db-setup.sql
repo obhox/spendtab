@@ -4,7 +4,6 @@ CREATE TABLE public.budgets (
   amount numeric NOT NULL,
   spent numeric NOT NULL DEFAULT 0,
   period text NOT NULL,
-  category text NOT NULL,
   startdate date NULL,
   enddate date NULL,
   user_id uuid NULL,
@@ -12,7 +11,6 @@ CREATE TABLE public.budgets (
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT budgets_pkey PRIMARY KEY (id),
   CONSTRAINT budgets_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-);
 
 CREATE TABLE public.categories (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

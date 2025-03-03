@@ -38,7 +38,6 @@ import { useTransactions } from "@/lib/context/TransactionContext"
 interface Budget {
   id: string
   name: string
-  category: string
   amount: number
   spent?: number
   startDate: string
@@ -65,7 +64,6 @@ export function BudgetList() {
           const transactionDate = new Date(transaction.date)
           return (
             transaction.type === "expense" &&
-            transaction.category === budget.category &&
             transactionDate >= budgetStart &&
             transactionDate <= budgetEnd
           )
@@ -162,7 +160,6 @@ export function BudgetList() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[250px]">Name</TableHead>
-            <TableHead>Category</TableHead>
             <TableHead>Period</TableHead>
             <TableHead className="text-right">Budget</TableHead>
             <TableHead className="text-right">Spent</TableHead>
@@ -177,7 +174,6 @@ export function BudgetList() {
             return (
               <TableRow key={budget.id}>
                 <TableCell className="font-medium">{budget.name}</TableCell>
-                <TableCell>{budget.category}</TableCell>
                 <TableCell>{formatDate(budget.startDate)} - {formatDate(budget.endDate)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(budget.amount)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(spent)}</TableCell>
