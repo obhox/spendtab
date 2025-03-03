@@ -41,7 +41,7 @@ export function IncomeExpenseChart() {
           Add income and expense transactions to see your financial comparison chart. 
           This chart will help you visualize and track income vs expenses over time.
         </p>
-        <Link href="/dashboard/transactions">
+        <Link href="/transactions">
           <Button size="sm" variant="outline">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions

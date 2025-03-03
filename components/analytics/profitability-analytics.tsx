@@ -64,7 +64,7 @@ export default function ProfitabilityAnalytics() {
           Start adding both income and expense transactions to see your profitability analytics. 
           This will help you track your profit margins and financial performance over time.
         </p>
-        <Link href="/dashboard/transactions">
+        <Link href="/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions

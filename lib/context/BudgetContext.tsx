@@ -10,8 +10,6 @@ export interface Budget {
   name: string
   amount: number
   spent: number
-  period: string
-  category: string
   startDate?: string
   endDate?: string
 }
@@ -24,6 +22,7 @@ interface BudgetContextType {
   deleteBudget: (id: string) => Promise<void>
   isLoading: boolean
   error: string | null
+  getBudgets: () => Promise<void>
 }
 
 // Create the context with a default value
@@ -57,7 +56,6 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
             amount: item.amount,
             spent: item.spent,
             period: item.period,
-            category: item.category,
             startDate: item.startDate || undefined,
             endDate: item.endDate || undefined
           })))
@@ -105,7 +103,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
       }
       // Check if a budget already exists for the same category and has been spent
       const existingBudget = budgets.find(
-        (b) => b.category === budget.category && b.spent > 0
+        (b) => b.spent > 0
       );
 
       if (existingBudget) {
@@ -128,7 +126,6 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         amount: budget.amount,
         spent: budget.spent,
         period: budget.period,
-        category: budget.category,
         startDate: budget.startDate,
         endDate: budget.endDate
       }])
@@ -198,6 +195,40 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Load initial data from Supabase
+  async function fetchBudgets() {
+    try {
+      setIsLoading(true)
+      
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .order('name', { ascending: true })
+      
+      if (error) {
+        throw error
+      }
+      
+      if (data) {
+        setBudgets(data.map(item => ({
+          id: item.id,
+          name: item.name,
+          amount: item.amount,
+          spent: item.spent,
+          period: item.period,
+          category: item.category,
+          startDate: item.startDate || undefined,
+          endDate: item.endDate || undefined
+        })))
+      }
+    } catch (error) {
+      console.error('Error fetching budgets:', error)
+      setError('Failed to load budgets')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Context value
   const value = {
     budgets,
@@ -206,9 +237,12 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     deleteBudget,
     isLoading,
     error,
+    getBudgets: fetchBudgets,
   }
 
-  return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+  return (
+    <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+  )
 }
 
 // Custom hook to use the budget context

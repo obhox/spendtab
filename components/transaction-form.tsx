@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -21,12 +21,19 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useTransactions } from "@/lib/context/TransactionContext"
-import { useToast } from "@/components/ui/use-toast"
+import { useBudgets } from "@/lib/context/BudgetContext";
+import { useToast } from "@/components/ui/toaster"
 
 const formSchema = z.object({
   date: z.date(),
@@ -41,6 +48,7 @@ const formSchema = z.object({
   }),
   type: z.enum(["income", "expense"]),
   notes: z.string().optional(),
+  budget_id: z.string().nullable().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -53,6 +61,7 @@ interface Transaction {
   amount: number
   type: "income" | "expense"
   notes?: string
+  budget_id: string | null
 }
 
 interface TransactionFormProps {
@@ -64,6 +73,12 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
   const [open, setOpen] = useState(false)
   const { addTransaction, updateTransaction } = useTransactions()
   const { toast } = useToast()
+  const { budgets, getBudgets } = useBudgets();
+  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(transaction?.budget_id || null);
+
+  useEffect(() => {
+    getBudgets();
+  }, [getBudgets]);
 
   const defaultValues: Partial<FormValues> = transaction
     ? {
@@ -73,6 +88,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         amount: Math.abs(transaction.amount),
         type: transaction.type,
         notes: transaction.notes || "",
+        budget_id: transaction.budget_id ?? null,
       }
     : {
         date: new Date(),
@@ -81,7 +97,8 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         amount: 0,
         type: "income",
         notes: "",
-      }
+        budget_id: null,
+      };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -91,7 +108,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
   function onSubmit(values: FormValues) {
     // Format amount based on transaction type
     const finalAmount = values.type === "expense" ? -Math.abs(values.amount) : Math.abs(values.amount)
-    
+
     // Create the transaction object
     const transactionData = {
       date: format(values.date, "yyyy-MM-dd"),
@@ -100,8 +117,9 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
       amount: finalAmount,
       type: values.type,
       notes: values.notes,
+      budget_id: values.budget_id,
     }
-    
+
     // Either update existing or add new transaction
     if (transaction) {
       updateTransaction(transaction.id, transactionData)
@@ -116,7 +134,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         description: "Your new transaction has been added successfully."
       })
     }
-    
+
     setOpen(false)
     form.reset()
   }
@@ -253,6 +271,34 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
                   <FormControl>
                     <Textarea placeholder="Additional notes (optional)" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="budget_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Budget</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value)}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a budget" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No Budget</SelectItem>
+                      {budgets?.map((budget) => (
+                        <SelectItem key={budget.id} value={budget.id}>
+                          {budget.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
