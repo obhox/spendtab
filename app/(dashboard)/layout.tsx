@@ -25,7 +25,7 @@ export default function DashboardLayout({
             <div className="flex h-16 items-center border-b">
               <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                 <DollarSign className="h-6 w-6" />
-                <span>FinTrack</span>
+                <span>spendtab</span>
               </Link>
               <Button variant="ghost" size="icon" className="ml-auto">
                 <X className="h-5 w-5" />
@@ -61,7 +61,7 @@ export default function DashboardLayout({
         </Sheet>
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <DollarSign className="h-6 w-6" />
-          <span className="hidden md:inline-block">FinTrack</span>
+          <span className="hidden md:inline-block">spendtab</span>
         </Link>
         <div className="ml-auto flex items-center gap-4">
           <ModeToggle />

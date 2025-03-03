@@ -11,7 +11,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "FinTrack - Business Financial Management",
+  title: "spendtab - Business Financial Management",
   description: "Comprehensive financial tracking and modeling for businesses",
 }
 
