@@ -103,15 +103,24 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-      
+      // Check if a budget already exists for the same category and has been spent
+      const existingBudget = budgets.find(
+        (b) => b.category === budget.category && b.spent > 0
+      );
+
+      if (existingBudget) {
+        setError("A budget for this category has already been used.");
+        return; // Prevent adding the new budget
+      }
+
       const { error } = await supabase
         .from('budgets')
         .insert(newBudget)
-      
+
       if (error) {
         throw error
       }
-      
+
       // Optimistically update the UI
       setBudgets(prev => [...prev, {
         id: newBudget.id,
@@ -123,7 +132,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         startDate: budget.startDate,
         endDate: budget.endDate
       }])
-      
+
     } catch (error) {
       console.error('Error adding budget:', error)
       setError('Failed to add budget')

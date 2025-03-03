@@ -1,7 +1,3 @@
-"use client"
-
-import type React from "react"
-
 import { useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -55,7 +51,7 @@ interface BudgetFormProps {
 
 export function BudgetForm({ children, budget }: BudgetFormProps) {
   const [open, setOpen] = useState(false)
-  const { addBudget, updateBudget } = useBudgets()
+  const { addBudget, updateBudget, budgets } = useBudgets() // Import budgets from useBudgets
   const { toast } = useToast()
 
   const defaultValues: Partial<FormValues> = budget
@@ -77,6 +73,11 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
     defaultValues,
   })
 
+  // Get the list of used categories
+  const usedCategories = budgets
+    .filter((budget) => budget.spent > 0)
+    .map((budget) => budget.category);
+
   function onSubmit(values: FormValues) {
     // Create the budget object
     const budgetData = {
@@ -86,7 +87,7 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
       period: values.period,
       category: values.category,
     }
-    
+
     // Either update existing or add new budget
     if (budget) {
       updateBudget(budget.id, budgetData)
@@ -101,7 +102,7 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
         description: "Your new budget has been created successfully."
       })
     }
-    
+
     setOpen(false)
     form.reset()
   }
@@ -181,14 +182,14 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
-                      <SelectItem value="Software">Software</SelectItem>
-                      <SelectItem value="Supplies">Supplies</SelectItem>
-                      <SelectItem value="Training">Training</SelectItem>
-                      <SelectItem value="Travel">Travel</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {/* Filter out used categories */}
+                      {["Marketing", "Sales", "Operations", "Software", "Supplies", "Training", "Travel", "Other"]
+                        .filter((category) => !usedCategories.includes(category))
+                        .map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
