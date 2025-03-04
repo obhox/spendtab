@@ -49,6 +49,65 @@ export async function signOut() {
   }
 }
 
+export async function getUserProfile() {
+  const user = await getCurrentUser()
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('first_name, last_name, company_name')
+    .eq('id', user.id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching user profile:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function updateUserProfile({
+  first_name,
+  last_name,
+  company_name,
+  password,
+}: {
+  first_name?: string
+  last_name?: string
+  company_name?: string
+  password?: string
+}) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('No user logged in')
+
+  // Update profile data
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      first_name,
+      last_name,
+      company_name,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id)
+
+  if (profileError) {
+    throw profileError
+  }
+
+  // Update password if provided
+  if (password) {
+    const { error: passwordError } = await supabase.auth.updateUser({
+      password,
+    })
+
+    if (passwordError) {
+      throw passwordError
+    }
+  }
+}
+
 export async function resetPassword(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,

@@ -80,6 +80,18 @@ export default function DashboardLayout({
                 </Link>
               </div>
             </div>
+            <div className="px-3 py-2">
+              <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Account</h2>
+              <div className="space-y-1">
+                <Link
+                  href="/profile"
+                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </ScrollArea>
       </aside>
