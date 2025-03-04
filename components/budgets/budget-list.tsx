@@ -52,7 +52,7 @@ export function BudgetList() {
 
   // Calculate percentage spent
   const calculatePercentage = (spent: number, total: number): number => {
-    return Math.min(Math.round((spent / total) * 100), 100)
+    return Math.round((spent / total) * 100)
   }
 
   // Format currency
@@ -89,14 +89,13 @@ export function BudgetList() {
       setSelectedBudget(null)
     }
   }
-
   // Get progress bar color based on percentage
   const getProgressColor = (percentage: number): string => {
+    if (percentage > 100) return "bg-red-500"
     if (percentage < 50) return "bg-green-500"
     if (percentage < 75) return "bg-yellow-500"
     return "bg-red-500"
   }
-
   if (isLoadingBudgets) {
     return <div className="flex justify-center items-center py-8">Loading budgets...</div>;
   }
@@ -144,7 +143,7 @@ export function BudgetList() {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Progress value={percentage} className={getProgressColor(percentage)} />
-                    <span className="text-xs w-10">{percentage}%</span>
+                    <span className={`text-xs w-10 ${percentage > 100 ? 'text-red-500' : ''}`}>{percentage}%</span>
                   </div>
                 </TableCell>
                 <TableCell>

@@ -126,6 +126,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         amount: budget.amount,
         spent: budget.spent,
         period: budget.period,
+        category: budget.category,
         startDate: budget.startDate,
         endDate: budget.endDate
       }])

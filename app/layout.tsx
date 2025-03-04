@@ -1,14 +1,17 @@
 import type React from "react"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Inter } from "next/font/google"
+import { GeistSans } from "geist/font"
+import { GeistMono } from "geist/font"
 import { PostHogProvider } from "./providers/posthog-provider"
 import { ThemeProvider } from "./providers/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
+import { LoadingBar } from "@/components/ui/loading-bar"
 import { DataProvider } from "@/lib/context/DataProvider"
+import { cn } from "@/lib/utils"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const fontSans = GeistSans
+const fontMono = GeistMono
 
 export const metadata = {
   title: "spendtab - Business Financial Management",
@@ -22,17 +25,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <PostHogProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable, fontMono.variable)}>
+        <LoadingBar />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <PostHogProvider>
             <DataProvider>
               {children}
-              <Toaster />
             </DataProvider>
-          </ThemeProvider>
-        </PostHogProvider>
-        <Analytics />
-        <SpeedInsights />
+          </PostHogProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

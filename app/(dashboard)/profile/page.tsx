@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
-import { getUserProfile, updateUserProfile } from "@/lib/auth-utils"
+import { getUserProfile, updateUserProfile, signOut } from "@/lib/auth-utils"
 
 export default function ProfilePage() {
   const [firstName, setFirstName] = useState("")
@@ -116,16 +116,33 @@ export default function ProfilePage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Updating..." : "Update Profile"}
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </form>
 
-        <div className="flex justify-between items-center">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard">Back to Dashboard</Link>
-          </Button>
-          <Button variant="destructive" asChild>
-            <Link href="/login">Log Out</Link>
+        <div className="space-y-4">
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={async () => {
+              try {
+                await signOut()
+                router.push('/login')
+                toast({
+                  title: "Logged out",
+                  description: "You have been successfully logged out",
+                })
+              } catch (error: any) {
+                console.error('Logout error:', error)
+                toast({
+                  title: "Logout failed",
+                  description: error?.message || "Failed to logout",
+                  variant: "destructive",
+                })
+              }
+            }}
+          >
+            Logout
           </Button>
         </div>
       </div>
