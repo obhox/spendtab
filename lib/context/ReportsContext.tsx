@@ -198,9 +198,12 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   }
   
   const calculateCashFlowData = (filteredTransactions: any[]) => {
-    // Starting balance would typically come from an actual balance record
-    // For this example, we'll use a placeholder value
-    const startingBalance = 10000
+    // Calculate starting balance based on transactions before the start date
+    const startingBalance = transactions
+      .filter(t => new Date(t.date) < dateRange.startDate)
+      .reduce((balance, t) => {
+        return balance + (t.type === 'income' ? t.amount : -Math.abs(t.amount))
+      }, 0)
     
     // Group income transactions by category for cash in
     const cashInByCategory = new Map<string, number>()

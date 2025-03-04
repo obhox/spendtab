@@ -112,77 +112,48 @@ export default function DashboardPage() {
       <Suspense fallback={<div>Loading dashboard...</div>}>
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview" className="space-y-4">
-              <DashboardMetrics />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
-                  <CardHeader>
-                    <CardTitle>Income vs Expenses</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pl-2">
-                    <IncomeExpenseChart />
-                  </CardContent>
-                </Card>
-                <Card className="col-span-3">
-                  <CardHeader>
-                    <CardTitle>Recent Transactions</CardTitle>
-                    <CardDescription>Your latest transactions</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RecentTransactions />
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
-                  <CardHeader>
-                    <CardTitle>Cash Flow</CardTitle>
-                    <CardDescription>Your cash flow trends</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pl-2">
-                    <CashFlowChart />
-                  </CardContent>
-                </Card>
-                <Card className="col-span-3">
-                  <CardHeader>
-                    <CardTitle>Budget Overview</CardTitle>
-                    <CardDescription>Your budget utilization</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <BudgetOverview />
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            <TabsContent value="analytics" className="space-y-4">
-              <Card>
+          <div className="space-y-4">
+            <DashboardMetrics />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>Advanced Analytics</CardTitle>
-                  <CardDescription>Detailed financial analytics and trends</CardDescription>
+                  <CardTitle>Income vs Expenses</CardTitle>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <p>Analytics content will be displayed here</p>
+                  <IncomeExpenseChart />
                 </CardContent>
               </Card>
-            </TabsContent>
-            <TabsContent value="reports" className="space-y-4">
-              <Card>
+              <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Financial Reports</CardTitle>
-                  <CardDescription>Generate and view your financial reports</CardDescription>
+                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardDescription>Your latest transactions</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecentTransactions />
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>Cash Flow</CardTitle>
+                  <CardDescription>Your cash flow trends</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <p>Reports content will be displayed here</p>
+                  <CashFlowChart />
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+              <Card className="col-span-3">
+                <CardHeader>
+                  <CardTitle>Budget Overview</CardTitle>
+                  <CardDescription>Your budget utilization</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <BudgetOverview />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </Suspense>
     </DataProvider>

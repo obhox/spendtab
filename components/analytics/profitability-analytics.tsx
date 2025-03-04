@@ -32,30 +32,34 @@ const timePeriods = [
 ];
 
 export default function ProfitabilityAnalytics() {
-  const { profitData, productProfitData, isLoading } = useAnalytics();
+  const { monthlyData, financialSummary, isLoading } = useAnalytics();
   const [timePeriod, setTimePeriod] = useState("");
   
   // Initialize time period on client-side to avoid hydration mismatch
   useEffect(() => {
     setTimePeriod("12m");
   }, []);
-
+  
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString()}`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(value);
   };
-
+  
   // Format percentage for tooltip
   const formatPercent = (value: number) => {
-    return `${value}%`;
+    return `${value.toFixed(2)}%`;
   };
-
+  
   if (isLoading) {
     return <div className="flex justify-center items-center py-8">Loading analytics data...</div>;
   }
-
-  const showEmptyState = !profitData || profitData.length === 0;
-
+  
+  const showEmptyState = !monthlyData || monthlyData.length === 0;
+  
   if (showEmptyState) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -64,7 +68,7 @@ export default function ProfitabilityAnalytics() {
           Start adding both income and expense transactions to see your profitability analytics. 
           This will help you track your profit margins and financial performance over time.
         </p>
-        <Link href="/dashboard/transactions">
+        <Link href="/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions
@@ -73,10 +77,53 @@ export default function ProfitabilityAnalytics() {
       </div>
     );
   }
-
+  
+  // Transform monthly data for the chart
+  const profitData = monthlyData.map(month => ({
+    month: month.month,
+    revenue: month.income,
+    expense: month.expenses,
+    profit: month.profit,
+    margin: month.income > 0 ? (month.profit / month.income) * 100 : 0
+  }));
+  
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalRevenue)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalExpenses)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalProfit)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="py-4">
+              <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercent(financialSummary.profitMargin)}</div>
+            </CardContent>
+          </Card>
+        </div>
         <Select value={timePeriod} onValueChange={setTimePeriod}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time period" />
@@ -90,11 +137,11 @@ export default function ProfitabilityAnalytics() {
           </SelectContent>
         </Select>
       </div>
-
+  
       <Card>
         <CardHeader>
-          <CardTitle>Profit & Margin Trend</CardTitle>
-          <CardDescription>Monthly profit and profit margin over time</CardDescription>
+          <CardTitle>Revenue, Expenses & Profit</CardTitle>
+          <CardDescription>Monthly financial performance</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[350px]">
@@ -108,67 +155,94 @@ export default function ProfitabilityAnalytics() {
                   bottom: 20,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} />
-                <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="month" stroke="#666" />
+                <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} stroke="#666" />
                 <Tooltip 
                   formatter={(value, name: any) => {
-                    if (name === "margin") return [`${value}%`, "Profit Margin"];
-                    return [`$${value.toLocaleString()}`, name.charAt(0).toUpperCase() + name.slice(1)];
+                    return [formatCurrency(value), name.charAt(0).toUpperCase() + name.slice(1)];
+                  }}
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "6px",
+                    border: "1px solid #eee",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
                   }}
                 />
-                <Legend />
-                <Area yAxisId="left" type="monotone" dataKey="revenue" fill="#8884d8" stroke="#8884d8" fillOpacity={0.3} />
-                <Area yAxisId="left" type="monotone" dataKey="expense" fill="#ff6b6b" stroke="#ff6b6b" fillOpacity={0.3} />
-                <Bar yAxisId="left" dataKey="profit" fill="#82ca9d" />
-                <Line yAxisId="right" type="monotone" dataKey="margin" stroke="#ff7300" strokeWidth={2} />
+                <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                <Area 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  fill="#4f46e5" 
+                  stroke="#4f46e5" 
+                  fillOpacity={0.2} 
+                  strokeWidth={2}
+                  name="Revenue" 
+                />
+                <Area 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="expense" 
+                  fill="#ef4444" 
+                  stroke="#ef4444" 
+                  fillOpacity={0.2} 
+                  strokeWidth={2}
+                  name="Expenses" 
+                />
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="profit" 
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  name="Profit"
+                  dot={{ fill: "#22c55e", r: 4 }}
+                />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
-          <CardTitle>Product/Service Profitability</CardTitle>
-          <CardDescription>Profitability analysis by product and service</CardDescription>
+          <CardTitle>Profit Margin Trend</CardTitle>
+          <CardDescription>Monthly profit margin percentage</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px]">
-            {productProfitData && productProfitData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={productProfitData}
-                  margin={{
-                    top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 20,
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={profitData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 20,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="month" stroke="#666" />
+                <YAxis tickFormatter={(value) => `${value}%`} stroke="#666" />
+                <Tooltip 
+                  formatter={(value) => [formatPercent(value), "Profit Margin"]}
+                  contentStyle={{
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    borderRadius: "6px",
+                    border: "1px solid #eee",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
                   }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} />
-                  <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => `${value}%`} />
-                  <Tooltip
-                    formatter={(value, name: any) => {
-                      if (name === "margin") return [`${value}%`, "Profit Margin"];
-                      return [`$${value.toLocaleString()}`, name.charAt(0).toUpperCase() + name.slice(1)];
-                    }}
-                  />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="revenue" fill="#8884d8" name="Revenue" />
-                  <Bar yAxisId="left" dataKey="cost" fill="#ff6b6b" name="Cost" />
-                  <Bar yAxisId="left" dataKey="profit" fill="#82ca9d" name="Profit" />
-                  <Line yAxisId="right" type="monotone" dataKey="margin" stroke="#ff7300" strokeWidth={2} name="Margin %" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-sm text-muted-foreground">No product profitability data available</p>
-              </div>
-            )}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="margin"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  name="Profit Margin"
+                  dot={{ fill: "#f59e0b", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>

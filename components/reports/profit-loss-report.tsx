@@ -80,7 +80,7 @@ export function ProfitLossReport() {
           Start adding income and expense transactions to generate your profit and loss report.
           This report will help you track your business's financial performance over time.
         </p>
-        <Link href="/dashboard/transactions">
+        <Link href="/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions
