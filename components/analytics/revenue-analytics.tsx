@@ -68,7 +68,7 @@ export default function RevenueAnalytics() {
           Start adding transactions to see your revenue analytics. 
           Add income transactions to visualize your revenue patterns over time.
         </p>
-        <Link href="/transactions">
+        <Link href="/dashboard/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Income Transactions

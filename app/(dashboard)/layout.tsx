@@ -36,23 +36,23 @@ export default function DashboardLayout({
                 <LayoutDashboard className="h-5 w-5" />
                 Dashboard
               </Link>
-              <Link href="/transactions" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
+              <Link href="/dashboard/transactions" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
                 <CreditCard className="h-5 w-5" />
                 Transactions
               </Link>
-              <Link href="/analytics" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
+              <Link href="/dashboard/analytics" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
                 <PieChart className="h-5 w-5" />
                 Analytics
               </Link>
-              <Link href="/reports" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
+              <Link href="/dashboard/reports" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
                 <FileText className="h-5 w-5" />
                 Reports
               </Link>
-              <Link href="/budgets" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
+              <Link href="/dashboard/budgets" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
                 <LineChart className="h-5 w-5" />
                 Budgets
               </Link>
-              <Link href="/categories" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
+              <Link href="/dashboard/categories" className="flex items-center gap-2 font-medium p-2 hover:bg-muted">
                 <Tag className="h-5 w-5" />
                 Categories
               </Link>

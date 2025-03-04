@@ -127,7 +127,7 @@ export function ExpenseReport() {
           Start adding expense transactions to generate your expense report.
           This report will help you track and analyze your spending patterns over time.
         </p>
-        <Link href="/transactions">
+        <Link href="/dashboard/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Expenses

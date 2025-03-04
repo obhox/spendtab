@@ -68,7 +68,7 @@ export default function ExpenseAnalytics() {
           Start adding transactions to see your expense analytics. 
           Add expense transactions to track your spending patterns over time.
         </p>
-        <Link href="/transactions">
+        <Link href="/dashboard/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Expense Transactions

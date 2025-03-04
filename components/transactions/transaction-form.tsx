@@ -289,7 +289,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                         )}
                       </SelectContent>
                     </Select>
-                    <Link href="/categories" passHref>
+                    <Link href="/dashboard/categories" passHref>
                       <Button
                         type="button"
                         variant="outline"
@@ -306,7 +306,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                       <HelpCircle className="h-4 w-4 mt-0.5 text-muted-foreground" />
                       <span className="text-muted-foreground">
                         Please add categories for {form.watch("type")} transactions on the 
-                        <Link href="/categories" className="text-primary font-medium ml-1">
+                        <Link href="/dashboard/categories" className="text-primary font-medium ml-1">
                           categories page
                         </Link>.
                       </span>

@@ -92,7 +92,7 @@ export function CashFlowReport() {
           Start adding income and expense transactions to generate your cash flow report.
           This report will help you track money moving in and out of your business over time.
         </p>
-        <Link href="/transactions">
+        <Link href="/dashboard/transactions">
           <Button size="sm" variant="outline" className="mt-2">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions

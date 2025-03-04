@@ -21,19 +21,13 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useTransactions } from "@/lib/context/TransactionContext"
+import { useToast } from "@/components/ui/use-toast"
 import { useBudgets } from "@/lib/context/BudgetContext";
-import { useToast } from "@/components/ui/toaster"
 
 const formSchema = z.object({
   date: z.date(),
@@ -88,7 +82,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         amount: Math.abs(transaction.amount),
         type: transaction.type,
         notes: transaction.notes || "",
-        budget_id: transaction.budget_id ?? null,
+        budget_id: transaction.budget_id || null,
       }
     : {
         date: new Date(),
@@ -98,7 +92,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         type: "income",
         notes: "",
         budget_id: null,
-      };
+      }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -281,10 +275,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Budget</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value)}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={(value) => field.onChange(value)} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a budget" />
@@ -294,7 +285,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
                       <SelectItem value="">No Budget</SelectItem>
                       {budgets?.map((budget) => (
                         <SelectItem key={budget.id} value={budget.id}>
-                          {budget.name}
+                          {budget.category}
                         </SelectItem>
                       ))}
                     </SelectContent>
