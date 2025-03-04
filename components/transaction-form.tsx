@@ -74,6 +74,10 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
     getBudgets();
   }, [getBudgets]);
 
+  useEffect(() => {
+    console.log("Budgets fetched:", budgets);
+  }, [budgets]);
+
   const defaultValues: Partial<FormValues> = transaction
     ? {
         date: new Date(transaction.date),
@@ -111,7 +115,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
       amount: finalAmount,
       type: values.type,
       notes: values.notes,
-      budget_id: values.budget_id,
+      budget_id: values.budget_id ?? null,
     }
 
     // Either update existing or add new transaction
@@ -207,6 +211,31 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
             />
             <FormField
               control={form.control}
+              name="budget_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Budget</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(value)} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a budget" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">No Budget</SelectItem>
+                      {budgets?.map((budget) => (
+                        <SelectItem key={budget.id} value={budget.id}>
+                          {budget.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem>
@@ -265,31 +294,6 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
                   <FormControl>
                     <Textarea placeholder="Additional notes (optional)" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="budget_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(value)} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a budget" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="">No Budget</SelectItem>
-                      {budgets?.map((budget) => (
-                        <SelectItem key={budget.id} value={budget.id}>
-                          {budget.category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

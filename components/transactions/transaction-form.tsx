@@ -38,6 +38,7 @@ import { format } from "date-fns"
 import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { useCategories } from "@/lib/context/CategoryContext"
 import { useTransactions } from "@/lib/context/TransactionContext"
+import { useBudgets } from "@/lib/context/BudgetContext"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -49,7 +50,8 @@ const transactionSchema = z.object({
   date: z.date(),
   category: z.string().min(1, { message: "Please select a category." }),
   type: z.enum(["income", "expense"]),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  budget_id: z.string().nullable()
 });
 
 // Type for form data
@@ -76,6 +78,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const [open, setOpen] = useState(false);
   const { categories, incomeCategories, expenseCategories } = useCategories();
   const { addTransaction, updateTransaction } = useTransactions();
+  const { budgets } = useBudgets();
   const { toast } = useToast();
   
   // Default values for the form
@@ -86,7 +89,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         date: new Date(transaction.date),
         category: transaction.category,
         type: transaction.type,
-        notes: transaction.notes
+        notes: transaction.notes,
+        budget_id: transaction.budget_id || null
       }
     : {
         description: "",
@@ -94,7 +98,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         date: new Date(),
         category: "",
         type: "expense",
-        notes: ""
+        notes: "",
+        budget_id: null
       };
   
   // Initialize form
@@ -317,6 +322,33 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
               )}
             />
             
+            {form.watch("type") === "expense" && (
+              <FormField
+                control={form.control}
+                name="budget_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a budget (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No Budget</SelectItem>
+                        {budgets.map((budget) => (
+                          <SelectItem key={budget.id} value={budget.id}>
+                            {budget.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="notes"

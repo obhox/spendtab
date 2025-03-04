@@ -46,45 +46,9 @@ interface Budget {
 
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading: isLoadingBudgets } = useBudgets()
-  const { transactions } = useTransactions()
-  const [processedBudgets, setProcessedBudgets] = useState<Budget[]>([])
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null)
   const { toast } = useToast()
-
-  // Calculate spent amount for each budget based on transactions
-  useEffect(() => {
-    if (budgets.length > 0 && transactions.length > 0) {
-      const budgetsWithSpending = budgets.map(budget => {
-        // Get transactions that fall within the budget date range and category
-        const budgetStart = new Date(budget.startDate)
-        const budgetEnd = new Date(budget.endDate)
-        
-        const relevantTransactions = transactions.filter(transaction => {
-          const transactionDate = new Date(transaction.date)
-          return (
-            transaction.type === "expense" &&
-            transactionDate >= budgetStart &&
-            transactionDate <= budgetEnd
-          )
-        })
-        
-        // Calculate total spent
-        const spent = relevantTransactions.reduce((total, transaction) => {
-          return total + transaction.amount
-        }, 0)
-        
-        return {
-          ...budget,
-          spent
-        }
-      })
-      
-      setProcessedBudgets(budgetsWithSpending)
-    } else {
-      setProcessedBudgets(budgets.map(budget => ({...budget, spent: 0})))
-    }
-  }, [budgets, transactions])
 
   // Calculate percentage spent
   const calculatePercentage = (spent: number, total: number): number => {
@@ -168,7 +132,7 @@ export function BudgetList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {processedBudgets.map((budget) => {
+          {budgets.map((budget) => {
             const spent = budget.spent || 0
             const percentage = calculatePercentage(spent, budget.amount)
             return (

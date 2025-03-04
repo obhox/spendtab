@@ -13,6 +13,7 @@ export interface Transaction {
   amount: number
   type: "income" | "expense"
   notes?: string
+  budget_id?: string
 }
 
 // Context interface
@@ -57,7 +58,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             category: item.category,
             amount: item.amount,
             type: item.type,
-            notes: item.notes || undefined
+            notes: item.notes || undefined,
+            budget_id: item.budget_id || undefined
           })))
         }
       } catch (error) {

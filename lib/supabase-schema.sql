@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   amount decimal NOT NULL,
   type text NOT NULL CHECK (type IN ('income', 'expense')),
   notes text,
+  budget_id uuid REFERENCES public.budgets(id) ON DELETE SET NULL,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL
