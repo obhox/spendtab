@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { CategoryForm } from "./category-form"
 import { Badge } from "@/components/ui/badge"
 
@@ -33,7 +33,7 @@ export function CategoryManager() {
   const [tabValue, setTabValue] = useState("income")
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const { toast } = useToast()
+  
 
   // Function to handle category deletion
   const handleDelete = async () => {
@@ -41,15 +41,12 @@ export function CategoryManager() {
     
     try {
       await deleteCategory(categoryToDelete.id)
-      toast({
-        title: "Category deleted",
+      toast("Category deleted", {
         description: `${categoryToDelete.name} has been deleted.`,
       })
     } catch (error) {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to delete category. Default categories cannot be deleted.",
-        variant: "destructive",
       })
     }
     setShowDeleteConfirm(false)

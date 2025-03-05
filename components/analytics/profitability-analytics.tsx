@@ -160,7 +160,7 @@ export default function ProfitabilityAnalytics() {
                 <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} stroke="#666" />
                 <Tooltip 
                   formatter={(value, name: any) => {
-                    return [formatCurrency(value), name.charAt(0).toUpperCase() + name.slice(1)];
+                    return [formatCurrency(Number(value)), name.charAt(0).toUpperCase() + name.slice(1)];
                   }}
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -225,7 +225,7 @@ export default function ProfitabilityAnalytics() {
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis tickFormatter={(value) => `${value}%`} stroke="#666" />
                 <Tooltip 
-                  formatter={(value) => [formatPercent(value), "Profit Margin"]}
+                  formatter={(value) => [formatPercent(Number(value)), "Profit Margin"]}
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
                     borderRadius: "6px",

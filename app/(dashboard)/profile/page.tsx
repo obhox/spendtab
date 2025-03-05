@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { getUserProfile, updateUserProfile, signOut } from "@/lib/auth-utils"
 
 export default function ProfilePage() {
@@ -41,17 +41,10 @@ export default function ProfilePage() {
         company_name: companyName,
         ...(newPassword ? { password: newPassword } : {}),
       })
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated",
-      })
+      toast("Your profile has been successfully updated")
     } catch (error: any) {
       console.error("Profile update error:", error)
-      toast({
-        title: "Update failed",
-        description: error?.message || "Failed to update profile",
-        variant: "destructive",
-      })
+      toast(error?.message || "Failed to update profile")
     } finally {
       setLoading(false)
     }
@@ -128,17 +121,10 @@ export default function ProfilePage() {
               try {
                 await signOut()
                 router.push('/login')
-                toast({
-                  title: "Logged out",
-                  description: "You have been successfully logged out",
-                })
+                toast("You have been successfully logged out")
               } catch (error: any) {
                 console.error('Logout error:', error)
-                toast({
-                  title: "Logout failed",
-                  description: error?.message || "Failed to logout",
-                  variant: "destructive",
-                })
+                toast(error?.message || "Failed to logout")
               }
             }}
           >

@@ -26,7 +26,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useTransactions } from "@/lib/context/TransactionContext"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext";
 
 const formSchema = z.object({
@@ -66,7 +66,6 @@ interface TransactionFormProps {
 export function TransactionForm({ children, transaction }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const { addTransaction, updateTransaction } = useTransactions()
-  const { toast } = useToast()
   const { budgets, getBudgets } = useBudgets();
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(transaction?.budget_id || null);
 
@@ -121,14 +120,12 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
     // Either update existing or add new transaction
     if (transaction) {
       updateTransaction(transaction.id, transactionData)
-      toast({
-        title: "Transaction updated",
+      toast("Transaction updated", {
         description: "Your transaction has been updated successfully."
       })
     } else {
       addTransaction(transactionData)
-      toast({
-        title: "Transaction added",
+      toast("Transaction added", {
         description: "Your new transaction has been added successfully."
       })
     }

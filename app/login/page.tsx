@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signIn, signInWithGoogle } from "@/lib/auth-utils"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -23,17 +23,14 @@ export default function LoginPage() {
     
     try {
       await signIn(email, password)
-      toast({
-        title: "Login successful",
-        description: "You have been successfully logged in",
+      toast("Successfully logged in", {
+        description: "Welcome back to your account",
       })
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
-      toast({
-        title: "Login failed",
-        description: error?.message || "Please check your credentials and try again",
-        variant: "destructive",
+      toast("Login failed", {
+        description: error?.message || "Please check your credentials and try again"
       })
     } finally {
       setLoading(false)
@@ -44,16 +41,13 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signInWithGoogle()
-      toast({
-        title: "Google sign-in initiated",
+      toast("Google sign-in initiated", {
         description: "Please complete the authentication process",
       })
     } catch (error: any) {
       console.error("Google sign-in error:", error)
-      toast({
-        title: "Google sign-in failed",
+      toast("Google sign-in failed", {
         description: error?.message || "Failed to sign in with Google",
-        variant: "destructive",
       })
     } finally {
       setLoading(false)

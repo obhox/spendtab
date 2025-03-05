@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signUp, signInWithGoogle } from "@/lib/auth-utils"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("")
@@ -26,18 +26,11 @@ export default function SignUpPage() {
     
     try {
       await signUp(email, password)
-      toast({
-        title: "Account created",
-        description: "Please check your email to confirm your account.",
-      })
+      toast("Account created. Please check your email to confirm your account.")
       router.push("/login")
     } catch (error: any) {
       console.error("Signup error:", error)
-      toast({
-        title: "Sign up failed",
-        description: error?.message || "There was a problem creating your account.",
-        variant: "destructive",
-      })
+      toast("Sign up failed: " + (error?.message || "There was a problem creating your account."))
     } finally {
       setLoading(false)
     }
@@ -47,17 +40,10 @@ export default function SignUpPage() {
     setLoading(true)
     try {
       await signInWithGoogle()
-      toast({
-        title: "Google sign-in initiated",
-        description: "Please complete the authentication process",
-      })
+      toast("Please complete the Google authentication process")
     } catch (error: any) {
       console.error("Google sign-in error:", error)
-      toast({
-        title: "Google sign-in failed",
-        description: error?.message || "Failed to sign in with Google",
-        variant: "destructive",
-      })
+      toast("Google sign-in failed: " + (error?.message || "Failed to sign in with Google"))
     } finally {
       setLoading(false)
     }

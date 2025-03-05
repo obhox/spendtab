@@ -171,7 +171,7 @@ export default function RevenueAnalytics() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

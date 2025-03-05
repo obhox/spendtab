@@ -16,7 +16,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useBudgets } from "@/lib/context/BudgetContext"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
+
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -45,7 +46,6 @@ interface BudgetFormProps {
 export function BudgetForm({ children, budget }: BudgetFormProps) {
   const [open, setOpen] = useState(false)
   const { addBudget, updateBudget, budgets } = useBudgets() // Import budgets from useBudgets
-  const { toast } = useToast()
 
   const defaultValues: Partial<FormValues> = budget
     ? {
@@ -83,14 +83,12 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
       // Either update existing or add new budget
       if (budget) {
         await updateBudget(budget.id, budgetData)
-        toast({
-          title: "Budget updated",
+        toast("Budget updated", {
           description: "Your budget has been updated successfully."
         })
       } else {
         await addBudget(budgetData)
-        toast({
-          title: "Budget created",
+        toast("Budget created", {
           description: "Your new budget has been created successfully."
         })
       }
@@ -99,10 +97,8 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
       form.reset()
     } catch (error) {
       console.error('Error saving budget:', error)
-      toast({
-        title: "Error",
-        description: "There was a problem saving your budget.",
-        variant: "destructive"
+      toast("Error", {
+        description: "There was a problem saving your budget."
       })
     }
   }

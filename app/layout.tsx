@@ -7,6 +7,7 @@ import { PostHogProvider } from "./providers/posthog-provider"
 import { ThemeProvider } from "./providers/theme-provider"
 import { LoadingBar } from "@/components/ui/loading-bar"
 import { DataProvider } from "@/lib/context/DataProvider"
+import { Toaster } from "@/components/ui/sonner" // Updated import path
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           <PostHogProvider>
             <DataProvider>
               {children}
+              <Toaster /> {/* Using the updated Toaster component */}
             </DataProvider>
           </PostHogProvider>
         </ThemeProvider>

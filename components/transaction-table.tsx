@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useTransactions } from "@/lib/context/TransactionContext"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface Transaction {
   id: string
@@ -34,6 +34,7 @@ interface Transaction {
   category: string
   amount: number
   type: "income" | "expense"
+  budget_id?: string | null
 }
 
 interface TransactionTableProps {
@@ -43,7 +44,6 @@ interface TransactionTableProps {
 
 export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const { transactions, deleteTransaction, isLoading } = useTransactions()
-  const { toast } = useToast()
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
@@ -73,8 +73,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const confirmDelete = () => {
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete)
-      toast({
-        title: "Transaction deleted",
+      toast("Transaction deleted", {
         description: "The transaction has been deleted successfully."
       })
       setTransactionToDelete(null)
@@ -128,7 +127,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <TransactionForm transaction={transaction}>
+                        <TransactionForm transaction={{ ...transaction, budget_id: transaction.budget_id || null }}>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit

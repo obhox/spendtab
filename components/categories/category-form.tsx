@@ -31,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useCategories, Category } from "@/lib/context/CategoryContext"
 import { HexColorPicker } from "react-colorful"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -71,7 +71,6 @@ const icons = [
 
 export function CategoryForm({ children, category, defaultType = "expense" }: CategoryFormProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { toast } = useToast()
   const { addCategory, updateCategory } = useCategories()
 
   // Create form
@@ -90,16 +89,24 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
     try {
       if (category) {
         // Update existing category
-        await updateCategory(category.id, data)
-        toast({
-          title: "Category updated",
+        await updateCategory(category.id, {
+          name: data.name,
+          type: data.type,
+          color: data.color,
+          icon: data.icon
+        })
+        toast("Category updated", {
           description: "Your category has been updated successfully."
         })
       } else {
         // Add new category
-        await addCategory(data)
-        toast({
-          title: "Category created",
+        await addCategory({
+          name: data.name,
+          type: data.type,
+          color: data.color,
+          icon: data.icon
+        })
+        toast("Category created", {
           description: "Your new category has been created successfully."
         })
       }
@@ -107,10 +114,8 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
       setIsOpen(false)
       form.reset()
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem saving your category.",
-        variant: "destructive"
+      toast("Error", {
+        description: "There was a problem saving your category."
       })
     }
   }
