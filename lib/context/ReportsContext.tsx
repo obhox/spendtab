@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useTransactions } from "./TransactionContext"
-import { format, subMonths, isWithinInterval, parse, startOfMonth, endOfMonth, subQuarters, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from "date-fns"
+import { format, subMonths, isWithinInterval, parse, startOfMonth, startOfQuarter, endOfQuarter } from "date-fns"
 
 // Cash Flow Report interfaces
 interface CashFlowCategory {
@@ -88,12 +88,12 @@ const ReportsContext = createContext<ReportsContextType | undefined>(undefined)
 export function ReportsProvider({ children }: { children: ReactNode }) {
   const { transactions, isLoading: transactionsLoading } = useTransactions()
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
   
   // Default to current quarter
   const [dateRange, setDateRange] = useState({
-    startDate: startOfQuarter(new Date()),
-    endDate: endOfQuarter(new Date()),
+    startDate: typeof window !== 'undefined' ? startOfQuarter(new Date()) : new Date(),
+    endDate: typeof window !== 'undefined' ? endOfQuarter(new Date()) : new Date(),
   })
   
   // State for reports data
@@ -145,7 +145,11 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }
   
-  const calculateProfitLossData = (filteredTransactions: any[]) => {
+  const calculateProfitLossData = (filteredTransactions: Array<{
+    type: string;
+    category: string;
+    amount: number;
+  }>) => {
     // Group income transactions by category
     const revenueByCategory = new Map<string, number>()
     
@@ -197,7 +201,12 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
     })
   }
   
-  const calculateCashFlowData = (filteredTransactions: any[]) => {
+  const calculateCashFlowData = (filteredTransactions: Array<{
+    type: string;
+    category: string;
+    amount: number;
+    date: string;
+  }>) => {
     // Calculate starting balance based on transactions before the start date
     const startingBalance = transactions
       .filter(t => new Date(t.date) < dateRange.startDate)
@@ -296,7 +305,15 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
     })
   }
   
-  const calculateExpenseData = (filteredTransactions: any[]) => {
+  const calculateExpenseData = (filteredTransactions: Array<{
+    type: string;
+    category: string;
+    amount: number;
+    date: string;
+    id: string;
+    description: string;
+    paymentMethod?: string;
+  }>) => {
     // Filter only expense transactions
     const expenses = filteredTransactions
       .filter(t => t.type === 'expense')
@@ -366,7 +383,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   // Calculate reports when transactions or date range changes
   useEffect(() => {
     calculateReportsData()
-  }, [transactions, dateRange, transactionsLoading])
+  }, [transactions, dateRange, transactionsLoading, calculateReportsData])
 
   // Context value
   const value = {

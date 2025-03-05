@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { ChevronRight, LineChart, PieChart, DollarSign } from "lucide-react"
-import { BarChart3 } from 'lucide-react'
+import { ChevronRight, LineChart, PieChart, BarChart3, DollarSign } from "lucide-react"
 import Link from "next/link"
 
 export default function Home() {

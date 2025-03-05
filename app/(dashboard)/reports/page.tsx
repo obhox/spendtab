@@ -1,12 +1,13 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ProfitLossReport } from "@/components/reports/profit-loss-report"
 import { CashFlowReport } from "@/components/reports/cash-flow-report"
 import { ExpenseReport } from "@/components/reports/expense-report"
-import { Download, Printer } from 'lucide-react'
+import { ProfitLossReport } from "@/components/reports/profit-loss-report"
+import { Download } from 'lucide-react'
 import { useReports } from "@/lib/context/ReportsContext"
 import { exportReport } from "@/lib/export-utils"
 import { toast } from "sonner"
@@ -26,13 +27,37 @@ export default function ReportsPage() {
 
       switch (tabId) {
         case 'profit-loss':
+          if (!profitLossData) {
+            toast({
+              title: "Export failed",
+              description: "No profit & loss data available to export.",
+              variant: "destructive"
+            });
+            return;
+          }
           await exportReport({ type: 'profit-loss', data: profitLossData });
           break;
         case 'cash-flow':
+          if (!cashFlowData) {
+            toast({
+              title: "Export failed",
+              description: "No cash flow data available to export.",
+              variant: "destructive"
+            });
+            return;
+          }
           await exportReport({ type: 'cash-flow', data: cashFlowData });
           break;
         case 'expense':
-          await exportReport({ type: 'expense', data: expenseData });
+          if (!expenseData) {
+            toast({
+              title: "Export failed",
+              description: "No expense data available to export.",
+              variant: "destructive"
+            });
+            return;
+          }
+          await exportReport({ type: 'expense', data: expenseData.expenses });
           break;
         default:
           toast("Invalid report type selected.");
@@ -68,7 +93,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle>Profit & Loss Statement</CardTitle>
               <CardDescription>
-                View your business's revenue, costs, and expenses over a specific time period.
+                View your business&apos;s revenue, costs, and expenses over a specific time period.
               </CardDescription>
             </CardHeader>
             <CardContent>

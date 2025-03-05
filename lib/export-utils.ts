@@ -1,19 +1,48 @@
 import jsPDF from 'jspdf';
 
+interface CategoryItem {
+  name: string;
+  amount: number;
+  subItems?: SubItem[];
+}
+
+interface SubItem {
+  name: string;
+  amount: number;
+}
+
+interface ExpenseItem {
+  date: string;
+  category: string;
+  description: string;
+  amount: number;
+  paymentMethod: string;
+}
+
+interface ProfitLossData {
+  revenue: CategoryItem[];
+  expenses: CategoryItem[];
+}
+
+interface CashFlowData {
+  cashIn: CategoryItem[];
+  cashOut: CategoryItem[];
+}
+
 interface ExportOptions {
   type: 'profit-loss' | 'cash-flow' | 'expense';
-  data: any;
+  data: ProfitLossData | CashFlowData | ExpenseItem[];
 }
 
 const formatDate = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
-const formatProfitLossData = (data: any) => {
+const formatProfitLossData = (data: ProfitLossData) => {
   const rows = [];
   
   // Add revenue items
-  data.revenue.forEach((category: any) => {
+  data.revenue.forEach((category: CategoryItem) => {
     rows.push({
       type: 'Revenue',
       category: category.name,
@@ -21,7 +50,7 @@ const formatProfitLossData = (data: any) => {
       amount: category.amount
     });
     
-    category.subItems?.forEach((subItem: any) => {
+    category.subItems?.forEach((subItem: SubItem) => {
       rows.push({
         type: 'Revenue',
         category: category.name,
@@ -32,7 +61,7 @@ const formatProfitLossData = (data: any) => {
   });
   
   // Add expense items
-  data.expenses.forEach((category: any) => {
+  data.expenses.forEach((category: CategoryItem) => {
     rows.push({
       type: 'Expense',
       category: category.name,
@@ -40,7 +69,7 @@ const formatProfitLossData = (data: any) => {
       amount: category.amount
     });
     
-    category.subItems?.forEach((subItem: any) => {
+    category.subItems?.forEach((subItem: SubItem) => {
       rows.push({
         type: 'Expense',
         category: category.name,
@@ -53,11 +82,11 @@ const formatProfitLossData = (data: any) => {
   return rows;
 };
 
-const formatCashFlowData = (data: any) => {
+const formatCashFlowData = (data: CashFlowData) => {
   const rows = [];
   
   // Add cash inflows
-  data.cashIn.forEach((category: any) => {
+  data.cashIn.forEach((category: CategoryItem) => {
     rows.push({
       type: 'Cash In',
       category: category.name,
@@ -65,7 +94,7 @@ const formatCashFlowData = (data: any) => {
       amount: category.amount
     });
     
-    category.subItems?.forEach((subItem: any) => {
+    category.subItems?.forEach((subItem: SubItem) => {
       rows.push({
         type: 'Cash In',
         category: category.name,
@@ -76,7 +105,7 @@ const formatCashFlowData = (data: any) => {
   });
   
   // Add cash outflows
-  data.cashOut.forEach((category: any) => {
+  data.cashOut.forEach((category: CategoryItem) => {
     rows.push({
       type: 'Cash Out',
       category: category.name,
@@ -84,7 +113,7 @@ const formatCashFlowData = (data: any) => {
       amount: category.amount
     });
     
-    category.subItems?.forEach((subItem: any) => {
+    category.subItems?.forEach((subItem: SubItem) => {
       rows.push({
         type: 'Cash Out',
         category: category.name,
@@ -97,8 +126,8 @@ const formatCashFlowData = (data: any) => {
   return rows;
 };
 
-const formatExpenseData = (data: any) => {
-  return data.expenses.map((expense: any) => ({
+const formatExpenseData = (data: ExpenseItem[]) => {
+  return data.map((expense: ExpenseItem) => ({
     date: expense.date,
     category: expense.category,
     description: expense.description,
@@ -118,18 +147,18 @@ const formatCurrencyValue = (value: number): string => {
 export const exportReport = async ({ type, data }: ExportOptions): Promise<void> => {
   try {
     let formattedData;
-    let fileName = `${type}-report-${formatDate(new Date())}.pdf`;
+    const fileName = `${type}-report-${formatDate(new Date())}.pdf`;
     
     // Format data based on report type
     switch (type) {
       case 'profit-loss':
-        formattedData = formatProfitLossData(data);
+        formattedData = formatProfitLossData(data as ProfitLossData);
         break;
       case 'cash-flow':
-        formattedData = formatCashFlowData(data);
+        formattedData = formatCashFlowData(data as CashFlowData);
         break;
       case 'expense':
-        formattedData = formatExpenseData(data);
+        formattedData = formatExpenseData(data as ExpenseItem[]);
         break;
       default:
         throw new Error('Invalid report type');
@@ -172,7 +201,7 @@ export const exportReport = async ({ type, data }: ExportOptions): Promise<void>
     doc.setFont('helvetica', 'normal');
     yPos += 10;
     
-    formattedData.forEach((row: any) => {
+    formattedData.forEach((row: Record<string, string | number>) => {
       // Check if we need a new page
       if (yPos >= pageHeight - margin) {
         doc.addPage();

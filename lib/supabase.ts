@@ -138,4 +138,11 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+})

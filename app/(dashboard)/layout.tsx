@@ -1,103 +1,42 @@
-import type React from "react"
-import { Suspense } from "react"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { ModeToggle } from "@/components/mode-toggle"
-import { ScrollArea } from "@/components/ui/scroll-area"
+"use client"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+import { Activity, BarChart3, CreditCard, DollarSign, Home, PieChart, Settings } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Transactions", href: "/transactions", icon: CreditCard },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Reports", href: "/reports", icon: Activity },
+  { name: "Budgets", href: "/budgets", icon: DollarSign },
+  { name: "Categories", href: "/categories", icon: PieChart },
+  { name: "Profile", href: "/profile", icon: Settings },
+]
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-            <DollarSign className="h-6 w-6 text-primary" />
-            <span>spendtab</span>
-          </Link>
-        </div>
-        <ScrollArea className="h-[calc(100vh-4rem)] px-3">
-          <div className="space-y-4 py-4">
-            <div className="px-3 py-2">
-              <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Main</h2>
-              <div className="space-y-1">
-                <Link
-                  href="/dashboard"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  <span>Dashboard</span>
-                </Link>
-                <Link
-                  href="/transactions"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  <span>Transactions</span>
-                </Link>
-              </div>
-            </div>
-            <div className="px-3 py-2">
-              <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Analytics</h2>
-              <div className="space-y-1">
-                <Link
-                  href="/analytics"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <PieChart className="mr-2 h-4 w-4" />
-                  <span>Analytics</span>
-                </Link>
-                <Link
-                  href="/reports"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>Reports</span>
-                </Link>
-              </div>
-            </div>
-            <div className="px-3 py-2">
-              <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Planning</h2>
-              <div className="space-y-1">
-                <Link
-                  href="/budgets"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <LineChart className="mr-2 h-4 w-4" />
-                  <span>Budget</span>
-                </Link>
-                <Link
-                  href="/categories"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Tag className="mr-2 h-4 w-4" />
-                  <span>Categories</span>
-                </Link>
-              </div>
-            </div>
-            <div className="px-3 py-2">
-              <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Account</h2>
-              <div className="space-y-1">
-                <Link
-                  href="/profile"
-                  className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
-      </aside>
-      <main className="flex-1 overflow-auto p-8 pl-72">
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-      </main>
+      <div className="hidden w-64 flex-col border-r bg-gray-100/40 p-6 lg:flex">
+        <nav className="flex flex-1 flex-col space-y-2">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:text-gray-900 dark:hover:text-gray-50 ${isActive ? "bg-gray-200/80 text-gray-900 dark:bg-gray-800 dark:text-gray-50" : "text-gray-500 dark:text-gray-400"}`}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+      <main className="flex-1 overflow-y-auto p-8">{children}</main>
     </div>
   )
 }

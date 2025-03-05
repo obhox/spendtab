@@ -31,7 +31,7 @@ interface Budget {
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading } = useBudgets()
   
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  
   const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null)
 
   const handleDelete = (id: string) => {

@@ -157,7 +157,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       
       const updateData = {
         ...updatedCategory,
-        updated_at: new Date().toISOString()
+        updated_at: typeof window !== 'undefined' ? new Date().toISOString() : ''
       }
       
       const { error } = await supabase
