@@ -9,7 +9,7 @@ import { ExpenseReport } from "@/components/reports/expense-report"
 import { Download, Printer } from 'lucide-react'
 import { useReports } from "@/lib/context/ReportsContext"
 import { exportReport } from "@/lib/export-utils"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function ReportsPage() {
   const { profitLossData, cashFlowData, expenseData } = useReports();
@@ -20,11 +20,7 @@ export default function ReportsPage() {
       const tabId = activeTab?.id.replace('tabpanel-', '');
       
       if (!tabId) {
-        toast({
-          title: "Export failed",
-          description: "Could not determine which report to export. Please try again.",
-          variant: "destructive"
-        });
+        toast("Could not determine which report to export. Please try again.");
         return;
       }
 
@@ -39,25 +35,14 @@ export default function ReportsPage() {
           await exportReport({ type: 'expense', data: expenseData });
           break;
         default:
-          toast({
-            title: "Export failed",
-            description: "Invalid report type selected.",
-            variant: "destructive"
-          });
+          toast("Invalid report type selected.");
           return;
       }
 
-      toast({
-        title: "Export successful",
-        description: "Your report has been exported as PDF."
-      });
+      toast("Your report has been exported as PDF.");
     } catch (error) {
       console.error('Error exporting report:', error);
-      toast({
-        title: "Export failed",
-        description: "An error occurred while exporting the report. Please try again.",
-        variant: "destructive"
-      });
+      toast("An error occurred while exporting the report. Please try again.");
     }
   };
 

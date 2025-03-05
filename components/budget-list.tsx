@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useBudgets } from "@/lib/context/BudgetContext"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface Budget {
   id: string
@@ -30,7 +30,6 @@ interface Budget {
 
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading } = useBudgets()
-  const { toast } = useToast()
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null)
@@ -43,8 +42,7 @@ export function BudgetList() {
   const confirmDelete = () => {
     if (budgetToDelete) {
       deleteBudget(budgetToDelete)
-      toast({
-        title: "Budget deleted",
+      toast("Budget deleted", {
         description: "The budget has been deleted successfully."
       })
       setBudgetToDelete(null)
@@ -67,9 +65,6 @@ export function BudgetList() {
             <Card key={budget.id}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">{budget.name}</CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  {budget.period} • {budget.category}
-                </div>
               </CardHeader>
               <CardContent className="pb-2">
                 <div className="flex items-center justify-between mb-2">
@@ -89,7 +84,7 @@ export function BudgetList() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between pt-2">
-                <BudgetForm budget={budget}>
+                <BudgetForm budget={budget as Budget}>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit

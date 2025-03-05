@@ -33,7 +33,7 @@ import {
 import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { format, addMonths } from "date-fns"
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import Link from "next/link"
 
@@ -67,7 +67,6 @@ interface BudgetFormProps {
 
 export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { toast } = useToast()
   const { addBudget, updateBudget } = useBudgets()
   
   // Create form
@@ -94,25 +93,25 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
       if (budget) {
         // Update existing budget
         await updateBudget(budget.id, {
-          ...data,
+          name: data.name,
+          amount: data.amount,
           startDate: format(data.startDate, "yyyy-MM-dd"),
           endDate: format(data.endDate, "yyyy-MM-dd"),
-          spent: 0,
+          spent: budget.spent
         });
-        toast({
-          title: "Budget updated",
+        toast("Budget updated", {
           description: "Your budget has been updated successfully."
         });
       } else {
         // Add new budget
         await addBudget({
-          ...data,
+          name: data.name,
+          amount: data.amount,
           startDate: format(data.startDate, "yyyy-MM-dd"),
           endDate: format(data.endDate, "yyyy-MM-dd"),
-          spent: 0,
+          spent: 0
         });
-        toast({
-          title: "Budget created",
+        toast("Budget created", {
           description: "Your new budget has been created successfully."
         });
       }
@@ -121,10 +120,8 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
       form.reset();
       if (onSave && budget) onSave(budget);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem saving your budget.",
-        variant: "destructive"
+      toast("Error", {
+        description: "There was a problem saving your budget."
       });
     }
   }

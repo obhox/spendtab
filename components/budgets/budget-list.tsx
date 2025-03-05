@@ -31,7 +31,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Edit, MoreHorizontal, Trash2, Plus } from 'lucide-react'
 import { BudgetForm } from "./budget-form"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { useTransactions } from "@/lib/context/TransactionContext"
 
@@ -39,7 +39,7 @@ interface Budget {
   id: string
   name: string
   amount: number
-  spent?: number
+  spent: number
   startDate: string
   endDate: string
 }
@@ -48,8 +48,6 @@ export function BudgetList() {
   const { budgets, deleteBudget, isLoading: isLoadingBudgets } = useBudgets()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null)
-  const { toast } = useToast()
-
   // Calculate percentage spent
   const calculatePercentage = (spent: number, total: number): number => {
     return Math.round((spent / total) * 100)
@@ -79,11 +77,7 @@ export function BudgetList() {
     if (selectedBudget) {
       await deleteBudget(selectedBudget.id)
       
-      toast({
-        title: "Budget deleted",
-        description: `${selectedBudget.name} has been deleted.`,
-        variant: "default"
-      })
+      toast(`${selectedBudget.name} has been deleted.`)
       
       setIsDeleteDialogOpen(false)
       setSelectedBudget(null)
@@ -157,7 +151,7 @@ export function BudgetList() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <BudgetForm budget={budget}>
+                      <BudgetForm budget={budget as Budget}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
@@ -165,7 +159,7 @@ export function BudgetList() {
                       </BudgetForm>
                       <DropdownMenuItem 
                         onClick={() => {
-                          setSelectedBudget(budget)
+                          setSelectedBudget(budget as Budget)
                           setIsDeleteDialogOpen(true)
                         }}
                         className="text-red-600"

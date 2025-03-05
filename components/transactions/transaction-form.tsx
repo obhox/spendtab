@@ -41,7 +41,7 @@ import { useTransactions } from "@/lib/context/TransactionContext"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 // Schema for form validation
 const transactionSchema = z.object({
@@ -66,6 +66,7 @@ interface Transaction {
   amount: number
   type: "income" | "expense"
   notes?: string
+  budget_id?: string | null
 }
 
 interface TransactionFormProps {
@@ -79,7 +80,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const { categories, incomeCategories, expenseCategories } = useCategories();
   const { addTransaction, updateTransaction } = useTransactions();
   const { budgets } = useBudgets();
-  const { toast } = useToast();
+  
   
   // Default values for the form
   const defaultValues: Partial<TransactionFormValues> = transaction 
@@ -94,7 +95,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       }
     : {
         description: "",
-        amount: undefined,
+        amount: undefined as number | undefined,
         date: new Date(),
         category: "",
         type: "expense",
@@ -107,22 +108,35 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     resolver: zodResolver(transactionSchema),
     defaultValues
   });
-
   // Handle form submission
   async function onSubmit(data: TransactionFormValues) {
     try {
       if (transaction) {
         // Update existing transaction
-        await updateTransaction(transaction.id, data);
-        toast({
-          title: "Transaction updated",
+        await updateTransaction(transaction.id, {
+          description: data.description,
+          amount: data.amount,
+          date: format(data.date, "yyyy-MM-dd"),
+          category: data.category,
+          type: data.type,
+          notes: data.notes,
+          budget_id: data.budget_id
+        });
+        toast("Transaction updated", {
           description: "Your transaction has been updated successfully."
         });
       } else {
         // Add new transaction
-        await addTransaction(data);
-        toast({
-          title: "Transaction added",
+        await addTransaction({
+          description: data.description,
+          amount: data.amount,
+          date: format(data.date, "yyyy-MM-dd"),
+          category: data.category,
+          type: data.type,
+          notes: data.notes,
+          budget_id: data.budget_id
+        });
+        toast("Transaction added", {
           description: "Your new transaction has been added successfully."
         });
       }
@@ -131,14 +145,11 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       form.reset();
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "There was a problem saving your transaction.",
-        variant: "destructive"
+      toast("Error", {
+        description: "There was a problem saving your transaction."
       });
     }
   }
-
   // Filter categories based on selected transaction type
   const filteredCategories = form.watch("type") === "income" 
     ? incomeCategories 
