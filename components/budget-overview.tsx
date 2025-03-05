@@ -12,7 +12,6 @@ export function BudgetOverview() {
   useEffect(() => {
     const processed = budgets.map(budget => ({
       id: budget.id,
-      category: budget.category,
       allocated: budget.amount,
       spent: budget.spent,
       remaining: budget.amount - budget.spent,
@@ -39,7 +38,6 @@ export function BudgetOverview() {
           return (
             <div key={budget.id} className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{budget.category}</span>
                 <span className="text-sm text-muted-foreground">{budget.percentSpent}%</span>
               </div>
               <Progress value={budget.percentSpent} className="h-2" />

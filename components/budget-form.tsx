@@ -24,13 +24,7 @@ const formSchema = z.object({
   }),
   amount: z.coerce.number().positive({
     message: "Budget amount must be positive.",
-  }),
-  period: z.string().min(1, {
-    message: "Please select a budget period.",
-  }),
-  category: z.string().min(1, {
-    message: "Please select a category.",
-  }),
+  })
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -41,7 +35,6 @@ interface Budget {
   amount: number
   spent: number
   period: string
-  category: string
 }
 
 interface BudgetFormProps {
@@ -58,14 +51,12 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
     ? {
         name: budget.name,
         amount: budget.amount,
-        period: budget.period,
-        category: budget.category,
+      
       }
     : {
         name: "",
         amount: 0,
-        period: "Monthly",
-        category: "",
+      
       }
 
   const form = useForm<FormValues>({
@@ -73,38 +64,47 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
     defaultValues,
   })
 
-  // Get the list of used categories
-  const usedCategories = budgets
-    .filter((budget) => budget.spent > 0)
-    .map((budget) => budget.category);
 
-  function onSubmit(values: FormValues) {
-    // Create the budget object
-    const budgetData = {
-      name: values.name,
-      amount: values.amount,
-      spent: budget?.spent || 0, // Keep existing spent amount or set to 0 for new budgets
-      period: values.period,
-      category: values.category,
-    }
 
-    // Either update existing or add new budget
-    if (budget) {
-      updateBudget(budget.id, budgetData)
+  async function onSubmit(values: FormValues) {
+    try {
+      // Create the budget object
+      const budgetData = {
+        name: values.name,
+        amount: values.amount,
+        spent: budget?.spent || 0,
+        startDate: new Date().toISOString(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
+        period: "monthly",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      // Either update existing or add new budget
+      if (budget) {
+        await updateBudget(budget.id, budgetData)
+        toast({
+          title: "Budget updated",
+          description: "Your budget has been updated successfully."
+        })
+      } else {
+        await addBudget(budgetData)
+        toast({
+          title: "Budget created",
+          description: "Your new budget has been created successfully."
+        })
+      }
+
+      setOpen(false)
+      form.reset()
+    } catch (error) {
+      console.error('Error saving budget:', error)
       toast({
-        title: "Budget updated",
-        description: "Your budget has been updated successfully."
-      })
-    } else {
-      addBudget(budgetData)
-      toast({
-        title: "Budget created",
-        description: "Your new budget has been created successfully."
+        title: "Error",
+        description: "There was a problem saving your budget.",
+        variant: "destructive"
       })
     }
-
-    setOpen(false)
-    form.reset()
   }
 
   return (
@@ -146,56 +146,8 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="period"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget Period</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a period" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                      <SelectItem value="Quarterly">Quarterly</SelectItem>
-                      <SelectItem value="Yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {/* Filter out used categories */}
-                      {["Marketing", "Sales", "Operations", "Software", "Supplies", "Training", "Travel", "Other"]
-                        .filter((category) => !usedCategories.includes(category))
-                        .map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+
             <DialogFooter>
               <Button type="submit">{budget ? "Save Changes" : "Create Budget"}</Button>
             </DialogFooter>

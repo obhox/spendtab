@@ -12,6 +12,7 @@ export interface Budget {
   spent: number
   startDate?: string
   endDate?: string
+  period?: string
 }
 
 // Context interface
@@ -94,41 +95,35 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const addBudget = async (budget: Omit<Budget, "id">) => {
     try {
       setIsLoading(true)
+      setError(null) // Reset any previous errors
       
       const newBudget = {
         ...budget,
         id: uuidv4(),
+        spent: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
-      // Check if a budget already exists for the same category and has been spent
-      const existingBudget = budgets.find(
-        (b) => b.spent > 0
-      );
 
-      if (existingBudget) {
-        setError("A budget for this category has already been used.");
-        return; // Prevent adding the new budget
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('budgets')
         .insert(newBudget)
+        .select()
+        .single()
 
       if (error) {
         throw error
       }
 
-      // Optimistically update the UI
+      // Update the UI with the returned data from Supabase
       setBudgets(prev => [...prev, {
-        id: newBudget.id,
-        name: budget.name,
-        amount: budget.amount,
-        spent: budget.spent,
-        period: budget.period,
-        category: budget.category,
-        startDate: budget.startDate,
-        endDate: budget.endDate
+        id: data.id,
+        name: data.name,
+        amount: data.amount,
+        spent: data.spent || 0,
+        period: data.period,
+        startDate: data.startDate,
+        endDate: data.endDate
       }])
 
     } catch (error) {
@@ -217,7 +212,6 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
           amount: item.amount,
           spent: item.spent,
           period: item.period,
-          category: item.category,
           startDate: item.startDate || undefined,
           endDate: item.endDate || undefined
         })))

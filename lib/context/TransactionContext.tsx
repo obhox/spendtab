@@ -123,45 +123,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         notes: transaction.notes
       }])
 
-      // Update budget spent amount
-      const budgetCategory = transaction.category;
-      const transactionAmount = transaction.amount;
-      const isExpense = transaction.type === "expense";
-
-      try {
-        // Fetch the existing budget for the category
-        const { data: budgetData, error: budgetError } = await supabase
-          .from('budgets')
-          .select('*')
-          .eq('category', budgetCategory)
-          .single();
-
-        if (budgetError) {
-          console.error('Error fetching budget:', budgetError);
-          throw budgetError; // Re-throw to handle it in the outer catch
-        }
-
-        if (budgetData) {
-          // Calculate the new spent amount
-          const newSpent = isExpense
-            ? budgetData.spent + transactionAmount
-            : budgetData.spent - transactionAmount;
-
-          // Update the budget in Supabase
-          const { error: updateError } = await supabase
-            .from('budgets')
-            .update({ spent: newSpent })
-            .eq('id', budgetData.id);
-
-          if (updateError) {
-            console.error('Error updating budget:', updateError);
-            throw updateError; // Re-throw to handle it in the outer catch
-          }
-        }
-      } catch (error) {
-        console.error('Error updating budget spent amount:', error);
-        setError('Failed to update budget spent amount');
-      }
+      // Budget spent amount is now handled directly by the database
     } catch (error) {
       console.error('Error adding transaction:', error)
       setError('Failed to add transaction')
@@ -194,94 +156,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         )
       )
 
-      // Update budget spent amount
-      try {
-        // Fetch the old transaction details
-        const { data: oldTransactionData, error: oldTransactionError } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (oldTransactionError) {
-          console.error('Error fetching old transaction:', oldTransactionError);
-          throw oldTransactionError;
-        }
-
-        if (oldTransactionData) {
-          const oldCategory = oldTransactionData.category;
-          const oldAmount = oldTransactionData.amount;
-          const oldIsExpense = oldTransactionData.type === "expense";
-
-          // Update the old budget
-          if (oldCategory) {
-            const { data: oldBudgetData, error: oldBudgetError } = await supabase
-              .from('budgets')
-              .select('*')
-              .eq('category', oldCategory)
-              .single();
-
-            if (oldBudgetError) {
-              console.error('Error fetching old budget:', oldBudgetError);
-              throw oldBudgetError;
-            }
-
-            if (oldBudgetData) {
-              const newSpentOld = oldIsExpense
-                ? oldBudgetData.spent - oldAmount
-                : oldBudgetData.spent + oldAmount;
-
-              const { error: updateOldBudgetError } = await supabase
-                .from('budgets')
-                .update({ spent: newSpentOld })
-                .eq('id', oldBudgetData.id);
-
-              if (updateOldBudgetError) {
-                console.error('Error updating old budget:', updateOldBudgetError);
-                throw updateOldBudgetError;
-              }
-            }
-          }
-        }
-
-        // Fetch the new transaction details
-        const newCategory = updatedTransaction.category;
-        const newAmount = updatedTransaction.amount;
-        const newIsExpense = updatedTransaction.type === "expense";
-
-        // Update the new budget
-        if (newCategory) {
-          const { data: newBudgetData, error: newBudgetError } = await supabase
-            .from('budgets')
-            .select('*')
-            .eq('category', newCategory)
-            .single();
-
-          if (newBudgetError) {
-            console.error('Error fetching new budget:', newBudgetError);
-            throw newBudgetError;
-          }
-
-          if (newBudgetData) {
-            const newSpentNew = newIsExpense
-              ? newBudgetData.spent + newAmount
-              : newBudgetData.spent - newAmount;
-
-            const { error: updateNewBudgetError } = await supabase
-              .from('budgets')
-              .update({ spent: newSpentNew })
-              .eq('id', newBudgetData.id);
-
-            if (updateNewBudgetError) {
-              console.error('Error updating new budget:', updateNewBudgetError);
-              throw updateNewBudgetError;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error updating budget spent amount:', error);
-        setError('Failed to update budget spent amount');
-      }
+      // Budget spent amount is now handled directly by the database
     } catch (error) {
       console.error('Error updating transaction:', error)
       setError('Failed to update transaction')
@@ -307,59 +182,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       // Update the UI
       setTransactions(prev => prev.filter(transaction => transaction.id !== id))
 
-      // Update budget spent amount
-      try {
-        // Fetch the transaction details
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (transactionError) {
-          console.error('Error fetching transaction:', transactionError);
-          throw transactionError;
-        }
-
-        if (transactionData) {
-          const category = transactionData.category;
-          const amount = transactionData.amount;
-          const isExpense = transactionData.type === "expense";
-
-          // Update the budget
-          if (category) {
-            const { data: budgetData, error: budgetError } = await supabase
-              .from('budgets')
-              .select('*')
-              .eq('category', category)
-              .single();
-
-            if (budgetError) {
-              console.error('Error fetching budget:', budgetError);
-              throw budgetError;
-            }
-
-            if (budgetData) {
-              const newSpent = isExpense
-                ? budgetData.spent - amount
-                : budgetData.spent + amount;
-
-              const { error: updateError } = await supabase
-                .from('budgets')
-                .update({ spent: newSpent })
-                .eq('id', budgetData.id);
-
-              if (updateError) {
-                console.error('Error updating budget:', updateError);
-                throw updateError;
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error updating budget spent amount:', error);
-        setError('Failed to update budget spent amount');
-      }
+      // Budget spent amount is now handled directly by the database
     } catch (error) {
       console.error('Error deleting transaction:', error)
       setError('Failed to delete transaction')
