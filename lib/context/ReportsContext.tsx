@@ -92,8 +92,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   
   // Default to current quarter
   const [dateRange, setDateRange] = useState({
-    startDate: startOfQuarter(new Date()),
-    endDate: endOfQuarter(new Date()),
+    startDate: typeof window !== 'undefined' ? startOfQuarter(new Date()) : new Date(),
+    endDate: typeof window !== 'undefined' ? endOfQuarter(new Date()) : new Date(),
   })
   
   // State for reports data

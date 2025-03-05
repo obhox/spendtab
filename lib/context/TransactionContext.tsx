@@ -100,8 +100,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       const newTransaction = {
         ...transaction,
         id: uuidv4(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: typeof window !== 'undefined' ? new Date().toISOString() : '',
+        updated_at: typeof window !== 'undefined' ? new Date().toISOString() : ''
       }
       
       const { error } = await supabase
@@ -141,7 +141,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .from('transactions')
         .update({
           ...updatedTransaction,
-          updated_at: new Date().toISOString()
+          updated_at: typeof window !== 'undefined' ? new Date().toISOString() : ''
         })
         .eq('id', id)
       

@@ -101,8 +101,8 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         ...budget,
         id: uuidv4(),
         spent: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_at: typeof window !== 'undefined' ? new Date().toISOString() : '',
+        updated_at: typeof window !== 'undefined' ? new Date().toISOString() : ''
       }
 
       const { data, error } = await supabase
@@ -143,7 +143,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         .from('budgets')
         .update({
           ...updatedBudget,
-          updated_at: new Date().toISOString()
+          updated_at: typeof window !== 'undefined' ? new Date().toISOString() : ''
         })
         .eq('id', id)
       
