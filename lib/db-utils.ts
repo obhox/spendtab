@@ -8,13 +8,26 @@ export async function getUserId() {
 }
 
 // Generic function to fetch user's data with pagination
+type FilterOperator = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'ilike' | 'in' | 'is';
+
+type FilterValue = string | number | boolean | null | Array<string | number | boolean> | {
+  [K in FilterOperator]?: string | number | boolean | null;
+};
+
+type Channel = {
+  on: (event: string, callback: () => void) => Channel;
+  subscribe: () => Channel;
+};
+
+type FilterOptions = Record<string, FilterValue>;
+
 export async function fetchUserData<T>(
   table: string,
   options: {
     page?: number,
     pageSize?: number,
     orderBy?: { column: string, ascending: boolean },
-    filter?: Record<string, any>
+    filter?: FilterOptions
   } = {}
 ) {
   const userId = await getUserId()
@@ -52,7 +65,7 @@ export async function fetchUserData<T>(
         // Handle range filters like { gte: 100, lte: 200 }
         Object.entries(value).forEach(([operator, operatorValue]) => {
           if (operatorValue !== undefined && operatorValue !== null) {
-            query = query[operator as any](key, operatorValue)
+            query = query[operator as FilterOperator](key, operatorValue)
           }
         })
       } else {

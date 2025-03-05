@@ -6,7 +6,15 @@ import { useBudgets } from "@/lib/context/BudgetContext"
 
 export function BudgetOverview() {
   const { budgets, isLoading } = useBudgets()
-  const [topBudgets, setTopBudgets] = useState<any[]>([])
+  interface BudgetSummary {
+  id: string;
+  allocated: number;
+  spent: number;
+  remaining: number;
+  percentSpent: number;
+}
+
+const [topBudgets, setTopBudgets] = useState<BudgetSummary[]>([])
   
   // Process budgets to show the 4 with highest spending percentage
   useEffect(() => {

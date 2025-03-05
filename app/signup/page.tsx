@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signUp, signInWithGoogle } from "@/lib/auth-utils"
@@ -31,11 +31,11 @@ export default function SignUpPage() {
         description: "Please check your email to confirm your account.",
       })
       router.push("/login")
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Signup error:", error)
       toast({
         title: "Sign up failed",
-        description: error?.message || "There was a problem creating your account.",
+        description: error instanceof Error ? error.message : "There was a problem creating your account.",
         variant: "destructive",
       })
     } finally {
@@ -51,11 +51,11 @@ export default function SignUpPage() {
         title: "Google sign-in initiated",
         description: "Please complete the authentication process",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Google sign-in error:", error)
       toast({
         title: "Google sign-in failed",
-        description: error?.message || "Failed to sign in with Google",
+        description: error instanceof Error ? error.message : "Failed to sign in with Google",
         variant: "destructive",
       })
     } finally {

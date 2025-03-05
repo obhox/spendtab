@@ -33,7 +33,7 @@ import { Edit, MoreHorizontal, Trash2, Plus } from 'lucide-react'
 import { BudgetForm } from "./budget-form"
 import { useToast } from "@/hooks/use-toast"
 import { useBudgets } from "@/lib/context/BudgetContext"
-import { useTransactions } from "@/lib/context/TransactionContext"
+
 
 interface Budget {
   id: string
@@ -46,7 +46,7 @@ interface Budget {
 
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading: isLoadingBudgets } = useBudgets()
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null)
   const { toast } = useToast()
 

@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { getUserProfile, updateUserProfile, signOut } from "@/lib/auth-utils"
 import SubscriptionPage from "./subscription"
@@ -18,7 +16,6 @@ export default function ProfilePage() {
   const [companyName, setCompanyName] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -47,11 +44,11 @@ export default function ProfilePage() {
         title: "Profile updated",
         description: "Your profile has been successfully updated",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Profile update error:", error)
       toast({
         title: "Update failed",
-        description: error?.message || "Failed to update profile",
+        description: error instanceof Error ? error.message : "Failed to update profile",
         variant: "destructive",
       })
     } finally {

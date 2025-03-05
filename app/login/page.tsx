@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signIn, signInWithGoogle } from "@/lib/auth-utils"
@@ -28,11 +28,11 @@ export default function LoginPage() {
         description: "You have been successfully logged in",
       })
       router.push("/dashboard")
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error)
       toast({
         title: "Login failed",
-        description: error?.message || "Please check your credentials and try again",
+        description: error instanceof Error ? error.message : "Please check your credentials and try again",
         variant: "destructive",
       })
     } finally {
@@ -48,11 +48,11 @@ export default function LoginPage() {
         title: "Google sign-in initiated",
         description: "Please complete the authentication process",
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Google sign-in error:", error)
       toast({
         title: "Google sign-in failed",
-        description: error?.message || "Failed to sign in with Google",
+        description: error instanceof Error ? error.message : "Failed to sign in with Google",
         variant: "destructive",
       })
     } finally {
@@ -134,7 +134,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
             Sign up
           </Link>
