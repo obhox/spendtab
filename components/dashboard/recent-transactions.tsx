@@ -23,10 +23,10 @@ export function RecentTransactions() {
   // Use real data from the context
   useEffect(() => {
     if (transactions.length > 0) {
-      // Get the most recent 5 transactions
+      // Get the most recent 7 transactions
       const recent = [...transactions]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5);
+        .slice(0, 7);
       
       setRecentTransactions(recent);
     }

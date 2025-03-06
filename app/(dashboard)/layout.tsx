@@ -107,14 +107,14 @@ export default function DashboardLayout({
           </SheetContent>
         </Sheet>
       </div>
-      <aside className="hidden lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-screen lg:w-64 border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-16 items-center border-b px-6">
+      <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="sticky top-0 flex h-16 items-center border-b px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
             <DollarSign className="h-6 w-6 text-primary" />
             <span>spendtab</span>
           </Link>
         </div>
-        <ScrollArea className="h-[calc(100vh-4rem)] px-3">
+        <ScrollArea className="flex-1 px-3">
           <div className="space-y-4 py-4">
             <div className="px-3 py-2">
               <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Main</h2>

@@ -50,10 +50,9 @@ export function BudgetOverview() {
       </div>
     )
   }
-
   return (
     <div className="space-y-4">
-      {budgets.map((budget) => {
+      {budgets.slice(0, 5).map((budget) => {
         const percentUsed = Math.round((budget.spent !== null && budget.spent !== undefined ? budget.spent : 0) / budget.amount * 100);
 
         return (
