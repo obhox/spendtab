@@ -87,62 +87,41 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead className="hidden sm:table-cell">Category</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right w-[70px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No transactions found.
+            {filteredTransactions.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell className="hidden md:table-cell">{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                <TableCell className="max-w-[200px] truncate">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span>{transaction.description}</span>
+                    <Badge className="w-fit sm:hidden" variant={transaction.type === "income" ? "default" : "destructive"}>
+                      {transaction.category}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <Badge variant={transaction.type === "income" ? "default" : "destructive"}>
+                    {transaction.category}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className={transaction.type === "income" ? "text-green-600" : "text-red-600"}>
+                    {transaction.type === "income" ? "+" : "-"}${Math.abs(transaction.amount).toFixed(2)}
+                  </span>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{transaction.category}</Badge>
-                  </TableCell>
-                  <TableCell className={`text-right ${transaction.amount > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {transaction.amount > 0 ? "+" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <TransactionForm transaction={{ ...transaction, budget_id: transaction.budget_id || null }}>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        </TransactionForm>
-                        <DropdownMenuItem onSelect={() => handleDelete(transaction.id)}>
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
