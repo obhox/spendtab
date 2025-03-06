@@ -1,10 +1,17 @@
 "use client"
 
+import { Suspense } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { BudgetList } from "@/components/budgets/budget-list"
 import { BudgetForm } from "@/components/budgets/budget-form"
 import { Plus } from 'lucide-react'
+import { Skeleton } from "@/components/ui/skeleton"
+
+const BudgetList = dynamic(
+  () => import("@/components/budgets/budget-list").then((mod) => mod.BudgetList),
+  { ssr: false }
+)
 
 export default function BudgetsPage() {
   return (
@@ -24,7 +31,9 @@ export default function BudgetsPage() {
           <CardDescription>Create and manage your budgets to keep your finances on track.</CardDescription>
         </CardHeader>
         <CardContent>
-          <BudgetList />
+          <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <BudgetList />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

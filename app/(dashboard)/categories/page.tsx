@@ -1,11 +1,18 @@
 "use client"
 
+import { Suspense } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CategoryManager } from "@/components/categories/category-manager"
 import { CategoryForm } from "@/components/categories/category-form"
 import { ArrowLeft, Plus } from "lucide-react"
 import Link from "next/link"
+import { Skeleton } from "@/components/ui/skeleton"
+
+const CategoryManager = dynamic(
+  () => import("@/components/categories/category-manager").then((mod) => mod.CategoryManager),
+  { ssr: false }
+)
 
 export default function CategoriesPage() {
   return (
@@ -35,7 +42,9 @@ export default function CategoriesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <CategoryManager />
+          <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <CategoryManager />
+          </Suspense>
         </CardContent>
       </Card>
       <div className="grid gap-4 md:grid-cols-2">

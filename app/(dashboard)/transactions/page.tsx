@@ -1,13 +1,20 @@
 "use client"
 
 import { useState } from "react"
+import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TransactionTable } from "@/components/transactions/transaction-table"
+import dynamic from "next/dynamic"
+
+const TransactionTable = dynamic(
+  () => import("@/components/transactions/transaction-table").then((mod) => mod.TransactionTable),
+  { ssr: false }
+)
 import { TransactionForm } from "@/components/transactions/transaction-form"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Plus } from "lucide-react"
 
 export default function TransactionsPage() {
@@ -51,7 +58,9 @@ export default function TransactionsPage() {
               <CardDescription>View and manage all your financial transactions.</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransactionTable type="all" searchTerm={searchTerm} />
+              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                <TransactionTable type="all" searchTerm={searchTerm} />
+              </Suspense>
             </CardContent>
           </Card>
         </TabsContent>
@@ -62,7 +71,9 @@ export default function TransactionsPage() {
               <CardDescription>View and manage your income transactions.</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransactionTable type="income" searchTerm={searchTerm} />
+              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                <TransactionTable type="income" searchTerm={searchTerm} />
+              </Suspense>
             </CardContent>
           </Card>
         </TabsContent>
@@ -73,7 +84,9 @@ export default function TransactionsPage() {
               <CardDescription>View and manage your expense transactions.</CardDescription>
             </CardHeader>
             <CardContent>
-              <TransactionTable type="expenses" searchTerm={searchTerm} />
+              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+                <TransactionTable type="expenses" searchTerm={searchTerm} />
+              </Suspense>
             </CardContent>
           </Card>
         </TabsContent>

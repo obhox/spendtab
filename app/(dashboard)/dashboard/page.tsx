@@ -1,15 +1,33 @@
 "use client"
 
 import { Suspense, useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowDown, ArrowUp, DollarSign, TrendingUp } from 'lucide-react'
-import { RecentTransactions } from "@/components/dashboard/recent-transactions"
-import { IncomeExpenseChart } from "@/components/dashboard/income-expense-chart"
-import { CashFlowChart } from "@/components/dashboard/cash-flow-chart"
-import { BudgetOverview } from "@/components/dashboard/budget-overview"
+import { Skeleton } from "@/components/ui/skeleton"
 import { DataProvider } from "@/lib/context/DataProvider"
 import { useTransactions } from "@/lib/context/TransactionContext"
+
+const RecentTransactions = dynamic(
+  () => import("@/components/dashboard/recent-transactions").then((mod) => mod.RecentTransactions),
+  { ssr: false }
+)
+
+const IncomeExpenseChart = dynamic(
+  () => import("@/components/dashboard/income-expense-chart").then((mod) => mod.IncomeExpenseChart),
+  { ssr: false }
+)
+
+const CashFlowChart = dynamic(
+  () => import("@/components/dashboard/cash-flow-chart").then((mod) => mod.CashFlowChart),
+  { ssr: false }
+)
+
+const BudgetOverview = dynamic(
+  () => import("@/components/dashboard/budget-overview").then((mod) => mod.BudgetOverview),
+  { ssr: false }
+)
 
 function DashboardMetrics() {
   const { transactions } = useTransactions()
@@ -23,17 +41,14 @@ function DashboardMetrics() {
   
   useEffect(() => {
     if (transactions.length > 0) {
-      // Calculate metrics from transactions
       const currentDate = new Date()
       const lastMonth = new Date(currentDate)
       lastMonth.setMonth(currentDate.getMonth() - 1)
       
-      // Current month transactions
       const currentMonthTransactions = transactions.filter(t => 
         new Date(t.date) >= lastMonth && new Date(t.date) <= currentDate
       )
       
-      // Calculate totals
       const revenue = currentMonthTransactions
         .filter(t => t.type === "income")
         .reduce((sum, t) => sum + t.amount, 0)
@@ -108,54 +123,51 @@ function DashboardMetrics() {
 
 export default function DashboardPage() {
   return (
-    <DataProvider>
-      <Suspense fallback={<div>Loading dashboard...</div>}>
-        <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <div className="space-y-4">
-            <DashboardMetrics />
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>Income vs Expenses</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <IncomeExpenseChart />
-                </CardContent>
-              </Card>
-              <Card className="col-span-3">
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>Your latest transactions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentTransactions />
-                </CardContent>
-              </Card>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>Cash Flow</CardTitle>
-                  <CardDescription>Your cash flow trends</CardDescription>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <CashFlowChart />
-                </CardContent>
-              </Card>
-              <Card className="col-span-3">
-                <CardHeader>
-                  <CardTitle>Budget Overview</CardTitle>
-                  <CardDescription>Your budget utilization</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <BudgetOverview />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </Suspense>
-    </DataProvider>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+      <DashboardMetrics />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <Suspense fallback={<Skeleton className="h-[350px] w-full" />}>
+              <IncomeExpenseChart />
+            </Suspense>
+          </CardContent>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Suspense fallback={<Skeleton className="h-[350px] w-full" />}>
+              <RecentTransactions />
+            </Suspense>
+          </CardContent>
+        </Card>
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Cash Flow</CardTitle>
+          </CardHeader>
+          <CardContent className="pl-2">
+            <Suspense fallback={<Skeleton className="h-[350px] w-full" />}>
+              <CashFlowChart />
+            </Suspense>
+          </CardContent>
+        </Card>
+        <Card className="col-span-3">
+          <CardHeader>
+            <CardTitle>Budget Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Suspense fallback={<Skeleton className="h-[350px] w-full" />}>
+              <BudgetOverview />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }

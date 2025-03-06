@@ -28,15 +28,6 @@ interface Budget {
   startDate?: string
   endDate?: string
 }
-// This script can be used to migrate placeholder data to Supabase
-// It's a template that can be modified based on specific needs
-
-import { supabase } from '../lib/supabase'
-import fs from 'fs'
-import path from 'path'
-
-// Mock user ID - in a real migration you would use the actual user IDs
-const USER_ID = 'your-user-id' // Replace with actual user ID
 
 // Sample data structure (replace with your actual data structure)
 interface Transaction {

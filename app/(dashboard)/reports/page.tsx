@@ -1,15 +1,29 @@
 "use client"
 
+import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ProfitLossReport } from "@/components/reports/profit-loss-report"
-import { CashFlowReport } from "@/components/reports/cash-flow-report"
-import { ExpenseReport } from "@/components/reports/expense-report"
-import { Download, Printer } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { useReports } from "@/lib/context/ReportsContext"
 import { exportReport } from "@/lib/export-utils"
 import { toast } from "sonner"
+
+const CashFlowReport = dynamic(
+  () => import("@/components/reports/cash-flow-report").then((mod) => mod.CashFlowReport),
+  { ssr: false }
+)
+
+const ExpenseReport = dynamic(
+  () => import("@/components/reports/expense-report").then((mod) => mod.ExpenseReport),
+  { ssr: false }
+)
+
+const ProfitLossReport = dynamic(
+  () => import("@/components/reports/profit-loss-report").then((mod) => mod.ProfitLossReport),
+  { ssr: false }
+)
 
 export default function ReportsPage() {
   const { profitLossData, cashFlowData, expenseData } = useReports();
@@ -26,13 +40,25 @@ export default function ReportsPage() {
 
       switch (tabId) {
         case 'profit-loss':
+          if (!profitLossData) {
+            toast("No profit & loss data available to export.");
+            return;
+          }
           await exportReport({ type: 'profit-loss', data: profitLossData });
           break;
         case 'cash-flow':
+          if (!cashFlowData) {
+            toast("No cash flow data available to export.");
+            return;
+          }
           await exportReport({ type: 'cash-flow', data: cashFlowData });
           break;
         case 'expense':
-          await exportReport({ type: 'expense', data: expenseData });
+          if (!expenseData) {
+            toast("No expense data available to export.");
+            return;
+          }
+          await exportReport({ type: 'expense', data: expenseData.expenses });
           break;
         default:
           toast("Invalid report type selected.");
@@ -68,7 +94,7 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle>Profit & Loss Statement</CardTitle>
               <CardDescription>
-                View your business's revenue, costs, and expenses over a specific time period.
+                View your business&apos;s revenue, costs, and expenses over a specific time period.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -80,7 +106,9 @@ export default function ReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Cash Flow Statement</CardTitle>
-              <CardDescription>Track how cash is flowing in and out of your business.</CardDescription>
+              <CardDescription>
+                Track your cash inflows and outflows over time.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <CashFlowReport />
@@ -91,7 +119,9 @@ export default function ReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Expense Report</CardTitle>
-              <CardDescription>Analyze your business expenses by category.</CardDescription>
+              <CardDescription>
+                Analyze your spending patterns and expense categories.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ExpenseReport />
