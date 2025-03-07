@@ -13,6 +13,7 @@ export interface Transaction {
   amount: number
   type: "income" | "expense"
   notes?: string
+  payment_source: string
   budget_id?: string
 }
 
@@ -59,6 +60,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             amount: item.amount,
             type: item.type,
             notes: item.notes || undefined,
+            payment_source: item.payment_source || undefined,
             budget_id: item.budget_id || undefined
           })))
         }
@@ -120,7 +122,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         category: transaction.category,
         amount: transaction.amount,
         type: transaction.type,
-        notes: transaction.notes
+        notes: transaction.notes,
+        payment_source: transaction.payment_source
       }])
 
       // Budget spent amount is now handled directly by the database

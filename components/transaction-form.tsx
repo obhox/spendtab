@@ -43,6 +43,9 @@ const formSchema = z.object({
   type: z.enum(["income", "expense"]),
   notes: z.string().optional(),
   budget_id: z.string().nullable().optional(),
+  payment_source: z.string().min(1, {
+    message: "Please select a payment source.",
+  })
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -56,6 +59,7 @@ interface Transaction {
   type: "income" | "expense"
   notes?: string
   budget_id: string | null
+  payment_source: string
 }
 
 interface TransactionFormProps {
@@ -86,6 +90,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         type: transaction.type,
         notes: transaction.notes || "",
         budget_id: transaction.budget_id || null,
+        payment_source: transaction.payment_source
       }
     : {
         date: new Date(),
@@ -95,13 +100,13 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
         type: "income",
         notes: "",
         budget_id: null,
+        payment_source: ""
       }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   })
-
   function onSubmit(values: FormValues) {
     // Format amount based on transaction type
     const finalAmount = values.type === "expense" ? -Math.abs(values.amount) : Math.abs(values.amount)
@@ -115,6 +120,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
       type: values.type,
       notes: values.notes,
       budget_id: values.budget_id ?? null,
+      payment_source: values.payment_source
     }
 
     // Either update existing or add new transaction
@@ -133,7 +139,6 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
     setOpen(false)
     form.reset()
   }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -263,6 +268,34 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
                           <SelectItem value="Other">Other</SelectItem>
                         </>
                       )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="payment_source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Source</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment source" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="credit_card">Credit Card</SelectItem>
+                      <SelectItem value="debit_card">Debit Card</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="stripe">Stripe</SelectItem>
+                      <SelectItem value="paypal">Paypal</SelectItem>
+                      <SelectItem value="mobile_payment">Mobile Payment</SelectItem>
+                      <SelectItem value="check">Check</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

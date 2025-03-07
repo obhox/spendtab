@@ -39,6 +39,7 @@ interface Transaction {
   category: string
   amount: number
   type: "income" | "expense"
+  payment_source: string
 }
 
 interface TransactionTableProps {
@@ -98,8 +99,9 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Payment Source</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="w-[70px]"></TableHead>
             </TableRow>
@@ -107,7 +109,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
           <TableBody>
             {filteredTransactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center space-y-3 py-4">
                     <p className="text-sm text-muted-foreground">No transactions found</p>
                     <p className="text-xs text-muted-foreground">
@@ -132,6 +134,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
                   <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>{transaction.category}</TableCell>
+                  <TableCell>{transaction.payment_source}</TableCell>
                   <TableCell className={`text-right ${transaction.type === "income" ? "text-green-600" : "text-red-600"}`}>
                     {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
                   </TableCell>

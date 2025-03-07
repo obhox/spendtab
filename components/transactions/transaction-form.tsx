@@ -50,6 +50,7 @@ const transactionSchema = z.object({
   date: z.date(),
   category: z.string().min(1, { message: "Please select a category." }),
   type: z.enum(["income", "expense"]),
+  payment_source: z.string().min(1, { message: "Please select a payment source." }),
   notes: z.string().optional(),
   budget_id: z.string().nullable()
 });
@@ -65,6 +66,7 @@ interface Transaction {
   category: string
   amount: number
   type: "income" | "expense"
+  payment_source: string
   notes?: string
   budget_id?: string | null
 }
@@ -96,6 +98,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     : {
         description: "",
         amount: undefined as number | undefined,
+        payment_source: "",
         date: new Date(),
         category: "",
         type: "expense",
@@ -120,7 +123,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
           category: data.category,
           type: data.type,
           notes: data.notes,
-          budget_id: data.budget_id
+          budget_id: data.budget_id,
+          payment_source: data.payment_source
         });
         toast("Transaction updated", {
           description: "Your transaction has been updated successfully."
@@ -134,7 +138,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
           category: data.category,
           type: data.type,
           notes: data.notes,
-          budget_id: data.budget_id
+          budget_id: data.budget_id,
+          payment_source: data.payment_source
         });
         toast("Transaction added", {
           description: "Your new transaction has been added successfully."
@@ -207,7 +212,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
                     <Input placeholder="E.g., Client payment, Office supplies" {...field} />
                   </FormControl>
@@ -360,6 +365,35 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                 )}
               />
             )}
+            <FormField
+              control={form.control}
+              name="payment_source"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Payment Source</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select payment source" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="credit_card">Credit Card</SelectItem>
+                      <SelectItem value="debit_card">Debit Card</SelectItem>
+                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="stripe">Stripe</SelectItem>
+                      <SelectItem value="paypal">Paypal</SelectItem>
+                      <SelectItem value="mobile_payment">Mobile Payment</SelectItem>
+                      <SelectItem value="check">Check</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="notes"
