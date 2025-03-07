@@ -4,6 +4,20 @@
 alter table public.transactions enable row level security;
 alter table public.budgets enable row level security;
 
+-- Create profiles table
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id uuid NOT NULL,
+    first_name text NULL,
+    last_name text NULL,
+    company_name text NULL,
+    created_at timestamp without time zone NULL DEFAULT now(),
+    CONSTRAINT profiles_pkey PRIMARY KEY (id),
+    CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+-- Enable Row Level Security for profiles
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
 -- Create transactions table
 CREATE TABLE IF NOT EXISTS public.transactions (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
