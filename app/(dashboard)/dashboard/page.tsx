@@ -29,8 +29,11 @@ const BudgetOverview = dynamic(
   { ssr: false }
 )
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 function DashboardMetrics() {
   const { transactions } = useTransactions()
+  const [timeRange, setTimeRange] = useState("current")
   const [metrics, setMetrics] = useState({
     revenue: 0,
     expenses: 0,
@@ -40,85 +43,116 @@ function DashboardMetrics() {
   })
   
   useEffect(() => {
-    if (transactions.length > 0) {
-      const currentDate = new Date()
-      const lastMonth = new Date(currentDate)
-      lastMonth.setMonth(currentDate.getMonth() - 1)
-      
-      const currentMonthTransactions = transactions.filter(t => 
-        new Date(t.date) >= lastMonth && new Date(t.date) <= currentDate
-      )
-      
-      const revenue = currentMonthTransactions
-        .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + t.amount, 0)
-        
-      const expenses = currentMonthTransactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + t.amount, 0)
-        
-      setMetrics({
-        revenue,
-        expenses,
-        profit: revenue - expenses,
-        cashFlow: revenue - expenses,
-        transactionCount: currentMonthTransactions.length
-      })
+    if (!transactions || transactions.length === 0) {
+      return;
     }
-  }, [transactions])
+  const currentDate = new Date()
+  let startDate = new Date(currentDate)
+  
+  switch (timeRange) {
+    case "past":
+      startDate.setMonth(currentDate.getMonth() - 1)
+      break
+    case "last3":
+      startDate.setMonth(currentDate.getMonth() - 3)
+      break
+    case "last6":
+      startDate.setMonth(currentDate.getMonth() - 6)
+      break
+    case "current":
+    default:
+      startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      break
+  }
+  
+  const filteredTransactions = transactions.filter(t => 
+    new Date(t.date) >= startDate && new Date(t.date) <= currentDate
+  )
+  
+  const revenue = filteredTransactions
+    .filter(t => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0)
+    
+  const expenses = filteredTransactions
+    .filter(t => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0)
+    
+  setMetrics({
+    revenue,
+    expenses,
+    profit: revenue - expenses,
+    cashFlow: revenue - expenses,
+    transactionCount: filteredTransactions.length
+  })
+}, [transactions, timeRange])
   
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${metrics.revenue.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            {transactions.length === 0 ? "No revenue data yet" : "Current month revenue"}
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-          <ArrowDown className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${metrics.expenses.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            {transactions.length === 0 ? "No expense data yet" : "Current month expenses"}
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Profit</CardTitle>
-          <ArrowUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${metrics.profit.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            {transactions.length === 0 ? "No profit data yet" : "Current month profit"}
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">${metrics.cashFlow.toFixed(2)}</div>
-          <p className="text-xs text-muted-foreground">
-            {transactions.length === 0 ? "No cash flow data yet" : "Current month cash flow"}
-          </p>
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Select defaultValue={timeRange} onValueChange={setTimeRange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="current">Current Month</SelectItem>
+            <SelectItem value="past">Past Month</SelectItem>
+            <SelectItem value="last3">Last 3 Months</SelectItem>
+            <SelectItem value="last6">Last 6 Months</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${metrics.revenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              {!transactions || transactions.length === 0 ? "No revenue data yet" : `${timeRange === "current" ? "Current" : timeRange === "past" ? "Past" : timeRange === "last3" ? "Last 3" : "Last 6"} month${timeRange === "last3" || timeRange === "last6" ? "s" : ""} revenue`}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+            <ArrowDown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${metrics.expenses.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              {!transactions || transactions.length === 0 ? "No expense data yet" : `${timeRange === "current" ? "Current" : timeRange === "past" ? "Past" : timeRange === "last3" ? "Last 3" : "Last 6"} month${timeRange === "last3" || timeRange === "last6" ? "s" : ""} expenses`}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Profit</CardTitle>
+            <ArrowUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${metrics.profit.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              {!transactions || transactions.length === 0 ? "No profit data yet" : `${timeRange === "current" ? "Current" : timeRange === "past" ? "Past" : timeRange === "last3" ? "Last 3" : "Last 6"} month${timeRange === "last3" || timeRange === "last6" ? "s" : ""} profit`}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${metrics.cashFlow.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              {!transactions || transactions.length === 0 ? "No cash flow data yet" : `${timeRange === "current" ? "Current" : timeRange === "past" ? "Past" : timeRange === "last3" ? "Last 3" : "Last 6"} month${timeRange === "last3" || timeRange === "last6" ? "s" : ""} cash flow`}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  )
+  );
 }
 
 export default function DashboardPage() {
@@ -169,5 +203,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
