@@ -31,8 +31,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Edit, MoreHorizontal, Trash2, Plus } from 'lucide-react'
 import { BudgetForm } from "./budget-form"
-import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
+import { toast } from "sonner" 
 import { useTransactions } from "@/lib/context/TransactionContext"
 
 interface Budget {
@@ -40,17 +40,32 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
+  period?: string
+  account_id?: string
 }
 
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading: isLoadingBudgets } = useBudgets()
+  const { transactions } = useTransactions()
+  const [processedBudgets, setProcessedBudgets] = useState<Budget[]>([])
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null)
+
+  // Use budget data directly from BudgetContext
+  useEffect(() => {
+    if (budgets.length > 0) {
+      // Use the spent values directly from the budgets context
+      setProcessedBudgets(budgets)
+    } else {
+      setProcessedBudgets([])
+    }
+  }, [budgets, transactions])
+
   // Calculate percentage spent
   const calculatePercentage = (spent: number, total: number): number => {
-    return Math.round((spent / total) * 100)
+    return Math.min(Math.round((spent / total) * 100), 100)
   }
 
   // Format currency
@@ -83,13 +98,14 @@ export function BudgetList() {
       setSelectedBudget(null)
     }
   }
+
   // Get progress bar color based on percentage
   const getProgressColor = (percentage: number): string => {
-    if (percentage > 100) return "bg-red-500"
     if (percentage < 50) return "bg-green-500"
     if (percentage < 75) return "bg-yellow-500"
     return "bg-red-500"
   }
+
   if (isLoadingBudgets) {
     return <div className="flex justify-center items-center py-8">Loading budgets...</div>;
   }
@@ -117,7 +133,7 @@ export function BudgetList() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[250px]">Name</TableHead>
-            <TableHead>Period</TableHead>
+            <TableHead>Date Range</TableHead>
             <TableHead className="text-right">Budget</TableHead>
             <TableHead className="text-right">Spent</TableHead>
             <TableHead>Progress</TableHead>
@@ -125,19 +141,19 @@ export function BudgetList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {budgets.map((budget) => {
+          {processedBudgets.map((budget) => {
             const spent = budget.spent || 0
             const percentage = calculatePercentage(spent, budget.amount)
             return (
               <TableRow key={budget.id}>
                 <TableCell className="font-medium">{budget.name}</TableCell>
-                <TableCell>{formatDate(budget.startDate)} - {formatDate(budget.endDate)}</TableCell>
+                <TableCell>{budget.startDate && budget.endDate ? `${formatDate(budget.startDate)} - ${formatDate(budget.endDate)}` : "No date range"}</TableCell>
                 <TableCell className="text-right">{formatCurrency(budget.amount)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(spent)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Progress value={percentage} className={getProgressColor(percentage)} />
-                    <span className={`text-xs w-10 ${percentage > 100 ? 'text-red-500' : ''}`}>{percentage}%</span>
+                    <span className="text-xs w-10">{percentage}%</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -151,7 +167,7 @@ export function BudgetList() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <BudgetForm budget={budget as Budget}>
+                      <BudgetForm budget={budget}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
@@ -159,7 +175,7 @@ export function BudgetList() {
                       </BudgetForm>
                       <DropdownMenuItem 
                         onClick={() => {
-                          setSelectedBudget(budget as Budget)
+                          setSelectedBudget(budget)
                           setIsDeleteDialogOpen(true)
                         }}
                         className="text-red-600"

@@ -29,7 +29,7 @@ const timePeriods = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#00A2FF'];
 
 export default function ExpenseAnalytics() {
-  const { monthlyData, expensesByCategory, financialSummary, isLoading } = useAnalytics();
+  const { monthlyData, expensesByCategory, financialSummary, isLoading, setDateRange } = useAnalytics();
   const { transactions } = useTransactions();
   const [timePeriod, setTimePeriod] = useState("");
   
@@ -37,11 +37,43 @@ export default function ExpenseAnalytics() {
   useEffect(() => {
     setTimePeriod("12m");
   }, []);
+  
+  // Update date range when time period changes
+  useEffect(() => {
+    if (!timePeriod) return;
+    
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch (timePeriod) {
+      case "7d":
+        startDate = subMonths(now, 0.25); // Approximately 7 days
+        break;
+      case "30d":
+        startDate = subMonths(now, 1);
+        break;
+      case "90d":
+        startDate = subMonths(now, 3);
+        break;
+      case "12m":
+        startDate = subMonths(now, 12);
+        break;
+      case "ytd":
+        startDate = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+        break;
+      default:
+        startDate = subMonths(now, 12); // Default to 12 months
+    }
+    
+    setDateRange({ startDate, endDate: now });
+  }, [timePeriod, setDateRange]);
 
-  // Get expense transactions
+  // Get expense transactions and filter by time period
   const expenseTransactions = transactions
-    ?.filter(t => t.type === "expense")
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
+    ? transactions
+        .filter(t => t.type === "expense")
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    : [];
 
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
@@ -137,7 +169,12 @@ export default function ExpenseAnalytics() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ category, percentage }) => `${category}: ${percentage.toFixed(0)}%`}
+                    label={({ name, value, payload }) => {
+                      // Use the correct property names based on the data structure
+                      const category = payload.category || name;
+                      const percentage = payload.percentage || 0;
+                      return `${category}: ${formatPercent(percentage).replace('$', '')}`;
+                    }}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="amount"
@@ -177,14 +214,29 @@ export default function ExpenseAnalytics() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {expenseTransactions.map((transaction, index) => (
+                {expenseTransactions.length > 0 ? (
+                  expenseTransactions.map((transaction, index) => (
                   <TableRow key={transaction.id}>
-                    <TableCell>{format(new Date(transaction.date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        try {
+                          return format(new Date(transaction.date), 'MMM d, yyyy');
+                        } catch (error) {
+                          return 'Invalid date';
+                        }
+                      })()}
+                    </TableCell>
                     <TableCell>{transaction.description}</TableCell>
                     <TableCell>{transaction.category}</TableCell>
                     <TableCell className="text-right">{formatCurrency(Math.abs(transaction.amount))}</TableCell>
                   </TableRow>
-                ))}
+                ))) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No expense transactions available
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>

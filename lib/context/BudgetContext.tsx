@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
+import { useAccounts } from "./AccountContext"
 
 // Budget data interface
 export interface Budget {
@@ -13,12 +14,13 @@ export interface Budget {
   startDate?: string
   endDate?: string
   period?: string
+  account_id: string
 }
 
 // Context interface
 interface BudgetContextType {
   budgets: Budget[]
-  addBudget: (budget: Omit<Budget, "id">) => Promise<void>
+  addBudget: (budget: Omit<Budget, "id">) => Promise<Budget | null>
   updateBudget: (id: string, budget: Omit<Budget, "id">) => Promise<void>
   deleteBudget: (id: string) => Promise<void>
   isLoading: boolean
@@ -36,63 +38,58 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   // Load initial data from Supabase
+  const { currentAccount } = useAccounts()
+
   useEffect(() => {
-    async function fetchBudgets() {
-      try {
-        setIsLoading(true)
-        
-        const { data, error } = await supabase
-          .from('budgets')
-          .select('*')
-          .order('name', { ascending: true })
-        
-        if (error) {
-          throw error
-        }
-        
-        if (data) {
-          setBudgets(data.map(item => ({
-            id: item.id,
-            name: item.name,
-            amount: item.amount,
-            spent: item.spent,
-            period: item.period,
-            startDate: item.startDate || undefined,
-            endDate: item.endDate || undefined
-          })))
-        }
-      } catch (error) {
-        console.error('Error fetching budgets:', error)
-        setError('Failed to load budgets')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
+    // Fetch budgets when account changes
     fetchBudgets()
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('budgets-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'budgets' 
-        }, 
-        () => {
-          fetchBudgets()
-        }
-      )
-      .subscribe()
+    // Clean up any existing subscription
+    const cleanupSubscription = () => {
+      const existingChannel = supabase.getChannels().find(ch => ch.topic.startsWith('realtime:budgets-'));
+      if (existingChannel) {
+        supabase.removeChannel(existingChannel);
+      }
+    };
+
+    // Set up real-time subscription only if we have a current account
+    let channel;
+    if (currentAccount) {
+      // Clean up any existing subscription first
+      cleanupSubscription();
+
+      const filter = `account_id=eq.${currentAccount.id}`
+      
+      channel = supabase
+        .channel(`budgets-${currentAccount.id}`)
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'budgets',
+            filter: filter
+          }, 
+          () => {
+            fetchBudgets()
+          }
+        )
+        .subscribe()
+    }
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [])
+  }, [currentAccount])
 
   // Add a new budget
-  const addBudget = async (budget: Omit<Budget, "id">) => {
+  const addBudget = async (budget: Omit<Budget, "id">): Promise<Budget | null> => {
+    if (!currentAccount) {
+      setError('No account selected')
+      return null
+    }
+    
     try {
       setIsLoading(true)
       setError(null) // Reset any previous errors
@@ -101,6 +98,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         ...budget,
         id: uuidv4(),
         spent: 0,
+        account_id: currentAccount.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -116,19 +114,26 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
       }
 
       // Update the UI with the returned data from Supabase
-      setBudgets(prev => [...prev, {
+      const createdBudget = {
         id: data.id,
         name: data.name,
         amount: data.amount,
         spent: data.spent || 0,
         period: data.period,
         startDate: data.startDate,
-        endDate: data.endDate
-      }])
+        endDate: data.endDate,
+        account_id: data.account_id
+      }
+      
+      setBudgets(prev => [...prev, createdBudget])
+      
+      // Return the created budget
+      return createdBudget
 
     } catch (error) {
       console.error('Error adding budget:', error)
       setError('Failed to add budget')
+      return null
     } finally {
       setIsLoading(false)
     }
@@ -136,8 +141,14 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
   // Update an existing budget
   const updateBudget = async (id: string, updatedBudget: Omit<Budget, "id">) => {
+    if (!currentAccount) {
+      setError('No account selected')
+      return
+    }
+    
     try {
       setIsLoading(true)
+      setError(null) // Reset any previous errors
       
       const { error } = await supabase
         .from('budgets')
@@ -146,6 +157,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
+        .eq('account_id', currentAccount.id)
       
       if (error) {
         throw error
@@ -168,13 +180,20 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
   // Delete a budget
   const deleteBudget = async (id: string) => {
+    if (!currentAccount) {
+      setError('No account selected')
+      return
+    }
+    
     try {
       setIsLoading(true)
+      setError(null) // Reset any previous errors
       
       const { error } = await supabase
         .from('budgets')
         .delete()
         .eq('id', id)
+        .eq('account_id', currentAccount.id)
       
       if (error) {
         throw error
@@ -191,14 +210,22 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Load initial data from Supabase
-  async function fetchBudgets() {
+  // Function to fetch budgets - can be called manually or by the effect
+  const fetchBudgets = async () => {
+    if (!currentAccount) {
+      setBudgets([])
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       
       const { data, error } = await supabase
         .from('budgets')
         .select('*')
+        .eq('account_id', currentAccount.id)
         .order('name', { ascending: true })
       
       if (error) {
@@ -210,10 +237,11 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
           id: item.id,
           name: item.name,
           amount: item.amount,
-          spent: item.spent,
+          spent: item.spent || 0,
           period: item.period,
           startDate: item.startDate || undefined,
-          endDate: item.endDate || undefined
+          endDate: item.endDate || undefined,
+          account_id: item.account_id
         })))
       }
     } catch (error) {

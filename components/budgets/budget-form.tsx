@@ -35,6 +35,7 @@ import { format, addMonths } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
+import { useAccounts } from "@/lib/context/AccountContext"
 import Link from "next/link"
 
 // Define the form schema
@@ -55,8 +56,10 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
+  period?: string
+  account_id?: string
 }
 
 interface BudgetFormProps {
@@ -68,6 +71,7 @@ interface BudgetFormProps {
 export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { addBudget, updateBudget } = useBudgets()
+  const { currentAccount } = useAccounts()
   
   // Create form
   const form = useForm<z.infer<typeof budgetFormSchema>>({
@@ -89,37 +93,72 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
 
   // Handle form submission
   async function onSubmit(data: z.infer<typeof budgetFormSchema>) {
+    if (!currentAccount) {
+      toast("Error", {
+        description: "Please select an account first."
+      });
+      return;
+    }
+
     try {
+      // Format dates consistently
+      const formattedStartDate = format(data.startDate, "yyyy-MM-dd");
+      const formattedEndDate = format(data.endDate, "yyyy-MM-dd");
+      
       if (budget) {
+        // Create updated budget object
+        const updatedBudget = {
+          id: budget.id,
+          name: data.name,
+          amount: data.amount,
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          spent: budget.spent || 0,
+          account_id: currentAccount.id,
+          period: budget.period
+        };
+        
         // Update existing budget
         await updateBudget(budget.id, {
           name: data.name,
           amount: data.amount,
-          startDate: format(data.startDate, "yyyy-MM-dd"),
-          endDate: format(data.endDate, "yyyy-MM-dd"),
-          spent: budget.spent
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          spent: budget.spent || 0,
+          account_id: currentAccount.id
         });
+        
         toast("Budget updated", {
           description: "Your budget has been updated successfully."
         });
+        
+        // Pass the updated budget to onSave callback
+        if (onSave) onSave(updatedBudget);
       } else {
         // Add new budget
-        await addBudget({
+        const newBudget = {
           name: data.name,
           amount: data.amount,
-          startDate: format(data.startDate, "yyyy-MM-dd"),
-          endDate: format(data.endDate, "yyyy-MM-dd"),
-          spent: 0
-        });
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          spent: 0,
+          account_id: currentAccount.id
+        };
+        
+        const createdBudget = await addBudget(newBudget);
+        
         toast("Budget created", {
           description: "Your new budget has been created successfully."
         });
+        
+        // Pass the created budget to onSave callback if it exists
+        if (onSave && createdBudget) onSave(createdBudget);
       }
       
       setIsOpen(false);
       form.reset();
-      if (onSave && budget) onSave(budget);
     } catch (error) {
+      console.error("Budget save error:", error);
       toast("Error", {
         description: "There was a problem saving your budget."
       });
@@ -205,6 +244,10 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
+                          disabled={(date) => {
+                            // Disable dates before 1900 (arbitrary past limit)
+                            return date < new Date("1900-01-01");
+                          }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -244,6 +287,11 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
+                          disabled={(date) => {
+                            // Disable dates before the selected start date
+                            const startDate = form.getValues("startDate");
+                            return date < new Date("1900-01-01") || (startDate && date <= startDate);
+                          }}
                         />
                       </PopoverContent>
                     </Popover>

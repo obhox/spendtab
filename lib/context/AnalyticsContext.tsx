@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useTransactions } from "./TransactionContext"
+import { useAccounts } from "./AccountContext"
 import { format, subMonths, isWithinInterval, parse } from "date-fns"
 
 // Financial data interfaces
@@ -48,6 +49,7 @@ const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefin
 // Provider component
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
   const { transactions, isLoading: transactionsLoading } = useTransactions()
+  const { currentAccount } = useAccounts()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
@@ -71,153 +73,154 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
 
   // Calculate all analytics data based on transactions and date range
   const calculateAnalyticsData = () => {
-    if (transactionsLoading) {
-      setIsLoading(true)
-      return
-    }
-    
-    // Filter transactions by date range
-    const filteredTransactions = transactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date)
-      return isWithinInterval(transactionDate, {
-        start: dateRange.startDate,
-        end: dateRange.endDate
-      })
-    })
-    
-    // Calculate monthly data
-    const monthlyDataMap = new Map<string, MonthlyData>()
-    
-    // Create entries for each month in the range
-    let currentDate = new Date(dateRange.startDate)
-    while (currentDate <= dateRange.endDate) {
-      const monthKey = format(currentDate, 'yyyy-MM')
-      monthlyDataMap.set(monthKey, {
-        month: format(currentDate, 'MMM yyyy'),
-        income: 0,
-        expenses: 0,
-        profit: 0
-      })
-      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1))
-    }
-    
-    // Aggregate transaction data by month
-    filteredTransactions.forEach(transaction => {
-      const transactionDate = new Date(transaction.date)
-      const monthKey = format(transactionDate, 'yyyy-MM')
-      
-      if (monthlyDataMap.has(monthKey)) {
-        const monthData = monthlyDataMap.get(monthKey)!
-        if (transaction.type === 'income') {
-          monthData.income += transaction.amount
-        } else {
-          monthData.expenses += Math.abs(transaction.amount)
-        }
-        monthData.profit = monthData.income - monthData.expenses
+    try {
+      // Reset data if no account or transactions
+      if (!currentAccount || !transactions || transactions.length === 0) {
+        setMonthlyData([])
+        setIncomeByCategory([])
+        setExpensesByCategory([])
+        setFinancialSummary({
+          totalRevenue: 0,
+          totalExpenses: 0,
+          totalProfit: 0,
+          profitMargin: 0,
+          cashFlow: 0,
+        })
+        setIsLoading(false)
+        setError(null)
+        return
       }
-    })
-    
-    // Convert map to sorted array
-    const sortedMonthlyData = Array.from(monthlyDataMap.values())
-      .sort((a, b) => {
-        const dateA = parse(a.month, 'MMM yyyy', new Date())
-        const dateB = parse(b.month, 'MMM yyyy', new Date())
-        return dateA.getTime() - dateB.getTime()
+
+      // Filter transactions by date range and current account
+      const filteredTransactions = transactions.filter(t => 
+        t.account_id === currentAccount.id &&
+        isWithinInterval(new Date(t.date), {
+          start: dateRange.startDate,
+          end: dateRange.endDate,
+        })
+      )
+
+      // Calculate monthly data
+      const monthlyMap = new Map<string, MonthlyData>()
+      filteredTransactions.forEach(transaction => {
+        const month = format(new Date(transaction.date), 'yyyy-MM')
+        const existing = monthlyMap.get(month) || {
+          month,
+          income: 0,
+          expenses: 0,
+          profit: 0,
+        }
+
+        if (transaction.type === 'income') {
+          existing.income += transaction.amount
+        } else {
+          existing.expenses += transaction.amount
+        }
+        existing.profit = existing.income - existing.expenses
+        monthlyMap.set(month, existing)
       })
-    
-    setMonthlyData(sortedMonthlyData)
-    
-    // Calculate totals for financial summary
-    const totalRevenue = filteredTransactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
-    
-    const totalExpenses = filteredTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-    
-    const totalProfit = totalRevenue - totalExpenses
-    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0
-    const cashFlow = totalRevenue - totalExpenses
-    
-    setFinancialSummary({
-      totalRevenue,
-      totalExpenses,
-      totalProfit,
-      profitMargin,
-      cashFlow
-    })
-    
-    // Calculate income by category
-    const incomeByCategoryMap = new Map<string, number>()
-    
-    filteredTransactions
-      .filter(t => t.type === 'income')
-      .forEach(t => {
-        const current = incomeByCategoryMap.get(t.category) || 0
-        incomeByCategoryMap.set(t.category, current + t.amount)
+
+      // Convert to array and sort by month
+      const monthlyDataArray = Array.from(monthlyMap.values())
+        .sort((a, b) => a.month.localeCompare(b.month))
+
+      // Calculate category data
+      const incomeMap = new Map<string, number>()
+      const expensesMap = new Map<string, number>()
+      let totalIncome = 0
+      let totalExpenses = 0
+
+      filteredTransactions.forEach(transaction => {
+        const map = transaction.type === 'income' ? incomeMap : expensesMap
+        const amount = transaction.amount
+        map.set(
+          transaction.category,
+          (map.get(transaction.category) || 0) + amount
+        )
+        if (transaction.type === 'income') {
+          totalIncome += amount
+        } else {
+          totalExpenses += amount
+        }
       })
-    
-    const incomeCategories = Array.from(incomeByCategoryMap.entries()).map(([category, amount]) => ({
-      category,
-      amount,
-      percentage: totalRevenue > 0 ? (amount / totalRevenue) * 100 : 0
-    }))
-    
-    setIncomeByCategory(incomeCategories.sort((a, b) => b.amount - a.amount))
-    
-    // Calculate expenses by category
-    const expensesByCategoryMap = new Map<string, number>()
-    
-    filteredTransactions
-      .filter(t => t.type === 'expense')
-      .forEach(t => {
-        const current = expensesByCategoryMap.get(t.category) || 0
-        expensesByCategoryMap.set(t.category, current + Math.abs(t.amount))
+
+      // Convert to arrays with percentages
+      const incomeCategoryData = Array.from(incomeMap.entries())
+        .map(([category, amount]) => ({
+          category,
+          amount,
+          percentage: totalIncome ? (amount / totalIncome) * 100 : 0,
+        }))
+        .sort((a, b) => b.amount - a.amount)
+
+      const expensesCategoryData = Array.from(expensesMap.entries())
+        .map(([category, amount]) => ({
+          category,
+          amount,
+          percentage: totalExpenses ? (amount / totalExpenses) * 100 : 0,
+        }))
+        .sort((a, b) => b.amount - a.amount)
+
+      // Calculate financial summary
+      const totalProfit = totalIncome - totalExpenses
+      const profitMargin = totalIncome ? (totalProfit / totalIncome) * 100 : 0
+      const cashFlow = totalIncome - totalExpenses
+
+      // Update state
+      setMonthlyData(monthlyDataArray)
+      setIncomeByCategory(incomeCategoryData)
+      setExpensesByCategory(expensesCategoryData)
+      setFinancialSummary({
+        totalRevenue: totalIncome,
+        totalExpenses,
+        totalProfit,
+        profitMargin,
+        cashFlow,
       })
-    
-    const expenseCategories = Array.from(expensesByCategoryMap.entries()).map(([category, amount]) => ({
-      category,
-      amount,
-      percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0
-    }))
-    
-    setExpensesByCategory(expenseCategories.sort((a, b) => b.amount - a.amount))
-    
-    setIsLoading(false)
+      setIsLoading(false)
+      setError(null)
+    } catch (error) {
+      console.error('Error calculating analytics:', error)
+      setError('Failed to calculate analytics data')
+      setIsLoading(false)
+    }
   }
 
-  // Refresh data function - can be called when transactions change
-  const refreshData = () => {
-    calculateAnalyticsData()
-  }
-
-  // Calculate analytics when transactions or date range changes
+  // Recalculate when transactions, date range, or account changes
   useEffect(() => {
+    setIsLoading(true)
     calculateAnalyticsData()
-  }, [transactions, dateRange, transactionsLoading])
+  }, [transactions, dateRange, currentAccount])
 
-  // Context value
-  const value = {
-    monthlyData,
-    incomeByCategory,
-    expensesByCategory,
-    financialSummary,
-    dateRange,
-    setDateRange,
-    isLoading,
-    error,
-    refreshData
+  // Function to manually refresh data
+  const refreshData = () => {
+    setIsLoading(true)
+    calculateAnalyticsData()
   }
 
-  return <AnalyticsContext.Provider value={value}>{children}</AnalyticsContext.Provider>
+  return (
+    <AnalyticsContext.Provider
+      value={{
+        monthlyData,
+        incomeByCategory,
+        expensesByCategory,
+        financialSummary,
+        dateRange,
+        setDateRange,
+        isLoading,
+        error,
+        refreshData,
+      }}
+    >
+      {children}
+    </AnalyticsContext.Provider>
+  )
 }
 
-// Custom hook to use the analytics context
 export function useAnalytics() {
   const context = useContext(AnalyticsContext)
   if (context === undefined) {
-    throw new Error("useAnalytics must be used within an AnalyticsProvider")
+    throw new Error('useAnalytics must be used within an AnalyticsProvider')
   }
   return context
 }

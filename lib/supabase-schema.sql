@@ -4,20 +4,6 @@
 alter table public.transactions enable row level security;
 alter table public.budgets enable row level security;
 
--- Create profiles table
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id uuid NOT NULL,
-    first_name text NULL,
-    last_name text NULL,
-    company_name text NULL,
-    created_at timestamp without time zone NULL DEFAULT now(),
-    CONSTRAINT profiles_pkey PRIMARY KEY (id),
-    CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
-);
-
--- Enable Row Level Security for profiles
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
 -- Create transactions table
 CREATE TABLE IF NOT EXISTS public.transactions (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -27,8 +13,6 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   amount decimal NOT NULL,
   type text NOT NULL CHECK (type IN ('income', 'expense')),
   notes text,
-  payment_source text,
-  budget_id uuid REFERENCES public.budgets(id) ON DELETE SET NULL,
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL
@@ -92,6 +76,40 @@ CREATE POLICY "Users can delete their own budgets"
   ON public.budgets
   FOR DELETE
   USING (auth.uid() = user_id);
+
+-- Create accounts table
+CREATE TABLE IF NOT EXISTS public.accounts (
+  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  description text,
+  owner_id uuid REFERENCES auth.users(id) NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Enable RLS for accounts table
+alter table public.accounts enable row level security;
+
+-- Create policies for accounts table
+CREATE POLICY "Users can view their own accounts"
+  ON public.accounts
+  FOR SELECT
+  USING (auth.uid() = owner_id);
+
+CREATE POLICY "Users can create their own accounts"
+  ON public.accounts
+  FOR INSERT
+  WITH CHECK (auth.uid() = owner_id AND owner_id IS NOT NULL);
+
+CREATE POLICY "Users can update their own accounts"
+  ON public.accounts
+  FOR UPDATE
+  USING (auth.uid() = owner_id);
+
+CREATE POLICY "Users can delete their own accounts"
+  ON public.accounts
+  FOR DELETE
+  USING (auth.uid() = owner_id);
 
 -- Create functions and triggers for updated_at
 CREATE OR REPLACE FUNCTION public.set_updated_at()

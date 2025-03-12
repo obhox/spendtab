@@ -1,5 +1,8 @@
+"use client"
+
 import type React from "react"
 import { Suspense } from "react"
+import dynamic from "next/dynamic"
 import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -7,12 +10,20 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+const AccountSelector = dynamic(
+  () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
+  { ssr: false }
+)
+
+import { DataProvider } from "@/lib/context/DataProvider"
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
+    <DataProvider>
     <div className="flex min-h-screen">
       <div className="lg:hidden fixed right-4 top-4 z-50">
         <Sheet>
@@ -23,7 +34,7 @@ export default function DashboardLayout({
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
             <nav className="h-full flex flex-col">
-              <div className="flex h-16 items-center border-b px-6">
+              <div className="flex h-16 items-center px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                   <DollarSign className="h-6 w-6 text-primary" />
                   <span>spendtab</span>
@@ -31,7 +42,6 @@ export default function DashboardLayout({
               </div>
               <ScrollArea className="flex-1 px-3">
                 <div className="space-y-4 py-4">
-                  {/* Copy the same navigation content here */}
                   <div className="px-3 py-2">
                     <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Main</h2>
                     <div className="space-y-1">
@@ -103,12 +113,17 @@ export default function DashboardLayout({
                   </div>
                 </div>
               </ScrollArea>
+              <div className="mt-auto p-4">
+                <Suspense fallback={<div>Loading account selector...</div>}>
+                  <AccountSelector />
+                </Suspense>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
       </div>
-      <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="sticky top-0 flex h-16 items-center border-b px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="sticky top-0 flex h-16 items-center px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
             <DollarSign className="h-6 w-6 text-primary" />
             <span>spendtab</span>
@@ -187,10 +202,16 @@ export default function DashboardLayout({
             </div>
           </div>
         </ScrollArea>
+        <div className="mt-auto p-4">
+          <Suspense fallback={<div>Loading account selector...</div>}>
+            <AccountSelector />
+          </Suspense>
+        </div>
       </aside>
       <main className="flex-1 overflow-auto p-8 lg:pl-72">
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </main>
     </div>
+    </DataProvider>
   )
 }

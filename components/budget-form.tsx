@@ -35,7 +35,8 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  period: string
+  period?: string
+  account_id: string
 }
 
 interface BudgetFormProps {
@@ -82,12 +83,12 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
 
       // Either update existing or add new budget
       if (budget) {
-        await updateBudget(budget.id, budgetData)
+        await updateBudget(budget.id, { ...budgetData, account_id: budget.account_id })
         toast("Budget updated", {
           description: "Your budget has been updated successfully."
         })
       } else {
-        await addBudget(budgetData)
+        await addBudget({ ...budgetData, account_id: "" })
         toast("Budget created", {
           description: "Your new budget has been created successfully."
         })

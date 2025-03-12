@@ -25,6 +25,8 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useTransactions } from "@/lib/context/TransactionContext"
+import { useAnalytics } from "@/lib/context/AnalyticsContext"
+import { format, subMonths, isWithinInterval } from "date-fns"
 
 // Time period options
 const timePeriods = [
@@ -38,53 +40,120 @@ const timePeriods = [
 // Colors for pie chart
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8']
 
+// Define interfaces for our data
+interface RevenueDataPoint {
+  month: string;
+  revenue: number;
+}
+
+interface CategoryDataPoint {
+  name: string;
+  value: number;
+}
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+  type: "income" | "expense";
+  payment_source?: string;
+}
+
 export default function RevenueAnalytics() {
-  const { transactions } = useTransactions()
-  const [timePeriod, setTimePeriod] = useState("12m")
+  const { transactions } = useTransactions();
+  const { incomeByCategory, monthlyData, isLoading, setDateRange } = useAnalytics();
+  const [timePeriod, setTimePeriod] = useState("");
+  
+  // Initialize time period on client-side to avoid hydration mismatch
+  useEffect(() => {
+    setTimePeriod("12m");
+  }, []);
+  
+  // Update date range when time period changes
+  useEffect(() => {
+    if (!timePeriod) return;
+    
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch (timePeriod) {
+      case "7d":
+        startDate = subMonths(now, 0.25); // Approximately 7 days
+        break;
+      case "30d":
+        startDate = subMonths(now, 1);
+        break;
+      case "90d":
+        startDate = subMonths(now, 3);
+        break;
+      case "12m":
+        startDate = subMonths(now, 12);
+        break;
+      case "ytd":
+        startDate = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+        break;
+      default:
+        startDate = subMonths(now, 12); // Default to 12 months
+    }
+    
+    setDateRange({ startDate, endDate: now });
+  }, [timePeriod, setDateRange]);
   
   // Process transactions data
   const processTransactionData = () => {
-    if (!transactions || transactions.length === 0) return { revenueData: [], revenueByCategory: [], incomeTransactions: [] }
+    if (!transactions || transactions.length === 0) return { revenueData: [], revenueByCategory: [], incomeTransactions: [] };
 
-    // Filter income transactions
-    const incomeTransactions = transactions
-      .filter(t => t.type === "income")
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    // Filter income transactions and filter by date range
+    const filteredTransactions = transactions.filter(t => {
+      if (t.type !== "income") return false;
+      
+      try {
+        const transactionDate = new Date(t.date);
+        return true; // We're using AnalyticsContext for date filtering now
+      } catch (err) {
+        console.error('Error parsing transaction date:', err);
+        return false;
+      }
+    });
+    
+    const incomeTransactions = filteredTransactions
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Group by month for revenue trend
-    const monthlyRevenue = incomeTransactions.reduce((acc, t) => {
-      const month = new Date(t.date).toLocaleString('default', { month: 'short', year: '2-digit' })
-      acc[month] = (acc[month] || 0) + t.amount
-      return acc
-    }, {})
+    // Transform monthly data from analytics context
+    const revenueData: RevenueDataPoint[] = monthlyData.map(month => ({
+      month: month.month,
+      revenue: month.income
+    }));
 
-    const revenueData = Object.entries(monthlyRevenue).map(([month, revenue]) => ({
-      month,
-      revenue
-    }))
+    // Transform category data from analytics context
+    const revenueByCategory: CategoryDataPoint[] = incomeByCategory.map(category => ({
+      name: category.category,
+      value: category.amount
+    }));
 
-    // Group by category
-    const categoryRevenue = incomeTransactions.reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount
-      return acc
-    }, {})
+    return { revenueData, revenueByCategory, incomeTransactions };
+  };
 
-    const revenueByCategory = Object.entries(categoryRevenue).map(([name, value]) => ({
-      name,
-      value
-    }))
-
-    return { revenueData, revenueByCategory, incomeTransactions }
-  }
-
-  const { revenueData, revenueByCategory, incomeTransactions } = processTransactionData()
+  const { revenueData, revenueByCategory, incomeTransactions } = processTransactionData();
 
   // Format currency
-  const formatCurrency = (value) => {
-    return `$${value.toLocaleString()}`
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(value);
   }
 
-  if (!transactions || transactions.length === 0) {
+  if (isLoading) {
+    return <div>Loading analytics data...</div>;
+  }
+  
+  const showEmptyState = !monthlyData || monthlyData.length === 0;
+  
+  if (showEmptyState) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
         <h3 className="text-lg font-medium">No Revenue Data Available</h3>
@@ -204,7 +273,15 @@ export default function RevenueAnalytics() {
                 {incomeTransactions && incomeTransactions.length > 0 ? (
                   incomeTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          try {
+                            return format(new Date(transaction.date), 'MMM d, yyyy');
+                          } catch (error) {
+                            return 'Invalid date';
+                          }
+                        })()}
+                      </TableCell>
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell>{transaction.category}</TableCell>
                       <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>

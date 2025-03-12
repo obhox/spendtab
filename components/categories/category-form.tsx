@@ -40,7 +40,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const categoryFormSchema = z.object({
   name: z.string().min(2, { message: "Category name must be at least 2 characters." }),
   type: z.enum(["income", "expense"]),
-  color: z.string().optional(),
+  color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, { message: "Color must be a valid hex color (e.g. #FF0000)" }).optional(),
   icon: z.string().optional()
 })
 
@@ -79,8 +79,7 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
     defaultValues: {
       name: category?.name || "",
       type: category?.type || defaultType,
-      color: category?.color || "#6366F1",
-      icon: category?.icon || "DollarSign"
+      color: category?.color || "#6366F1"
     }
   })
 
@@ -111,9 +110,20 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
         })
       }
       
+      // Close the dialog first
       setIsOpen(false)
-      form.reset()
+      
+      // Reset form after dialog is closed to avoid visual glitches
+      setTimeout(() => {
+        form.reset({
+          name: "",
+          type: defaultType,
+          color: "#6366F1",
+          icon: undefined
+        })
+      }, 100)
     } catch (error) {
+      console.error('Error saving category:', error)
       toast("Error", {
         description: "There was a problem saving your category."
       })
@@ -210,34 +220,6 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="icon"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Icon</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select icon" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {icons.map(icon => (
-                        <SelectItem key={icon} value={icon}>
-                          {icon}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Choose an icon for this category
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

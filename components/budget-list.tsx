@@ -24,8 +24,11 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  period: string
-  category: string
+  period?: string
+  category?: string
+  startDate?: string
+  endDate?: string
+  account_id?: string
 }
 
 export function BudgetList() {
@@ -84,7 +87,7 @@ export function BudgetList() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between pt-2">
-                <BudgetForm budget={budget as Budget}>
+                <BudgetForm budget={budget}>
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit

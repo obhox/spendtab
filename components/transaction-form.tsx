@@ -27,7 +27,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { toast } from "sonner"
-import { useBudgets } from "@/lib/context/BudgetContext";
+import { useBudgets } from "@/lib/context/BudgetContext"
+import { useAccounts } from "@/lib/context/AccountContext";
 
 const formSchema = z.object({
   date: z.date(),
@@ -71,6 +72,7 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
   const [open, setOpen] = useState(false)
   const { addTransaction, updateTransaction } = useTransactions()
   const { budgets, getBudgets } = useBudgets();
+  const { currentAccount } = useAccounts();
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(transaction?.budget_id || null);
 
   useEffect(() => {
@@ -120,7 +122,8 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
       type: values.type,
       notes: values.notes,
       budget_id: values.budget_id ?? null,
-      payment_source: values.payment_source
+      payment_source: values.payment_source,
+      account_id: currentAccount?.id
     }
 
     // Either update existing or add new transaction

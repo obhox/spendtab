@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { 
   Select, 
   SelectContent, 
@@ -28,8 +28,19 @@ import {
 } from "recharts"
 import { useReports } from "@/lib/context/ReportsContext"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, AlertTriangle } from "lucide-react"
 import Link from "next/link"
+// Ensure date-fns functions are available
+import { 
+  startOfMonth, 
+  endOfMonth, 
+  subMonths, 
+  startOfQuarter, 
+  endOfQuarter, 
+  subQuarters, 
+  startOfYear, 
+  endOfYear 
+} from "date-fns"
 
 // Types for cash flow data
 interface CashFlowCategory {
@@ -61,14 +72,11 @@ const financialPeriods = [
 ];
 
 export function CashFlowReport() {
-  const { cashFlowData, isLoading } = useReports();
-  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const { cashFlowData, isLoading, setDateRange, dateRange, refreshData } = useReports();
+  // Initialize with "current-quarter" to match the default in ReportsContext
+  const [selectedPeriod, setSelectedPeriod] = useState("current-quarter");
+  const [error, setError] = useState<string | null>(null);
   
-  // Initialize selected period on client-side to avoid hydration mismatch
-  useEffect(() => {
-    setSelectedPeriod("current-quarter");
-  }, []);
-
   // Format currency value
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -78,12 +86,113 @@ export function CashFlowReport() {
     }).format(value);
   };
 
+  // Date range mappings for each period option
+  const getPeriodDateRange = (period: string): { startDate: Date, endDate: Date } => {
+    const now = new Date();
+    
+    // Mapping of period values to date range calculations
+    const periodMap: Record<string, () => { startDate: Date, endDate: Date }> = {
+      "current-month": () => ({
+        startDate: startOfMonth(now),
+        endDate: endOfMonth(now)
+      }),
+      "previous-month": () => {
+        const prevMonth = subMonths(now, 1);
+        return {
+          startDate: startOfMonth(prevMonth),
+          endDate: endOfMonth(prevMonth)
+        };
+      },
+      "current-quarter": () => ({
+        startDate: startOfQuarter(now),
+        endDate: endOfQuarter(now)
+      }),
+      "previous-quarter": () => {
+        const prevQuarter = subQuarters(now, 1);
+        return {
+          startDate: startOfQuarter(prevQuarter),
+          endDate: endOfQuarter(prevQuarter)
+        };
+      },
+      "ytd": () => ({
+        startDate: startOfYear(now),
+        endDate: now
+      }),
+      "previous-year": () => {
+        const prevYear = new Date(now.getFullYear() - 1, 0, 1);
+        return {
+          startDate: startOfYear(prevYear),
+          endDate: endOfYear(prevYear)
+        };
+      }
+    };
+    
+    // Get date range using the mapping or return a default
+    const getRangeFn = periodMap[period];
+    if (!getRangeFn) {
+      console.warn(`Unknown period: ${period}, using current quarter as default`);
+      return periodMap["current-quarter"]();
+    }
+    
+    return getRangeFn();
+  };
+  
+  // Validate a date range to ensure it contains valid dates
+  const validateDateRange = (range: { startDate: Date, endDate: Date }) => {
+    if (!(range.startDate instanceof Date) || isNaN(range.startDate.getTime())) {
+      throw new Error("Invalid start date");
+    }
+    if (!(range.endDate instanceof Date) || isNaN(range.endDate.getTime())) {
+      throw new Error("Invalid end date");
+    }
+    if (range.startDate > range.endDate) {
+      throw new Error("Start date must be before end date");
+    }
+    return range;
+  };
+
+  // Handle period change with improved error handling
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    try {
+      // Get and validate the date range
+      const newDateRange = validateDateRange(getPeriodDateRange(value));
+      
+      // Update the context with the new range
+      setDateRange(newDateRange);
+      setError(null);
+    } catch (err) {
+      console.error("Error updating date range:", err);
+      setError(`Failed to update date range: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  // Display loading state
   if (isLoading) {
-    return <div className="flex justify-center items-center py-8">Loading report data...</div>;
+    return (
+      <div className="flex justify-center items-center py-8" aria-live="polite" role="status">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Loading report data...</p>
+        </div>
+      </div>
+    );
   }
 
-  const showEmptyState = !cashFlowData;
+  // Display error state if there's an error
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 space-y-4 text-red-500" role="alert">
+        <AlertTriangle size={32} />
+        <h3 className="text-lg font-medium">Error Loading Data</h3>
+        <p>{error}</p>
+        <Button onClick={refreshData} variant="outline">Retry</Button>
+      </div>
+    );
+  }
 
+  // Display empty state if no data
+  const showEmptyState = !cashFlowData;
   if (showEmptyState) {
     return (
       <div className="flex flex-col items-center justify-center py-12 space-y-4">
@@ -93,7 +202,7 @@ export function CashFlowReport() {
           This report will help you track money moving in and out of your business over time.
         </p>
         <Link href="/transactions">
-          <Button size="sm" variant="outline" className="mt-2">
+          <Button size="sm" variant="outline" className="mt-2" aria-label="Add transactions">
             <Plus className="mr-2 h-4 w-4" />
             Add Transactions
           </Button>
@@ -102,13 +211,30 @@ export function CashFlowReport() {
     );
   }
 
+  // Safely access data properties with null checks
+  const safeData = {
+    period: cashFlowData?.period || "Unknown Period",
+    startingBalance: cashFlowData?.startingBalance || 0,
+    cashIn: cashFlowData?.cashIn || [],
+    cashOut: cashFlowData?.cashOut || [],
+    totalCashIn: cashFlowData?.totalCashIn || 0,
+    totalCashOut: cashFlowData?.totalCashOut || 0,
+    netCashFlow: cashFlowData?.netCashFlow || 0,
+    endingBalance: cashFlowData?.endingBalance || 0,
+    monthlyCashFlow: cashFlowData?.monthlyCashFlow || []
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Period: {cashFlowData.period}</h3>
+          <h3 className="text-lg font-medium">Period: {safeData.period}</h3>
         </div>
-        <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+        <Select 
+          value={selectedPeriod} 
+          onValueChange={handlePeriodChange} 
+          aria-label="Select time period"
+        >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
@@ -126,42 +252,48 @@ export function CashFlowReport() {
       <div className="rounded-md border p-4">
         <h3 className="mb-4 text-lg font-medium">Cash Flow Trend</h3>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={cashFlowData.monthlyCashFlow}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-              <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="cashIn" 
-                name="Cash In" 
-                stroke="#8884d8" 
-                fill="#8884d8" 
-                fillOpacity={0.3} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="cashOut" 
-                name="Cash Out" 
-                stroke="#ff6b6b" 
-                fill="#ff6b6b" 
-                fillOpacity={0.3} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="netFlow" 
-                name="Net Flow" 
-                stroke="#4ade80" 
-                fill="#4ade80" 
-                fillOpacity={0.3} 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {safeData.monthlyCashFlow.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={safeData.monthlyCashFlow}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
+                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="cashIn" 
+                  name="Cash In" 
+                  stroke="#8884d8" 
+                  fill="#8884d8" 
+                  fillOpacity={0.3} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="cashOut" 
+                  name="Cash Out" 
+                  stroke="#ff6b6b" 
+                  fill="#ff6b6b" 
+                  fillOpacity={0.3} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="netFlow" 
+                  name="Net Flow" 
+                  stroke="#4ade80" 
+                  fill="#4ade80" 
+                  fillOpacity={0.3} 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-muted-foreground">No monthly data available for the selected period</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -178,7 +310,7 @@ export function CashFlowReport() {
             {/* Starting Balance */}
             <TableRow className="bg-muted/50">
               <TableCell className="font-medium">Starting Balance</TableCell>
-              <TableCell className="text-right font-medium">{formatCurrency(cashFlowData.startingBalance)}</TableCell>
+              <TableCell className="text-right font-medium">{formatCurrency(safeData.startingBalance)}</TableCell>
             </TableRow>
             
             {/* Cash In Section */}
@@ -187,24 +319,33 @@ export function CashFlowReport() {
               <TableCell className="text-right"></TableCell>
             </TableRow>
             
-            {cashFlowData.cashIn.map((category, idx) => (
-              <>
-                <TableRow key={`cash-in-${idx}`}>
-                  <TableCell className="pl-6 font-medium">{category.name}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(category.amount)}</TableCell>
-                </TableRow>
-                {category.subItems?.map((subItem, subIdx) => (
-                  <TableRow key={`cash-in-sub-${idx}-${subIdx}`} className="text-sm text-muted-foreground">
-                    <TableCell className="pl-10">{subItem.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(subItem.amount)}</TableCell>
+            {safeData.cashIn.length > 0 ? (
+              safeData.cashIn.map((category, idx) => (
+                <React.Fragment key={`cash-in-${idx}`}>
+                  <TableRow>
+                    <TableCell className="pl-6 font-medium">{category.name}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(category.amount)}</TableCell>
                   </TableRow>
-                ))}
-              </>
-            ))}
+                  {category.subItems?.map((subItem, subIdx) => (
+                    <TableRow key={`cash-in-sub-${idx}-${subIdx}`} className="text-sm text-muted-foreground">
+                      <TableCell className="pl-10">{subItem.name}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(subItem.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </React.Fragment>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center text-muted-foreground">No cash inflows recorded</TableCell>
+              </TableRow>
+            )}
             
-            <TableRow className="font-medium text-green-600">
-              <TableCell>Total Cash In</TableCell>
-              <TableCell className="text-right">{formatCurrency(cashFlowData.totalCashIn)}</TableCell>
+            <TableRow className="font-medium">
+              <TableCell>
+                <span className="text-green-600">Total Cash In</span>
+                <span className="sr-only">(positive value)</span>
+              </TableCell>
+              <TableCell className="text-right text-green-600">{formatCurrency(safeData.totalCashIn)}</TableCell>
             </TableRow>
             
             {/* Cash Out Section */}
@@ -213,24 +354,33 @@ export function CashFlowReport() {
               <TableCell className="text-right"></TableCell>
             </TableRow>
             
-            {cashFlowData.cashOut.map((category, idx) => (
-              <>
-                <TableRow key={`cash-out-${idx}`}>
-                  <TableCell className="pl-6 font-medium">{category.name}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(category.amount)}</TableCell>
-                </TableRow>
-                {category.subItems?.map((subItem, subIdx) => (
-                  <TableRow key={`cash-out-sub-${idx}-${subIdx}`} className="text-sm text-muted-foreground">
-                    <TableCell className="pl-10">{subItem.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(subItem.amount)}</TableCell>
+            {safeData.cashOut.length > 0 ? (
+              safeData.cashOut.map((category, idx) => (
+                <React.Fragment key={`cash-out-${idx}`}>
+                  <TableRow>
+                    <TableCell className="pl-6 font-medium">{category.name}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(category.amount)}</TableCell>
                   </TableRow>
-                ))}
-              </>
-            ))}
+                  {category.subItems?.map((subItem, subIdx) => (
+                    <TableRow key={`cash-out-sub-${idx}-${subIdx}`} className="text-sm text-muted-foreground">
+                      <TableCell className="pl-10">{subItem.name}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(subItem.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </React.Fragment>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center text-muted-foreground">No cash outflows recorded</TableCell>
+              </TableRow>
+            )}
             
-            <TableRow className="font-medium text-red-600">
-              <TableCell>Total Cash Out</TableCell>
-              <TableCell className="text-right">{formatCurrency(cashFlowData.totalCashOut)}</TableCell>
+            <TableRow className="font-medium">
+              <TableCell>
+                <span className="text-red-600">Total Cash Out</span>
+                <span className="sr-only">(negative value)</span>
+              </TableCell>
+              <TableCell className="text-right text-red-600">{formatCurrency(safeData.totalCashOut)}</TableCell>
             </TableRow>
             
             {/* Summary Section */}
@@ -240,16 +390,19 @@ export function CashFlowReport() {
             </TableRow>
             
             <TableRow className="font-medium">
-              <TableCell>Net Cash Flow</TableCell>
-              <TableCell className={`text-right ${cashFlowData.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(cashFlowData.netCashFlow)}
+              <TableCell>
+                <span>Net Cash Flow</span>
+                <span className="sr-only">{safeData.netCashFlow >= 0 ? "(positive value)" : "(negative value)"}</span>
+              </TableCell>
+              <TableCell className={`text-right ${safeData.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrency(safeData.netCashFlow)}
               </TableCell>
             </TableRow>
             
             <TableRow className="font-medium text-lg">
               <TableCell>Ending Balance</TableCell>
               <TableCell className="text-right font-bold">
-                {formatCurrency(cashFlowData.endingBalance)}
+                {formatCurrency(safeData.endingBalance)}
               </TableCell>
             </TableRow>
           </TableBody>

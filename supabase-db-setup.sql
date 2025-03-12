@@ -18,7 +18,6 @@ CREATE TABLE public.categories (
   name text NOT NULL,
   type text NOT NULL,
   color text NULL,
-  icon text NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
   is_default boolean NOT NULL DEFAULT false,

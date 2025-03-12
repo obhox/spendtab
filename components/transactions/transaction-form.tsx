@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -39,6 +39,7 @@ import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { useCategories } from "@/lib/context/CategoryContext"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { useBudgets } from "@/lib/context/BudgetContext"
+import { useAccounts } from "@/lib/context/AccountContext"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -52,7 +53,8 @@ const transactionSchema = z.object({
   type: z.enum(["income", "expense"]),
   payment_source: z.string().min(1, { message: "Please select a payment source." }),
   notes: z.string().optional(),
-  budget_id: z.string().nullable()
+  budget_id: z.string().nullable(),
+  account_id: z.string().optional()
 });
 
 // Type for form data
@@ -69,6 +71,7 @@ interface Transaction {
   payment_source: string
   notes?: string
   budget_id?: string | null
+  account_id: string
 }
 
 interface TransactionFormProps {
@@ -82,7 +85,10 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const { categories, incomeCategories, expenseCategories } = useCategories();
   const { addTransaction, updateTransaction } = useTransactions();
   const { budgets } = useBudgets();
+  const { currentAccount } = useAccounts();
   
+  // Get account ID for new transactions
+  const newTransactionAccountId = currentAccount?.id || "";
   
   // Default values for the form
   const defaultValues: Partial<TransactionFormValues> = transaction 
@@ -92,18 +98,21 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         date: new Date(transaction.date),
         category: transaction.category,
         type: transaction.type,
+        payment_source: transaction.payment_source, // Fixed: Added payment_source for existing transactions
         notes: transaction.notes,
-        budget_id: transaction.budget_id || null
+        budget_id: transaction.budget_id || null,
+        account_id: transaction.account_id
       }
     : {
         description: "",
         amount: undefined as number | undefined,
-        payment_source: "",
+        payment_source: "bank_transfer", // Fixed: Added default payment_source
         date: new Date(),
         category: "",
         type: "expense",
         notes: "",
-        budget_id: null
+        budget_id: null,
+        account_id: newTransactionAccountId // Default to current account ID
       };
   
   // Initialize form
@@ -111,20 +120,72 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     resolver: zodResolver(transactionSchema),
     defaultValues
   });
+
+  // Reset form when dialog opens/closes or transaction changes
+  useEffect(() => {
+    if (open) {
+      // Update the defaultValues object to use the current account
+      const updatedDefaults = transaction 
+        ? { ...defaultValues }
+        : { 
+            ...defaultValues,
+            account_id: currentAccount?.id || ""
+          };
+      
+      form.reset(updatedDefaults);
+    }
+  }, [open, transaction, currentAccount]);
+  
+  // Get the current transaction type and create filtered categories list
+  const transactionType = form.watch("type");
+  const filteredCategories = transactionType === "income" 
+    ? incomeCategories 
+    : expenseCategories;
+
+  const hasCategoriesForType = filteredCategories.length > 0;
+
+  // Get the current account ID from the AccountContext
+  const getActiveAccountId = () => {
+    if (!currentAccount) {
+      console.warn("No current account found, transactions require an account_id");
+      return ""; // You might want to handle this case differently
+    }
+    return currentAccount.id;
+  };
+
   // Handle form submission
   async function onSubmit(data: TransactionFormValues) {
     try {
+      // Ensure we have a valid account_id
+      const accountId = data.account_id || transaction?.account_id || getActiveAccountId();
+      
+      if (!accountId) {
+        toast("Error", {
+          description: "No account selected. Please select an account to continue."
+        });
+        return;
+      }
+      
+      // Fixed: Properly handle budget_id and ensure account_id is set
+      const processedData = {
+        ...data,
+        date: format(data.date, "yyyy-MM-dd"),
+        budget_id: data.budget_id === "none" ? null : data.budget_id,
+        account_id: accountId
+      };
+
       if (transaction) {
         // Update existing transaction
         await updateTransaction(transaction.id, {
-          description: data.description,
-          amount: data.amount,
-          date: format(data.date, "yyyy-MM-dd"),
-          category: data.category,
-          type: data.type,
-          notes: data.notes,
-          budget_id: data.budget_id,
-          payment_source: data.payment_source
+          description: processedData.description!,
+          amount: processedData.amount!,
+          date: processedData.date,
+          category: processedData.category!,
+          type: processedData.type!,
+          payment_source: processedData.payment_source!,
+          notes: processedData.notes,
+          budget_id: processedData.budget_id,
+          account_id: processedData.account_id
         });
         toast("Transaction updated", {
           description: "Your transaction has been updated successfully."
@@ -132,14 +193,15 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       } else {
         // Add new transaction
         await addTransaction({
-          description: data.description,
-          amount: data.amount,
-          date: format(data.date, "yyyy-MM-dd"),
-          category: data.category,
-          type: data.type,
-          notes: data.notes,
-          budget_id: data.budget_id,
-          payment_source: data.payment_source
+          description: processedData.description!,
+          amount: processedData.amount!,
+          date: processedData.date,
+          category: processedData.category!,
+          type: processedData.type!,
+          payment_source: processedData.payment_source!,
+          notes: processedData.notes,
+          budget_id: processedData.budget_id,
+          account_id: processedData.account_id
         });
         toast("Transaction added", {
           description: "Your new transaction has been added successfully."
@@ -147,20 +209,26 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       }
       
       setOpen(false);
-      form.reset();
+      form.reset(); // Reset the form state
       if (onSuccess) onSuccess();
     } catch (error) {
+      console.error("Transaction error:", error);
       toast("Error", {
         description: "There was a problem saving your transaction."
       });
     }
   }
-  // Filter categories based on selected transaction type
-  const filteredCategories = form.watch("type") === "income" 
-    ? incomeCategories 
-    : expenseCategories;
 
-  const hasCategoriesForType = filteredCategories.length > 0;
+  // Handle transaction type change
+  const handleTypeChange = (value: string) => {
+    form.setValue("type", value as "income" | "expense");
+    form.setValue("category", "");
+    
+    // Clear budget selection when switching to income
+    if (value === "income") {
+      form.setValue("budget_id", null);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -185,12 +253,9 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                 <FormItem>
                   <FormLabel>Type</FormLabel>
                   <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Reset category when type changes
-                      form.setValue("category", "");
-                    }}
+                    onValueChange={handleTypeChange}
                     defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -326,7 +391,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                     <div className="mt-2 p-2 text-sm bg-muted/50 rounded-md flex items-start gap-2">
                       <HelpCircle className="h-4 w-4 mt-0.5 text-muted-foreground" />
                       <span className="text-muted-foreground">
-                        Please add categories for {form.watch("type")} transactions on the 
+                        Please add categories for {transactionType} transactions on the 
                         <Link href="/categories" className="text-primary font-medium ml-1">
                           categories page
                         </Link>.
@@ -338,14 +403,17 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
               )}
             />
             
-            {form.watch("type") === "expense" && (
+            {transactionType === "expense" && (
               <FormField
                 control={form.control}
                 name="budget_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Budget</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "none" ? null : value)} 
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a budget (optional)" />
@@ -360,11 +428,15 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      Associate this expense with a budget for tracking.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
+            
             <FormField
               control={form.control}
               name="payment_source"

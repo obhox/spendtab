@@ -85,7 +85,7 @@ export default function TransactionsPage() {
             </CardHeader>
             <CardContent>
               <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
-                <TransactionTable type="expenses" searchTerm={searchTerm} />
+                <TransactionTable type="expense" searchTerm={searchTerm} />
               </Suspense>
             </CardContent>
           </Card>

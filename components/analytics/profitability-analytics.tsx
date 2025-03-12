@@ -10,11 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  BarChart,
-  Bar,
   ComposedChart,
   Area
 } from "recharts"
+import { subMonths } from "date-fns"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAnalytics } from "@/lib/context/AnalyticsContext"
@@ -32,13 +31,43 @@ const timePeriods = [
 ];
 
 export default function ProfitabilityAnalytics() {
-  const { monthlyData, financialSummary, isLoading } = useAnalytics();
+  const { monthlyData, financialSummary, isLoading, setDateRange, error } = useAnalytics();
   const [timePeriod, setTimePeriod] = useState("");
   
   // Initialize time period on client-side to avoid hydration mismatch
   useEffect(() => {
     setTimePeriod("12m");
   }, []);
+  
+  // Update date range when time period changes
+  useEffect(() => {
+    if (!timePeriod) return;
+    
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch (timePeriod) {
+      case "7d":
+        startDate = subMonths(now, 0.25); // Approximately 7 days
+        break;
+      case "30d":
+        startDate = subMonths(now, 1);
+        break;
+      case "90d":
+        startDate = subMonths(now, 3);
+        break;
+      case "12m":
+        startDate = subMonths(now, 12);
+        break;
+      case "ytd":
+        startDate = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+        break;
+      default:
+        startDate = subMonths(now, 12); // Default to 12 months
+    }
+    
+    setDateRange({ startDate, endDate: now });
+  }, [timePeriod, setDateRange]);
   
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
@@ -56,6 +85,10 @@ export default function ProfitabilityAnalytics() {
   
   if (isLoading) {
     return <div className="flex justify-center items-center py-8">Loading analytics data...</div>;
+  }
+  
+  if (error) {
+    return <div className="flex justify-center items-center py-8 text-red-500">Error: {error}</div>;
   }
   
   const showEmptyState = !monthlyData || monthlyData.length === 0;
@@ -85,7 +118,7 @@ export default function ProfitabilityAnalytics() {
     expense: month.expenses,
     profit: month.profit,
     margin: month.income > 0 ? (month.profit / month.income) * 100 : 0
-  }));
+  })).filter(data => data.revenue > 0 || data.expense > 0);
   
   return (
     <div className="space-y-6">
@@ -159,8 +192,8 @@ export default function ProfitabilityAnalytics() {
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} stroke="#666" />
                 <Tooltip 
-                  formatter={(value, name: any) => {
-                    return [formatCurrency(Number(value)), name.charAt(0).toUpperCase() + name.slice(1)];
+                  formatter={(value: number, name: string) => {
+                    return [formatCurrency(value), name.charAt(0).toUpperCase() + name.slice(1)];
                   }}
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
@@ -225,7 +258,7 @@ export default function ProfitabilityAnalytics() {
                 <XAxis dataKey="month" stroke="#666" />
                 <YAxis tickFormatter={(value) => `${value}%`} stroke="#666" />
                 <Tooltip 
-                  formatter={(value) => [formatPercent(Number(value)), "Profit Margin"]}
+                  formatter={(value: number) => [formatPercent(value), "Profit Margin"]}
                   contentStyle={{
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
                     borderRadius: "6px",

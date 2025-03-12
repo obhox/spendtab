@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
+import { useAccounts } from './AccountContext'
 
 // Category data interface
 export interface Category {
@@ -12,6 +13,7 @@ export interface Category {
   icon?: string
   color?: string
   is_default: boolean
+  account_id: string
 }
 
 // Context interface
@@ -19,8 +21,8 @@ interface CategoryContextType {
   categories: Category[]
   incomeCategories: Category[]
   expenseCategories: Category[]
-  addCategory: (category: Omit<Category, "id" | "is_default">) => Promise<void>
-  updateCategory: (id: string, category: Omit<Category, "id" | "is_default">) => Promise<void>
+  addCategory: (category: Omit<Category, "id" | "is_default" | "account_id">) => Promise<void>
+  updateCategory: (id: string, category: Omit<Category, "id" | "is_default" | "account_id">) => Promise<void>
   deleteCategory: (id: string) => Promise<void>
   isLoading: boolean
   error: string | null
@@ -34,16 +36,26 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { currentAccount } = useAccounts()
 
   // Load initial data from Supabase
   useEffect(() => {
     async function fetchCategories() {
+      setCategories([]) // Reset categories before fetching new account data
+      setError(null) // Clear any previous errors
+      
+      if (!currentAccount) {
+        setIsLoading(false)
+        return
+      }
+
       try {
         setIsLoading(true)
         
         const { data, error } = await supabase
           .from('categories')
           .select('*')
+          .eq('account_id', currentAccount.id)
           .order('name', { ascending: true })
         
         if (error) {
@@ -57,7 +69,8 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
             type: item.type,
             icon: item.icon || undefined,
             color: item.color || undefined,
-            is_default: item.is_default
+            is_default: item.is_default,
+            account_id: item.account_id
           })))
         }
       } catch (error) {
@@ -70,38 +83,61 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     
     fetchCategories()
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('categories-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'categories' 
-        }, 
-        () => {
-          fetchCategories()
-        }
-      )
-      .subscribe()
+    // Clean up any existing subscription
+    const cleanupSubscription = () => {
+      const existingChannel = supabase.getChannels().find(ch => ch.topic.startsWith('realtime:categories-'));
+      if (existingChannel) {
+        supabase.removeChannel(existingChannel);
+      }
+    };
+
+    // Set up real-time subscription only for current account
+    let channel;
+    if (currentAccount) {
+      // Clean up any existing subscription first
+      cleanupSubscription();
+      
+      // Set up new subscription for current account
+      channel = supabase
+        .channel(`categories-${currentAccount.id}`)
+        .on('postgres_changes', 
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'categories',
+            filter: `account_id=eq.${currentAccount.id}`
+          }, 
+          () => {
+            fetchCategories()
+          }
+        )
+        .subscribe()
+    }
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [])
+  }, [currentAccount])
 
   // Calculate derived categories
   const incomeCategories = categories.filter(cat => cat.type === 'income')
   const expenseCategories = categories.filter(cat => cat.type === 'expense')
 
   // Add a new category
-  const addCategory = async (category: Omit<Category, "id" | "is_default">) => {
+  const addCategory = async (category: Omit<Category, "id" | "is_default" | "account_id">) => {
+    if (!currentAccount) return
+
     try {
       setIsLoading(true)
       
       const newCategory = {
         ...category,
         is_default: false,
+        account_id: currentAccount.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
       
       const { error } = await supabase
@@ -112,29 +148,16 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      // Fetch the new category from Supabase
-      const { data: fetchedCategory, error: fetchError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('name', category.name) // Assuming name is unique
-        .single()
-
-      if (fetchError) {
-        console.error('Error fetching new category:', fetchError)
-        setError('Failed to add category')
-        return
-      }
-
-      if (fetchedCategory) {
-        setCategories(prev => [...prev, {
-          id: fetchedCategory.id,
-          name: fetchedCategory.name,
-          type: fetchedCategory.type,
-          icon: fetchedCategory.icon,
-          color: fetchedCategory.color,
-          is_default: fetchedCategory.is_default
-        }])
-      }
+      // Optimistically update the UI
+      setCategories(prev => [...prev, { 
+        id: uuidv4(),
+        name: category.name,
+        type: category.type,
+        icon: category.icon,
+        color: category.color,
+        is_default: false,
+        account_id: currentAccount.id
+      }])
       
     } catch (error) {
       console.error('Error adding category:', error)
@@ -145,7 +168,9 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   }
 
   // Update an existing category
-  const updateCategory = async (id: string, updatedCategory: Omit<Category, "id" | "is_default">) => {
+  const updateCategory = async (id: string, updatedCategory: Omit<Category, "id" | "is_default" | "account_id">) => {
+    if (!currentAccount) return
+
     try {
       setIsLoading(true)
       
@@ -164,6 +189,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .from('categories')
         .update(updateData)
         .eq('id', id)
+        .eq('account_id', currentAccount.id)
       
       if (error) {
         throw error
@@ -191,6 +217,8 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
 
   // Delete a category
   const deleteCategory = async (id: string) => {
+    if (!currentAccount) return
+
     try {
       setIsLoading(true)
       
@@ -208,6 +236,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .from('categories')
         .delete()
         .eq('id', id)
+        .eq('account_id', currentAccount.id)
       
       if (error) {
         throw error
@@ -219,6 +248,8 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error deleting category:', error)
       setError('Failed to delete category')
+      // Re-throw the error so it can be caught by the component
+      throw error
     } finally {
       setIsLoading(false)
     }

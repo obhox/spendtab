@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Monitor } from "lucide-react"
+import { DataProvider } from "@/lib/context/DataProvider"
 
 const RevenueAnalytics = dynamic(() => import("@/components/analytics/revenue-analytics"), { ssr: false })
 const ExpenseAnalytics = dynamic(() => import("@/components/analytics/expense-analytics"), { ssr: false })
@@ -11,7 +12,8 @@ const ProfitabilityAnalytics = dynamic(() => import("@/components/analytics/prof
 
 export default function AnalyticsPage() {
   return (
-    <div className="flex flex-col gap-4">
+    <DataProvider>
+      <div className="flex flex-col gap-4">
       {/* Mobile warning card */}
       <div className="lg:hidden">
         <Card>
@@ -73,6 +75,7 @@ export default function AnalyticsPage() {
         </Tabs>
       </div>
     </div>
+    </DataProvider>
   )
 }
 

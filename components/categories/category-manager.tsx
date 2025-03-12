@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useCategories, Category } from "@/lib/context/CategoryContext"
 import {
   Card,
@@ -29,27 +29,73 @@ import { CategoryForm } from "./category-form"
 import { Badge } from "@/components/ui/badge"
 
 export function CategoryManager() {
-  const { categories, incomeCategories, expenseCategories, deleteCategory } = useCategories()
-  const [tabValue, setTabValue] = useState("income")
+  const { categories, incomeCategories, expenseCategories, deleteCategory, isLoading } = useCategories()
+  const [isDeleting, setIsDeleting] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  
+  // Set initial tab value based on which category type has content
+  const [tabValue, setTabValue] = useState(() => {
+    // If we have expense categories but no income categories, default to expense tab
+    if (incomeCategories.length === 0 && expenseCategories.length > 0) {
+      return "expense"
+    }
+    // If we have income categories but no expense categories, default to income tab
+    if (expenseCategories.length === 0 && incomeCategories.length > 0) {
+      return "income"
+    }
+    // Default to income tab if both are empty or both have content
+    return "income"
+  })
+  
+  // Update tab value when categories change to handle async loading scenarios
+  useEffect(() => {
+    if (incomeCategories.length === 0 && expenseCategories.length > 0) {
+      setTabValue("expense")
+    } else if (expenseCategories.length === 0 && incomeCategories.length > 0) {
+      setTabValue("income")
+    }
+    // Only run this effect when category arrays change
+  }, [incomeCategories.length, expenseCategories.length])
   
 
   // Function to handle category deletion
   const handleDelete = async () => {
     if (!categoryToDelete) return
     
+    setIsDeleting(true)
     try {
       await deleteCategory(categoryToDelete.id)
       toast("Category deleted", {
         description: `${categoryToDelete.name} has been deleted.`,
       })
     } catch (error) {
-      toast("Error", {
-        description: "Failed to delete category. Default categories cannot be deleted.",
-      })
+      // Check for specific error types
+      if (error instanceof Error) {
+        if (error.message === 'Cannot delete default categories') {
+          toast("Error", {
+            description: "Default categories cannot be deleted.",
+          })
+        } else if (error.message === 'Category not found') {
+          toast("Error", {
+            description: "The category could not be found.",
+          })
+        } else {
+          toast("Error", {
+            description: "Failed to delete category. Please try again.",
+          })
+        }
+      } else {
+        toast("Error", {
+          description: "An unexpected error occurred. Please try again.",
+        })
+      }
+    } finally {
+      // Reset state regardless of success or failure
+      setCategoryToDelete(null)
+      setShowDeleteConfirm(false)
+      setIsDeleting(false)
     }
-    setShowDeleteConfirm(false)
   }
 
   // Function to open delete confirmation
@@ -80,6 +126,8 @@ export function CategoryManager() {
                   <div
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: category.color || '#888888' }}
+                    aria-hidden="true"
+                    title={`Color: ${category.color || '#888888'}`}
                   />
                   <span className="font-medium">{category.name}</span>
                   {category.is_default && (
@@ -97,7 +145,8 @@ export function CategoryManager() {
                     size="sm" 
                     variant="ghost" 
                     onClick={() => confirmDelete(category)}
-                    disabled={category.is_default}
+                    disabled={category.is_default || isLoading || isDeleting}
+                    aria-label={`Delete ${category.name} category`}
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
@@ -110,12 +159,34 @@ export function CategoryManager() {
     )
   }
 
+  // Show loading state when initially loading categories
+  if (isLoading && categories.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Manage Categories</CardTitle>
+          <CardDescription>
+            Loading categories...
+          </CardDescription>
+        </CardHeader>
+        <div className="flex justify-center items-center h-[350px]">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-8 w-8 bg-muted rounded-full mb-4"></div>
+            <div className="h-4 w-32 bg-muted rounded mb-2"></div>
+            <div className="h-3 w-48 bg-muted rounded"></div>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Manage Categories</CardTitle>
         <CardDescription>
           Create, edit, and delete your custom transaction categories
+          {isLoading && <span className="ml-2">(Updating...)</span>}
         </CardDescription>
       </CardHeader>
       <Tabs value={tabValue} onValueChange={setTabValue}>
@@ -136,7 +207,7 @@ export function CategoryManager() {
       </Tabs>
       <CardFooter className="flex justify-between px-6 py-4 border-t">
         <CategoryForm defaultType={tabValue as "income" | "expense"}>
-          <Button>
+          <Button disabled={isLoading}>
             <PlusCircle className="h-4 w-4 mr-2" />
             Add Category
           </Button>
@@ -155,7 +226,9 @@ export function CategoryManager() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
