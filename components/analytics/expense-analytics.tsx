@@ -173,7 +173,7 @@ export default function ExpenseAnalytics() {
                       // Use the correct property names based on the data structure
                       const category = payload.category || name;
                       const percentage = payload.percentage || 0;
-                      return `${category}: ${formatPercent(percentage).replace('$', '')}`;
+                      return `${category}: ${Math.round(percentage)}%`;
                     }}
                     outerRadius={80}
                     fill="#8884d8"

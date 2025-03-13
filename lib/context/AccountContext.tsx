@@ -32,57 +32,51 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [isAccountSwitching, setIsAccountSwitching] = useState(false);
 
   const setCurrentAccount = (account: Account, showNotification = true) => {
-    // Don't do anything if it's the same account
     if (currentAccount?.id === account.id) return;
     
-    // Set account switching flag
     setIsAccountSwitching(true);
-    
-    // Store the current account ID in localStorage
     localStorage.setItem('currentAccountId', account.id);
-    
-    // Update the account state immediately
     _setCurrentAccount(account);
     
-    // Only show toast if this is not the initial load AND showNotification is true
     if (!isInitialLoad && showNotification) {
       toast("Switched to account", {
         description: `Now using ${account.name}`
       });
     }
     
-    // Always dispatch the event (other components need this)
     window.dispatchEvent(new CustomEvent('account-changed', { 
       detail: { accountId: account.id } 
     }));
 
-    // Add a small delay before reloading to ensure the event completes
     setTimeout(() => {
       window.location.reload();
-    }, 300); // Increased delay to give events time to complete
+    }, 300);
   };
 
-  // Load all accounts for the current user
   const loadAccounts = async () => {
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast("Authentication Error", {
+          description: "Please sign in to access your accounts."
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from("accounts")
-        .select("*");
+        .select("*")
+        .eq("owner_id", session.user.id);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setAccounts(data || []);
       
       if (data && data.length > 0) {
-        // Get the stored account ID from localStorage
         const storedAccountId = localStorage.getItem('currentAccountId');
-        // Find the stored account in the loaded accounts
         const storedAccount = data.find(account => account.id === storedAccountId);
-        // Set either the stored account or the first account, but with no notification
         if (storedAccount || data[0]) {
-          _setCurrentAccount(storedAccount || data[0]); // Use _setCurrentAccount directly to avoid reload
+          _setCurrentAccount(storedAccount || data[0]);
           localStorage.setItem('currentAccountId', (storedAccount || data[0]).id);
         }
       }
@@ -96,59 +90,88 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addAccount = async (name: string, description?: string) => {
-    try {
-      // Get current user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+    let retryCount = 0;
+    const maxRetries = 3;
 
-      // Insert new account with owner_id
-      const { data, error } = await supabase
-        .from("accounts")
-        .insert([{ name, description, owner_id: userData.user.id }])
-        .select()
-        .single();
+    while (retryCount < maxRetries) {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        if (!session) {
+          // Try to refresh the session
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !refreshData.session) {
+            toast("Authentication Error", {
+              description: "Your session has expired. Please sign in again."
+            });
+            return;
+          }
+        }
 
-      if (error) throw error;
+        const newAccount = {
+          name,
+          description,
+          owner_id: session.user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
 
-      // Update accounts state with the new account
-      const updatedAccounts = [...accounts, data];
-      setAccounts(updatedAccounts);
-      
-      // If this is the first account, set it as current
-      if (!currentAccount) {
-        _setCurrentAccount(data); // Use _setCurrentAccount to avoid reload
-        localStorage.setItem('currentAccountId', data.id);
+        const { error } = await supabase
+          .from("accounts")
+          .insert([newAccount])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Reload accounts to get the new account with its ID
+        await loadAccounts();
+        return;
+
+      } catch (error) {
+        retryCount++;
+        if (retryCount === maxRetries) {
+          console.error("Error adding account:", error);
+          toast("Failed to create account", {
+            description: "There was a problem creating the account. Please try again."
+          });
+          throw error;
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
-      
-      toast("Account created", {
-        description: `Successfully created account: ${name}`
-      });
-    } catch (error) {
-      console.error("Error adding account:", error);
-      toast("Failed to create account", {
-        description: "There was a problem creating the account"
-      });
     }
   };
 
   const updateAccount = async (id: string, name: string, description?: string) => {
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast("Authentication Error", {
+          description: "Please sign in to update the account."
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from("accounts")
         .update({ name, description, updated_at: new Date().toISOString() })
         .eq("id", id)
+        .eq("owner_id", session.user.id)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Update the accounts state
       const updatedAccounts = accounts.map(a => a.id === id ? data : a);
       setAccounts(updatedAccounts);
       
-      // If we're updating the current account, update that too
       if (currentAccount?.id === id) {
-        _setCurrentAccount(data); // Use _setCurrentAccount to avoid reload
+        _setCurrentAccount(data);
       }
       
       toast("Account updated", {
@@ -164,7 +187,14 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const deleteAccount = async (id: string) => {
     try {
-      // First check if this is the only account
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast("Authentication Error", {
+          description: "Please sign in to delete the account."
+        });
+        return;
+      }
+
       if (accounts.length === 1) {
         toast("Cannot delete account", {
           description: "You must have at least one account"
@@ -175,25 +205,23 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase
         .from("accounts")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("owner_id", session.user.id);
 
       if (error) throw error;
 
-      // Update accounts state
       const remainingAccounts = accounts.filter(a => a.id !== id);
       setAccounts(remainingAccounts);
       
-      // If we're deleting the current account, switch to another one
       if (currentAccount?.id === id) {
-        const nextAccount = remainingAccounts[0]; // There should always be at least one account left
+        const nextAccount = remainingAccounts[0];
         if (nextAccount) {
-          setCurrentAccount(nextAccount); // Use full setCurrentAccount as we DO want to reload in this case
+          setCurrentAccount(nextAccount);
         } else {
-          _setCurrentAccount(null); // This should never happen due to the check above
-          localStorage.removeItem('currentAccountId'); // Clear localStorage if no accounts left
+          _setCurrentAccount(null);
+          localStorage.removeItem('currentAccountId');
         }
       } else {
-        // If we're not deleting the current account, just show a toast
         toast("Account deleted", {
           description: "The account has been successfully deleted"
         });
@@ -207,45 +235,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Only load accounts on initial mount
-    if (isInitialLoad) {
-      loadAccounts();
-    }
-
-    // Clean up any existing subscription
-    const cleanupSubscription = () => {
-      const existingChannel = supabase.getChannels().find(ch => ch.topic === 'accounts');
-      if (existingChannel) {
-        supabase.removeChannel(existingChannel);
-      }
-    };
-
-    // Set up real-time subscription
-    cleanupSubscription();
-    
-    const channel = supabase
-      .channel('accounts')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'accounts'
-        }, 
-        () => {
-          // Only reload accounts if we're not currently switching
-          if (!isAccountSwitching) {
-            loadAccounts();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [isInitialLoad, isAccountSwitching]);
+    loadAccounts();
+  }, []);
 
   return (
     <AccountContext.Provider

@@ -36,16 +36,21 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { currentAccount } = useAccounts()
+  const { currentAccount, isAccountSwitching, refreshCounter } = useAccounts()
 
   // Load initial data from Supabase
   useEffect(() => {
     async function fetchCategories() {
-      setCategories([]) // Reset categories before fetching new account data
-      setError(null) // Clear any previous errors
-      
       if (!currentAccount) {
+        setCategories([]) // Reset categories when no account
+        setError(null)
         setIsLoading(false)
+        return
+      }
+
+      if (isAccountSwitching) {
+        setCategories([]) // Clear categories during switch
+        setError(null)
         return
       }
 
@@ -119,7 +124,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(channel)
       }
     }
-  }, [currentAccount])
+  }, [currentAccount, refreshCounter]) // Add refreshCounter to dependencies
 
   // Calculate derived categories
   const incomeCategories = categories.filter(cat => cat.type === 'income')
@@ -242,35 +247,35 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      // Update the UI
+      // Optimistically update the UI
       setCategories(prev => prev.filter(category => category.id !== id))
       
     } catch (error) {
       console.error('Error deleting category:', error)
       setError('Failed to delete category')
-      // Re-throw the error so it can be caught by the component
-      throw error
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Context value
-  const value = {
-    categories,
-    incomeCategories,
-    expenseCategories,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    isLoading,
-    error,
-  }
-
-  return <CategoryContext.Provider value={value}>{children}</CategoryContext.Provider>
+  return (
+    <CategoryContext.Provider
+      value={{
+        categories,
+        incomeCategories,
+        expenseCategories,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        isLoading,
+        error,
+      }}
+    >
+      {children}
+    </CategoryContext.Provider>
+  )
 }
 
-// Custom hook to use the category context
 export function useCategories() {
   const context = useContext(CategoryContext)
   if (context === undefined) {

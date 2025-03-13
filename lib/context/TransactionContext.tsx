@@ -43,11 +43,16 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   // Load initial data from Supabase
   useEffect(() => {
     async function fetchTransactions() {
-      setTransactions([]) // Reset transactions before fetching new account data
-      setError(null) // Clear any previous errors
-      
-      if (!currentAccount || isAccountSwitching) {
+      if (!currentAccount) {
+        setTransactions([]) // Reset transactions when no account
+        setError(null)
         setIsLoading(false)
+        return
+      }
+
+      if (isAccountSwitching) {
+        setTransactions([]) // Clear transactions during switch
+        setError(null)
         return
       }
 
@@ -125,7 +130,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [currentAccount])
-
   // Add a new transaction
   const addTransaction = async (transaction: Omit<Transaction, "id">) => {
     if (!currentAccount) {
@@ -236,7 +240,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      // Update the UI
+      // Optimistically update the UI
       setTransactions(prev => prev.filter(transaction => transaction.id !== id))
       
     } catch (error) {
@@ -247,25 +251,27 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Context value
-  const value = {
-    transactions,
-    setTransactions,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    isLoading,
-    error,
-  }
-
-  return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>
+  return (
+    <TransactionContext.Provider
+      value={{
+        transactions,
+        setTransactions,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction,
+        isLoading,
+        error,
+      }}
+    >
+      {children}
+    </TransactionContext.Provider>
+  )
 }
 
-// Custom hook to use the transaction context
 export function useTransactions() {
   const context = useContext(TransactionContext)
   if (context === undefined) {
-    throw new Error("useTransactions must be used within a TransactionProvider")
+    throw new Error('useTransactions must be used within a TransactionProvider')
   }
   return context
 }

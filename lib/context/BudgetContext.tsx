@@ -38,11 +38,53 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   // Load initial data from Supabase
-  const { currentAccount } = useAccounts()
+  const { currentAccount, isAccountSwitching, refreshCounter } = useAccounts()
+
+  const getBudgets = async () => {
+    if (!currentAccount || isAccountSwitching) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('budgets')
+        .select('*')
+        .eq('account_id', currentAccount.id)
+        .order('name', { ascending: true })
+      
+      if (error) {
+        throw error
+      }
+      
+      if (data) {
+        setBudgets(data.map(item => ({
+          id: item.id,
+          name: item.name,
+          amount: item.amount,
+          spent: item.spent || 0,
+          period: item.period,
+          startDate: item.startDate || undefined,
+          endDate: item.endDate || undefined,
+          account_id: item.account_id
+        })))
+      }
+    } catch (error) {
+      console.error('Error fetching budgets:', error)
+      setError('Failed to load budgets')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Fetch budgets when account changes
-    fetchBudgets()
+    // Reset budgets when switching accounts
+    setBudgets([])
+    setError(null)
+    
+    getBudgets()
 
     // Clean up any existing subscription
     const cleanupSubscription = () => {
@@ -70,7 +112,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
             filter: filter
           }, 
           () => {
-            fetchBudgets()
+            getBudgets()
           }
         )
         .subscribe()
@@ -81,7 +123,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(channel)
       }
     }
-  }, [currentAccount])
+  }, [currentAccount, refreshCounter])
 
   // Add a new budget
   const addBudget = async (budget: Omit<Budget, "id">): Promise<Budget | null> => {
@@ -199,7 +241,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         throw error
       }
       
-      // Update the UI
+      // Optimistically update the UI
       setBudgets(prev => prev.filter(budget => budget.id !== id))
       
     } catch (error) {
@@ -210,69 +252,27 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Function to fetch budgets - can be called manually or by the effect
-  const fetchBudgets = async () => {
-    if (!currentAccount) {
-      setBudgets([])
-      setError(null)
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      
-      const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('account_id', currentAccount.id)
-        .order('name', { ascending: true })
-      
-      if (error) {
-        throw error
-      }
-      
-      if (data) {
-        setBudgets(data.map(item => ({
-          id: item.id,
-          name: item.name,
-          amount: item.amount,
-          spent: item.spent || 0,
-          period: item.period,
-          startDate: item.startDate || undefined,
-          endDate: item.endDate || undefined,
-          account_id: item.account_id
-        })))
-      }
-    } catch (error) {
-      console.error('Error fetching budgets:', error)
-      setError('Failed to load budgets')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Context value
-  const value = {
-    budgets,
-    addBudget,
-    updateBudget,
-    deleteBudget,
-    isLoading,
-    error,
-    getBudgets: fetchBudgets,
-  }
-
   return (
-    <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+    <BudgetContext.Provider
+      value={{
+        budgets,
+        addBudget,
+        updateBudget,
+        deleteBudget,
+        isLoading,
+        error,
+        getBudgets,
+      }}
+    >
+      {children}
+    </BudgetContext.Provider>
   )
 }
 
-// Custom hook to use the budget context
 export function useBudgets() {
   const context = useContext(BudgetContext)
   if (context === undefined) {
-    throw new Error("useBudgets must be used within a BudgetProvider")
+    throw new Error('useBudgets must be used within a BudgetProvider')
   }
   return context
 }
