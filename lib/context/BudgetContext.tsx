@@ -38,7 +38,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   // Load initial data from Supabase
-  const { currentAccount, isAccountSwitching, refreshCounter } = useAccounts()
+  const { currentAccount, isAccountSwitching } = useAccounts()
 
   const getBudgets = async () => {
     if (!currentAccount || isAccountSwitching) {
@@ -123,7 +123,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(channel)
       }
     }
-  }, [currentAccount, refreshCounter])
+  }, [currentAccount])
 
   // Add a new budget
   const addBudget = async (budget: Omit<Budget, "id">): Promise<Budget | null> => {

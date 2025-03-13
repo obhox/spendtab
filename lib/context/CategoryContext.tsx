@@ -36,21 +36,16 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { currentAccount, isAccountSwitching, refreshCounter } = useAccounts()
+  const { currentAccount, isAccountSwitching } = useAccounts()
 
   // Load initial data from Supabase
   useEffect(() => {
     async function fetchCategories() {
-      if (!currentAccount) {
-        setCategories([]) // Reset categories when no account
-        setError(null)
+      setCategories([]) // Reset categories before fetching new account data
+      setError(null) // Clear any previous errors
+      
+      if (!currentAccount || isAccountSwitching) {
         setIsLoading(false)
-        return
-      }
-
-      if (isAccountSwitching) {
-        setCategories([]) // Clear categories during switch
-        setError(null)
         return
       }
 
@@ -124,7 +119,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         supabase.removeChannel(channel)
       }
     }
-  }, [currentAccount, refreshCounter]) // Add refreshCounter to dependencies
+  }, [currentAccount]) // Only depend on currentAccount changes
 
   // Calculate derived categories
   const incomeCategories = categories.filter(cat => cat.type === 'income')
