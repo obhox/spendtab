@@ -7,6 +7,7 @@ import { PostHogProvider } from "@/app/providers/posthog-provider"
 import { ThemeProvider } from "@/app/providers/theme-provider"
 import { DataProvider } from "@/lib/context/DataProvider"
 import { Toaster } from "sonner"
+import { LoadingBar } from "@/components/ui/loading-bar"
 import "./globals.css"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <PostHogProvider>
             <DataProvider>
+              <LoadingBar />
               {children}
               <Toaster richColors closeButton />
             </DataProvider>

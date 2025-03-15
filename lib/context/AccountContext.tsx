@@ -31,6 +31,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isAccountSwitching, setIsAccountSwitching] = useState(false);
 
+  useEffect(() => {
+    loadAccounts();
+  }, []);
+
   const setCurrentAccount = (account: Account, showNotification = true) => {
     if (currentAccount?.id === account.id) return;
     
