@@ -79,7 +79,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   // Display any transaction context errors as toasts
   useEffect(() => {
     if (error) {
-      toast.error(error)
+      toast(error)
     }
   }, [error])
   

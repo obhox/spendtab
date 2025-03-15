@@ -25,7 +25,12 @@ export default function SignUpPage() {
     setLoading(true)
     
     try {
-      await signUp(email, password)
+      const { success, error } = await signUp(email, password, firstName, lastName, companyName)
+      
+      if (!success) {
+        throw new Error(error)
+      }
+      
       toast("Account created. Please check your email to confirm your account.")
       router.push("/login")
     } catch (error: any) {

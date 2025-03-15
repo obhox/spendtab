@@ -56,10 +56,13 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const loadAccounts = async () => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        toast("Authentication Error", {
-          description: "Please sign in to access your accounts."
-        });
+      if (sessionError) {
+        toast(sessionError.message);
+        throw sessionError;
+      }
+      
+      if (!session) {
+        toast("Please sign in to access your accounts.");
         return;
       }
 
@@ -68,7 +71,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         .select("*")
         .eq("owner_id", session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        toast(error.message);
+        throw error;
+      }
 
       setAccounts(data || []);
       
@@ -81,11 +87,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         }
       }
       setIsInitialLoad(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading accounts:", error);
-      toast("Failed to load accounts", {
-        description: "There was a problem loading your accounts"
-      });
+      toast(error.message || "Failed to load accounts");
     }
   };
 
@@ -98,18 +102,38 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
+          toast(sessionError.message);
           throw sessionError;
         }
         
         if (!session) {
           // Try to refresh the session
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError || !refreshData.session) {
-            toast("Authentication Error", {
-              description: "Your session has expired. Please sign in again."
-            });
+          if (refreshError) {
+            toast(refreshError.message);
+            throw refreshError;
+          }
+          if (!refreshData.session) {
+            toast("Your session has expired. Please sign in again.");
             return;
           }
+        }
+
+        // Check if user has reached the free plan limit
+        const { count: accountCount, error: countError } = await supabase
+          .from('accounts')
+          .select('*', { count: 'exact', head: true })
+          .eq('owner_id', session.user.id);
+          
+        if (countError) {
+          toast(countError.message);
+          throw countError;
+        }
+        
+        if (accountCount && accountCount >= 1) {
+          const errorMsg = 'Free users are limited to 1 account. Please upgrade to create more accounts.';
+          toast(errorMsg);
+          throw new Error(errorMsg);
         }
 
         const newAccount = {
@@ -126,117 +150,63 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          toast(error.message);
+          throw error;
+        }
 
         // Reload accounts to get the new account with its ID
         await loadAccounts();
         return;
 
-      } catch (error) {
+      } catch (error: any) {
         retryCount++;
         if (retryCount === maxRetries) {
           console.error("Error adding account:", error);
-          toast("Failed to create account", {
-            description: "There was a problem creating the account. Please try again."
-          });
-          throw error;
+          toast(error.message || "Failed to add account");
+          return;
         }
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
   };
 
   const updateAccount = async (id: string, name: string, description?: string) => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        toast("Authentication Error", {
-          description: "Please sign in to update the account."
-        });
-        return;
-      }
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("accounts")
         .update({ name, description, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .eq("owner_id", session.user.id)
-        .select()
-        .single();
+        .eq("id", id);
 
-      if (error) throw error;
-
-      const updatedAccounts = accounts.map(a => a.id === id ? data : a);
-      setAccounts(updatedAccounts);
-      
-      if (currentAccount?.id === id) {
-        _setCurrentAccount(data);
+      if (error) {
+        toast(error.message);
+        throw error;
       }
-      
-      toast("Account updated", {
-        description: `Successfully updated account: ${name}`
-      });
-    } catch (error) {
+
+      await loadAccounts();
+    } catch (error: any) {
       console.error("Error updating account:", error);
-      toast("Failed to update account", {
-        description: "There was a problem updating the account"
-      });
+      toast(error.message || "Failed to update account");
     }
   };
 
   const deleteAccount = async (id: string) => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        toast("Authentication Error", {
-          description: "Please sign in to delete the account."
-        });
-        return;
-      }
-
-      if (accounts.length === 1) {
-        toast("Cannot delete account", {
-          description: "You must have at least one account"
-        });
-        return;
-      }
-      
       const { error } = await supabase
         .from("accounts")
         .delete()
-        .eq("id", id)
-        .eq("owner_id", session.user.id);
+        .eq("id", id);
 
-      if (error) throw error;
-
-      const remainingAccounts = accounts.filter(a => a.id !== id);
-      setAccounts(remainingAccounts);
-      
-      if (currentAccount?.id === id) {
-        const nextAccount = remainingAccounts[0];
-        if (nextAccount) {
-          setCurrentAccount(nextAccount);
-        } else {
-          _setCurrentAccount(null);
-          localStorage.removeItem('currentAccountId');
-        }
-      } else {
-        toast("Account deleted", {
-          description: "The account has been successfully deleted"
-        });
+      if (error) {
+        toast(error.message);
+        throw error;
       }
-    } catch (error) {
+
+      await loadAccounts();
+    } catch (error: any) {
       console.error("Error deleting account:", error);
-      toast("Failed to delete account", {
-        description: "There was a problem deleting the account"
-      });
+      toast(error.message || "Failed to delete account");
     }
   };
-
-  useEffect(() => {
-    loadAccounts();
-  }, []);
 
   return (
     <AccountContext.Provider
@@ -256,6 +226,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Custom hook to use the account context
 export function useAccounts() {
   const context = useContext(AccountContext);
   if (context === undefined) {

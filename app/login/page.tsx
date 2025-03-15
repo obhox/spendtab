@@ -1,13 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn, signInWithGoogle } from "@/lib/auth-utils"
 import { toast } from "sonner"
 
@@ -16,6 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectUrl = searchParams.get('redirectedFrom') || '/dashboard'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +27,7 @@ export default function LoginPage() {
       toast("Successfully logged in", {
         description: "Welcome back to your account",
       })
-      router.push("/dashboard")
+      router.push(redirectUrl)
     } catch (error: any) {
       console.error("Login error:", error)
       toast("Login failed", {
@@ -40,7 +41,10 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
+      // Google sign-in will automatically redirect to the dashboard
+      // as configured in the signInWithGoogle function
       await signInWithGoogle()
+      // No need for manual redirect as OAuth flow handles it
       toast("Google sign-in initiated", {
         description: "Please complete the authentication process",
       })
@@ -49,8 +53,7 @@ export default function LoginPage() {
       toast("Google sign-in failed", {
         description: error?.message || "Failed to sign in with Google",
       })
-    } finally {
-      setLoading(false)
+      setLoading(false) // Only set loading to false on error since redirect will happen
     }
   }
 
@@ -66,6 +69,7 @@ export default function LoginPage() {
           variant="outline"
           className="w-full justify-center space-x-2"
           onClick={handleGoogleSignIn}
+          disabled={loading}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -85,7 +89,7 @@ export default function LoginPage() {
               fill="#EA4335"
             />
           </svg>
-          <span>Google</span>
+          <span>Sign in with Google</span>
         </Button>
 
         <div className="relative">
@@ -93,7 +97,7 @@ export default function LoginPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">OR CONTINUE WITH</span>
+            <span className="bg-white px-2 text-muted-foreground">OR CONTINUE WITH</span>
           </div>
         </div>
 
@@ -107,6 +111,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              placeholder="Enter your email"
             />
           </div>
 
@@ -119,7 +124,14 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              placeholder="Enter your password"
             />
+          </div>
+
+          <div className="flex items-center justify-end">
+            <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+              Forgot password?
+            </Link>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

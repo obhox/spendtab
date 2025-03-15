@@ -211,11 +211,23 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       setOpen(false);
       form.reset(); // Reset the form state
       if (onSuccess) onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Transaction error:", error);
-      toast("Error", {
-        description: "There was a problem saving your transaction."
-      });
+      
+      // Handle subscription limit errors
+      if (error.message?.includes("Free users are limited to")) {
+        toast("Subscription Limit Reached", {
+          description: error.message,
+          action: {
+            label: "Upgrade",
+            onClick: () => window.location.href = "/profile"
+          }
+        });
+      } else {
+        toast("Error", {
+          description: "There was a problem saving your transaction."
+        });
+      }
     }
   }
 

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from "./AccountContext"
+import { toast } from "sonner"
 
 // Budget data interface
 export interface Budget {
@@ -56,6 +57,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         .order('name', { ascending: true })
       
       if (error) {
+        toast(error.message)
         throw error
       }
       
@@ -71,9 +73,10 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
           account_id: item.account_id
         })))
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching budgets:', error)
-      setError('Failed to load budgets')
+      setError(error.message || 'Failed to load budgets')
+      toast(error.message || 'Failed to load budgets')
     } finally {
       setIsLoading(false)
     }
@@ -128,53 +131,54 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   // Add a new budget
   const addBudget = async (budget: Omit<Budget, "id">): Promise<Budget | null> => {
     if (!currentAccount) {
-      setError('No account selected')
+      const errorMsg = 'No account selected';
+      setError(errorMsg)
+      toast(errorMsg)
       return null
     }
-    
+
     try {
+      // Check if user has reached the free plan limit
+      const { count, error: countError } = await supabase
+        .from('budgets')
+        .select('*', { count: 'exact', head: true })
+        .eq('account_id', currentAccount.id)
+
+      if (countError) {
+        toast(countError.message)
+        throw countError
+      }
+
+      if (count && count >= 3) {
+        const errorMsg = 'Free users are limited to 3 budgets. Please upgrade to create more budgets.'
+        toast(errorMsg)
+        throw new Error(errorMsg)
+      }
+      
       setIsLoading(true)
       setError(null) // Reset any previous errors
       
       const newBudget = {
         ...budget,
         id: uuidv4(),
-        spent: 0,
-        account_id: currentAccount.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        spent: 0
       }
 
       const { data, error } = await supabase
         .from('budgets')
-        .insert(newBudget)
+        .insert([newBudget])
         .select()
         .single()
 
       if (error) {
+        toast(error.message)
         throw error
       }
 
-      // Update the UI with the returned data from Supabase
-      const createdBudget = {
-        id: data.id,
-        name: data.name,
-        amount: data.amount,
-        spent: data.spent || 0,
-        period: data.period,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        account_id: data.account_id
-      }
-      
-      setBudgets(prev => [...prev, createdBudget])
-      
-      // Return the created budget
-      return createdBudget
-
-    } catch (error) {
+      return data
+    } catch (error: any) {
       console.error('Error adding budget:', error)
-      setError('Failed to add budget')
+      setError(error.message)
       return null
     } finally {
       setIsLoading(false)
@@ -182,39 +186,24 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   }
 
   // Update an existing budget
-  const updateBudget = async (id: string, updatedBudget: Omit<Budget, "id">) => {
-    if (!currentAccount) {
-      setError('No account selected')
-      return
-    }
-    
+  const updateBudget = async (id: string, budget: Omit<Budget, "id">) => {
     try {
       setIsLoading(true)
-      setError(null) // Reset any previous errors
-      
+      setError(null)
+
       const { error } = await supabase
         .from('budgets')
-        .update({
-          ...updatedBudget,
-          updated_at: new Date().toISOString()
-        })
+        .update(budget)
         .eq('id', id)
-        .eq('account_id', currentAccount.id)
-      
+
       if (error) {
+        toast(error.message)
         throw error
       }
-      
-      // Optimistically update the UI
-      setBudgets(prev =>
-        prev.map(budget =>
-          budget.id === id ? { ...updatedBudget, id } : budget
-        )
-      )
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating budget:', error)
-      setError('Failed to update budget')
+      setError(error.message)
+      toast(error.message)
     } finally {
       setIsLoading(false)
     }
@@ -222,31 +211,23 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
   // Delete a budget
   const deleteBudget = async (id: string) => {
-    if (!currentAccount) {
-      setError('No account selected')
-      return
-    }
-    
     try {
       setIsLoading(true)
-      setError(null) // Reset any previous errors
-      
+      setError(null)
+
       const { error } = await supabase
         .from('budgets')
         .delete()
         .eq('id', id)
-        .eq('account_id', currentAccount.id)
-      
+
       if (error) {
+        toast(error.message)
         throw error
       }
-      
-      // Optimistically update the UI
-      setBudgets(prev => prev.filter(budget => budget.id !== id))
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting budget:', error)
-      setError('Failed to delete budget')
+      setError(error.message)
+      toast(error.message)
     } finally {
       setIsLoading(false)
     }
@@ -261,7 +242,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
         deleteBudget,
         isLoading,
         error,
-        getBudgets,
+        getBudgets
       }}
     >
       {children}
@@ -269,6 +250,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// Custom hook to use the budget context
 export function useBudgets() {
   const context = useContext(BudgetContext)
   if (context === undefined) {

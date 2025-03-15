@@ -4,6 +4,89 @@
 alter table public.transactions enable row level security;
 alter table public.budgets enable row level security;
 
+-- Helper functions for subscription restrictions
+CREATE OR REPLACE FUNCTION public.check_monthly_transaction_limit()
+RETURNS TRIGGER AS $$
+DECLARE
+  transaction_count INTEGER;
+  user_tier TEXT;
+BEGIN
+  -- Get user's subscription tier
+  SELECT subscription_tier INTO user_tier
+  FROM public.users
+  WHERE id = NEW.user_id;
+
+  -- Only check limits for free tier
+  IF user_tier = 'free' THEN
+    -- Count transactions for current month
+    SELECT COUNT(*) INTO transaction_count
+    FROM public.transactions
+    WHERE user_id = NEW.user_id
+    AND date_trunc('month', date) = date_trunc('month', NEW.date);
+
+    IF transaction_count >= 50 THEN
+      RAISE EXCEPTION 'Free users are limited to 50 transactions per month';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.check_budget_limit()
+RETURNS TRIGGER AS $$
+DECLARE
+  budget_count INTEGER;
+  user_tier TEXT;
+BEGIN
+  -- Get user's subscription tier
+  SELECT subscription_tier INTO user_tier
+  FROM public.users
+  WHERE id = NEW.user_id;
+
+  -- Only check limits for free tier
+  IF user_tier = 'free' THEN
+    -- Count existing budgets
+    SELECT COUNT(*) INTO budget_count
+    FROM public.budgets
+    WHERE user_id = NEW.user_id;
+
+    IF budget_count >= 3 THEN
+      RAISE EXCEPTION 'Free users are limited to 3 budgets';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.check_account_limit()
+RETURNS TRIGGER AS $$
+DECLARE
+  account_count INTEGER;
+  user_tier TEXT;
+BEGIN
+  -- Get user's subscription tier
+  SELECT subscription_tier INTO user_tier
+  FROM public.users
+  WHERE id = NEW.owner_id;
+
+  -- Only check limits for free tier
+  IF user_tier = 'free' THEN
+    -- Count existing accounts
+    SELECT COUNT(*) INTO account_count
+    FROM public.accounts
+    WHERE owner_id = NEW.owner_id;
+
+    IF account_count >= 1 THEN
+      RAISE EXCEPTION 'Free users are limited to 1 account';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create transactions table
 CREATE TABLE IF NOT EXISTS public.transactions (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -110,6 +193,22 @@ CREATE POLICY "Users can delete their own accounts"
   ON public.accounts
   FOR DELETE
   USING (auth.uid() = owner_id);
+
+-- Create triggers for subscription restrictions
+CREATE TRIGGER check_monthly_transaction_limit_trigger
+  BEFORE INSERT ON public.transactions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.check_monthly_transaction_limit();
+
+CREATE TRIGGER check_budget_limit_trigger
+  BEFORE INSERT ON public.budgets
+  FOR EACH ROW
+  EXECUTE FUNCTION public.check_budget_limit();
+
+CREATE TRIGGER check_account_limit_trigger
+  BEFORE INSERT ON public.accounts
+  FOR EACH ROW
+  EXECUTE FUNCTION public.check_account_limit();
 
 -- Create functions and triggers for updated_at
 CREATE OR REPLACE FUNCTION public.set_updated_at()
