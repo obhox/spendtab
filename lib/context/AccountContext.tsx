@@ -59,6 +59,20 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const loadAccounts = async () => {
     try {
+      // Get user subscription tier
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_tier')
+        .single();
+
+      if (userError) {
+        console.error('Error fetching user data:', userError);
+        toast('Error fetching user data');
+      }
+
+      const subscriptionTier = userData?.subscription_tier || 'free';
+      // Store subscription tier in localStorage for other contexts to use
+      localStorage.setItem('userSubscriptionTier', subscriptionTier);
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         toast(sessionError.message);

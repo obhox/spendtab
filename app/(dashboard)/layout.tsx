@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ModeToggle } from "@/components/mode-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useAccounts } from "@/lib/context/AccountContext"
+import { useState, useEffect } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 const AccountSelector = dynamic(
   () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
@@ -27,6 +30,30 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const { currentAccount } = useAccounts();
+ const [subscriptionTier, setSubscriptionTier] = useState('free');
+
+const supabase = createClientComponentClient()
+
+useEffect(() => {
+  const fetchSubscriptionTier = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', session.user.id)
+      .single();
+
+    if (userData) {
+      setSubscriptionTier(userData.subscription_tier);
+    }
+  };
+
+  fetchSubscriptionTier();
+}, []);
+
   return (
     <DataProvider>
       <AccountCreationModal />
@@ -119,10 +146,17 @@ export default function DashboardLayout({
                     </div>
                   </div>
                 </ScrollArea>
-                <div className="mt-auto p-4">
+                <div className="mt-auto p-4 space-y-4">
                   <Suspense fallback={<div>Loading account selector...</div>}>
                     <AccountSelector />
                   </Suspense>
+                  {!subscriptionTier || !['pro', 'PRO'].includes(subscriptionTier) && (
+                    <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                      <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
+                        Upgrade to Pro
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </nav>
             </SheetContent>
@@ -208,10 +242,17 @@ export default function DashboardLayout({
               </div>
             </div>
           </ScrollArea>
-          <div className="mt-auto p-4">
+          <div className="mt-auto p-4 space-y-4">
             <Suspense fallback={<div>Loading account selector...</div>}>
               <AccountSelector />
             </Suspense>
+            {subscriptionTier?.toLowerCase() !== 'pro' && (
+              <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            )}
           </div>
         </aside>
         <main className="flex-1 overflow-auto p-8 lg:pl-72">
