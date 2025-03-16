@@ -5,6 +5,7 @@ import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from './AccountContext'
 import { toast } from "sonner"
+import { getCookie } from "@/lib/cookie-utils"
 
 // Transaction data interface
 export interface Transaction {
@@ -142,7 +143,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     const localId = uuidv4()
     
     try {
-      const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
+      const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
       
       if (userSubscriptionTier === 'free') {
         // Check if user has reached the free plan limit for transactions

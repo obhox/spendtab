@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { setCookie, getCookie, deleteCookie } from "@/lib/cookie-utils";
 
 type Account = {
   id: string;
@@ -39,7 +40,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     if (currentAccount?.id === account.id) return;
     
     setIsAccountSwitching(true);
-    localStorage.setItem('currentAccountId', account.id);
+    setCookie('currentAccountId', account.id);
     _setCurrentAccount(account);
     
     if (!isInitialLoad && showNotification) {
@@ -72,7 +73,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
       const subscriptionTier = userData?.subscription_tier || 'free';
       // Store subscription tier in localStorage for other contexts to use
-      localStorage.setItem('userSubscriptionTier', subscriptionTier);
+      setCookie('userSubscriptionTier', subscriptionTier);
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         toast(sessionError.message);
@@ -97,11 +98,11 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setAccounts(data || []);
       
       if (data && data.length > 0) {
-        const storedAccountId = localStorage.getItem('currentAccountId');
+        const storedAccountId = getCookie('currentAccountId');
         const storedAccount = data.find(account => account.id === storedAccountId);
         if (storedAccount || data[0]) {
           _setCurrentAccount(storedAccount || data[0]);
-          localStorage.setItem('currentAccountId', (storedAccount || data[0]).id);
+          setCookie('currentAccountId', (storedAccount || data[0]).id);
         }
       }
       setIsInitialLoad(false);
@@ -138,7 +139,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Check if free tier user has reached the account limit
-        const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
+        const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
         
         if (userSubscriptionTier === 'free') {
           const { count: accountCount, error: countError } = await supabase
