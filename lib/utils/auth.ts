@@ -1,4 +1,10 @@
-import { supabase } from './supabase'
+import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession()
@@ -16,8 +22,8 @@ export async function getCurrentUser() {
 }
 
 export async function getUserProfile() {
-  const user = await getCurrentUser()
-  if (!user) return null
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) return null
   
   return {
     first_name: user.user_metadata?.first_name || '',
@@ -32,6 +38,10 @@ export async function updateUserProfile({ first_name, last_name, company_name, p
   company_name?: string
   password?: string
 }) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const updateData: any = {
     data: {
       first_name,
@@ -52,6 +62,10 @@ export async function updateUserProfile({ first_name, last_name, company_name, p
 }
 
 export async function signIn(email: string, password: string) {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -60,11 +74,18 @@ export async function signIn(email: string, password: string) {
   if (error) {
     throw error
   }
+
+  // After successful sign in, the session will be automatically handled by the client
+  return data
   
   return data
 }
 
 export async function signUp(email: string, password: string, firstName?: string, lastName?: string, companyName?: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   try {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -90,6 +111,10 @@ export async function signUp(email: string, password: string, firstName?: string
 }
 
 export async function signOut() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const { error } = await supabase.auth.signOut()
   
   if (error) {
@@ -97,9 +122,11 @@ export async function signOut() {
   }
 }
 
-
-
 export async function resetPassword(email: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/reset-password`,
   })
@@ -110,6 +137,10 @@ export async function resetPassword(email: string) {
 }
 
 export async function updatePassword(password: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const { error } = await supabase.auth.updateUser({
     password,
   })
@@ -120,6 +151,10 @@ export async function updatePassword(password: string) {
 }
 
 export function supabaseAuthStateChange(callback: (user: any) => void) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (event, session) => {
       callback(session?.user || null)
@@ -130,6 +165,10 @@ export function supabaseAuthStateChange(callback: (user: any) => void) {
 }
 
 export async function signInWithGoogle() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -146,9 +185,7 @@ export async function signInWithGoogle() {
       throw error
     }
     
-    // For OAuth flow, we need to handle both immediate and redirect cases
     if (!data.url) {
-      // Get immediate session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {

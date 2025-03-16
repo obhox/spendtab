@@ -1,24 +1,38 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  // Create a Supabase client configured for use with middleware
   const response = NextResponse.next()
-  
-  // AUTHENTICATION CHECKS DISABLED
-  // This allows access to all routes without authentication
-  // Remove this code and restore the original implementation when you want to re-enable authentication
-  return response;
-  
-  /* Original authentication code (commented out)
-  const supabase = createMiddlewareClient({ req: request, res: response })
-  
-  try {
-    // Refresh session if exists
-    await supabase.auth.getSession()
 
-    // Get the latest session state
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  try {
+    // Get session once
     const { data: { session }, error } = await supabase.auth.getSession()
 
     if (error) throw error
@@ -30,6 +44,7 @@ export async function middleware(request: NextRequest) {
       }
       return response
     }
+    
     // If no session and trying to access protected routes, redirect to login
     if (!session && 
       !request.nextUrl.pathname.startsWith('/_next') &&
@@ -45,16 +60,19 @@ export async function middleware(request: NextRequest) {
     }
 
     return response
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Auth error:', error)
     // Clear any invalid session state
     await supabase.auth.signOut()
     return NextResponse.redirect(new URL('/login', request.url))
   }
-  */
 }
 
 export const config = {
-  matcher: ["/((?!.+\.[\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: [
+    /*
+     * Match all paths except static files and images
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }
-

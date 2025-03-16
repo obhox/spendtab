@@ -11,7 +11,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createBrowserClient } from "@supabase/ssr"
 
 const AccountSelector = dynamic(
   () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
@@ -33,7 +33,10 @@ export default function DashboardLayout({
   const { currentAccount } = useAccounts();
  const [subscriptionTier, setSubscriptionTier] = useState('free');
 
-const supabase = createClientComponentClient()
+const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
 useEffect(() => {
   const fetchSubscriptionTier = async () => {

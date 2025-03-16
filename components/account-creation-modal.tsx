@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAccounts } from "@/lib/context/AccountContext"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createBrowserClient } from "@supabase/ssr"
 import { toast } from "sonner"
 
 export function AccountCreationModal() {
@@ -13,7 +13,10 @@ export function AccountCreationModal() {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const { accounts, addAccount, currentAccount } = useAccounts()
-  const supabase = createClientComponentClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   useEffect(() => {
     const checkUserAndAccounts = async () => {

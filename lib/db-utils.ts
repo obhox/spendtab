@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { getCurrentUser } from './auth-utils'
+import { getCurrentUser } from './utils/auth'
 
 // Helper function to get user ID for database operations
 export async function getUserId() {

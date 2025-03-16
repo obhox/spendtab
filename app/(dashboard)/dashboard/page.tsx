@@ -13,9 +13,9 @@ import { useTransactions } from "@/lib/context/TransactionContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, isWithinInterval } from "date-fns"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 // If the module is not found, make sure to:
-// 1. Install the package: npm install @supabase/auth-helpers-nextjs
+// 1. Install the package: npm install @supabase/ssr
 // 2. Add the types: npm install -D @supabase/supabase-js
 
 // Time period options for the filter
@@ -40,7 +40,10 @@ function DashboardMetrics() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [timePeriod, setTimePeriod] = useState("current_month")
-  const supabase = createClientComponentClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   // Set up real-time subscription for transactions
   useEffect(() => {

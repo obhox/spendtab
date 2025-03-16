@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signIn, signInWithGoogle } from "@/lib/auth-utils"
+import { signIn, signInWithGoogle } from "@/lib/utils/auth"
 import { toast } from "sonner"
 
 export default function LoginPage() {

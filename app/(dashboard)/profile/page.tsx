@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { getUserProfile, updateUserProfile, signOut } from "@/lib/auth-utils"
+import { getUserProfile, updateUserProfile, signOut } from "@/lib/utils/auth"
 
 export default function ProfilePage() {
   const [firstName, setFirstName] = useState("")

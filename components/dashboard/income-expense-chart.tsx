@@ -7,7 +7,7 @@ import { useAccounts } from "@/lib/context/AccountContext"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface DataPoint {
   month: string
@@ -19,7 +19,10 @@ export function IncomeExpenseChart() {
   const { monthlyData, error } = useAnalytics()
   const { currentAccount, isAccountSwitching } = useAccounts()
   const [chartData, setChartData] = useState<DataPoint[]>([])
-  const supabase = createClientComponentClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   // Set up real-time subscription for transactions
   useEffect(() => {

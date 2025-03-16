@@ -1,10 +1,26 @@
 import { redirect } from "next/navigation";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { CookieOptions, createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export default async function Home() {
   // Create a Supabase client for server components
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookies().get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          cookies().set(name, value, options)
+        },
+        remove(name: string, options: CookieOptions) {
+          cookies().set(name, '', options)
+        },
+      },
+    }
+  );
   
   // Check for an active session
   const { data: { session } } = await supabase.auth.getSession();

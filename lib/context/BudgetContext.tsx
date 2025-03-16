@@ -5,6 +5,7 @@ import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from "./AccountContext"
 import { toast } from "sonner"
+import { COOKIE_KEYS, getCookie } from "../cookie-utils"
 
 // Budget data interface
 export interface Budget {
@@ -138,7 +139,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
+      const userSubscriptionTier = getCookie(COOKIE_KEYS.USER_SUBSCRIPTION_TIER) || 'free';
       
       if (userSubscriptionTier === 'free') {
         // Check if user has reached the free plan limit
