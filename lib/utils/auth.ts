@@ -120,6 +120,11 @@ export async function signOut() {
   if (error) {
     throw error
   }
+
+  // Redirect to login page after successful signout
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login'
+  }
 }
 
 export async function resetPassword(email: string) {
@@ -165,7 +170,7 @@ export function supabaseAuthStateChange(callback: (user: any) => void) {
 }
 
 export async function signInWithGoogle() {
-  const supabase = createClient(
+  const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
@@ -182,18 +187,30 @@ export async function signInWithGoogle() {
     })
     
     if (error) {
+      console.error('Google sign-in error:', error)
       throw error
     }
     
-    if (!data.url) {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError) {
-        throw sessionError
-      }
+    // If we have a URL, the OAuth flow is starting
+    if (data.url) {
+      // Redirect to the provider's sign-in flow
+      window.location.href = data.url
+      return data
     }
     
-    return data
+    // If we don't have a URL, check if we have a valid session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError)
+      throw sessionError
+    }
+    
+    if (!session) {
+      throw new Error('No session established after Google sign-in')
+    }
+    
+    return { session }
   } catch (error) {
     console.error('Google sign-in error:', error)
     throw error
