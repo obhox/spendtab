@@ -137,21 +137,25 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Check if user has reached the free plan limit
-        const { count: accountCount, error: countError } = await supabase
-          .from('accounts')
-          .select('*', { count: 'exact', head: true })
-          .eq('owner_id', session.user.id);
-          
-        if (countError) {
-          toast(countError.message);
-          throw countError;
-        }
+        // Check if free tier user has reached the account limit
+        const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
         
-        if (accountCount && accountCount >= 1) {
-          const errorMsg = 'Free users are limited to 1 account. Please upgrade to create more accounts.';
-          toast(errorMsg);
-          throw new Error(errorMsg);
+        if (userSubscriptionTier === 'free') {
+          const { count: accountCount, error: countError } = await supabase
+            .from('accounts')
+            .select('*', { count: 'exact', head: true })
+            .eq('owner_id', session.user.id);
+            
+          if (countError) {
+            toast(countError.message);
+            throw countError;
+          }
+          
+          if (accountCount && accountCount >= 1) {
+            const errorMsg = 'Free users are limited to 1 account. Please upgrade to create more accounts.';
+            toast(errorMsg);
+            throw new Error(errorMsg);
+          }
         }
 
         const newAccount = {

@@ -138,21 +138,25 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Check if user has reached the free plan limit
-      const { count, error: countError } = await supabase
-        .from('budgets')
-        .select('*', { count: 'exact', head: true })
-        .eq('account_id', currentAccount.id)
+      const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
+      
+      if (userSubscriptionTier === 'free') {
+        // Check if user has reached the free plan limit
+        const { count, error: countError } = await supabase
+          .from('budgets')
+          .select('*', { count: 'exact', head: true })
+          .eq('account_id', currentAccount.id)
 
-      if (countError) {
-        toast(countError.message)
-        throw countError
-      }
+        if (countError) {
+          toast(countError.message)
+          throw countError
+        }
 
-      if (count && count >= 3) {
-        const errorMsg = 'Free users are limited to 3 budgets. Please upgrade to create more budgets.'
-        toast(errorMsg)
-        throw new Error(errorMsg)
+        if (count && count >= 3) {
+          const errorMsg = 'Free users are limited to 3 budgets. Please upgrade to create more budgets.'
+          toast(errorMsg)
+          throw new Error(errorMsg)
+        }
       }
       
       setIsLoading(true)

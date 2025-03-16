@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from './AccountContext'
+import { toast } from "sonner"
 
 // Transaction data interface
 export interface Transaction {
@@ -141,6 +142,28 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     const localId = uuidv4()
     
     try {
+      const userSubscriptionTier = localStorage.getItem('userSubscriptionTier') || 'free';
+      
+      if (userSubscriptionTier === 'free') {
+        // Check if user has reached the free plan limit for transactions
+        const { count, error: countError } = await supabase
+          .from('transactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('account_id', currentAccount.id)
+          .gte('created_at', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
+
+        if (countError) {
+          toast(countError.message)
+          throw countError
+        }
+
+        if (count && count >= 50) {
+          const errorMsg = 'Free users are limited to 50 transactions per month. Please upgrade to add more transactions.'
+          toast(errorMsg)
+          throw new Error(errorMsg)
+        }
+      }
+
       setError(null) // Clear any previous errors
       setIsLoading(true)
       
