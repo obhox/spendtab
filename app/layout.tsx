@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import { PostHogProvider } from "@/app/providers/posthog-provider"
 import { ThemeProvider } from "@/app/providers/theme-provider"
+import { QueryProvider } from "@/app/providers/query-provider"
 import { DataProvider } from "@/lib/context/DataProvider"
 import { Toaster } from "sonner"
 import { LoadingBar } from "@/components/ui/loading-bar"
@@ -16,11 +17,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <PostHogProvider>
-            <DataProvider>
-              <LoadingBar />
-              {children}
-              <Toaster richColors closeButton />
-            </DataProvider>
+            <QueryProvider>
+              <DataProvider>
+                <LoadingBar />
+                {children}
+                <Toaster richColors closeButton />
+              </DataProvider>
+            </QueryProvider>
           </PostHogProvider>
         </ThemeProvider>
       </body>

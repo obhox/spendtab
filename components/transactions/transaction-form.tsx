@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import * as z from "zod"
 import { 
   Dialog,
   DialogContent,
@@ -34,7 +34,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { format, parse } from "date-fns"
 import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { useCategories } from "@/lib/context/CategoryContext"
 import { useTransactions } from "@/lib/context/TransactionContext"
@@ -54,7 +54,7 @@ const transactionSchema = z.object({
   payment_source: z.string().min(1, { message: "Please select a payment source." }),
   notes: z.string().optional(),
   budget_id: z.string().nullable(),
-  account_id: z.string().optional()
+  account_id: z.string().min(1, { message: "An account is required." })
 });
 
 // Type for form data
@@ -87,54 +87,67 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
   
-  // Get account ID for new transactions
-  const newTransactionAccountId = currentAccount?.id || "";
+  // Get current account ID for new transactions
+  const currentAccountId = currentAccount?.id || "";
   
+  // Parse date from string if it's a transaction edit
+  const parseTransactionDate = (dateString: string): Date => {
+    try {
+      return parse(dateString, "yyyy-MM-dd", new Date());
+    } catch (error) {
+      console.error("Date parsing error:", error);
+      return new Date(); // Fallback to current date
+    }
+  };
+
   // Default values for the form
-  const defaultValues: Partial<TransactionFormValues> = transaction 
-    ? {
+  const getDefaultValues = (): Partial<TransactionFormValues> => {
+    if (transaction) {
+      return {
         description: transaction.description,
         amount: transaction.amount,
-        date: new Date(transaction.date),
+        date: parseTransactionDate(transaction.date),
         category: transaction.category,
         type: transaction.type,
-        payment_source: transaction.payment_source, // Fixed: Added payment_source for existing transactions
-        notes: transaction.notes,
+        payment_source: transaction.payment_source,
+        notes: transaction.notes || "",
         budget_id: transaction.budget_id || null,
         account_id: transaction.account_id
-      }
-    : {
-        description: "",
-        amount: undefined as number | undefined,
-        payment_source: "bank_transfer", // Fixed: Added default payment_source
-        date: new Date(),
-        category: "",
-        type: "expense",
-        notes: "",
-        budget_id: null,
-        account_id: newTransactionAccountId // Default to current account ID
       };
+    }
+    
+    return {
+      description: "",
+      amount: undefined,
+      payment_source: "bank_transfer",
+      date: new Date(),
+      category: "",
+      type: "expense",
+      notes: "",
+      budget_id: null,
+      account_id: currentAccountId
+    };
+  };
   
   // Initialize form
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues
+    defaultValues: getDefaultValues()
   });
 
-  // Reset form when dialog opens/closes or transaction changes
+  // Reset form when dialog opens/closes or transaction/account changes
   useEffect(() => {
     if (open) {
-      // Update the defaultValues object to use the current account
-      const updatedDefaults = transaction 
-        ? { ...defaultValues }
-        : { 
-            ...defaultValues,
-            account_id: currentAccount?.id || ""
-          };
-      
-      form.reset(updatedDefaults);
+      form.reset(getDefaultValues());
     }
-  }, [open, transaction, currentAccount]);
+    
+    return () => {
+      // Cleanup function
+      if (!open) {
+        form.reset();
+      }
+    };
+  }, [open, transaction, currentAccount, form]);
   
   // Get the current transaction type and create filtered categories list
   const transactionType = form.watch("type");
@@ -144,78 +157,63 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
 
   const hasCategoriesForType = filteredCategories.length > 0;
 
-  // Get the current account ID from the AccountContext
-  const getActiveAccountId = () => {
-    if (!currentAccount) {
-      console.warn("No current account found, transactions require an account_id");
-      return ""; // You might want to handle this case differently
-    }
-    return currentAccount.id;
-  };
-
   // Handle form submission
   async function onSubmit(data: TransactionFormValues) {
     try {
-      // Ensure we have a valid account_id
-      const accountId = data.account_id || transaction?.account_id || getActiveAccountId();
+      // Validate that categories exist for the selected type
+      if (!hasCategoriesForType) {
+        toast("No Categories Available", {
+          description: `Please add categories for ${transactionType} transactions before continuing.`
+        });
+        return;
+      }
       
-      if (!accountId) {
+      // Ensure we have a valid account_id
+      if (!data.account_id) {
         toast("Error", {
           description: "No account selected. Please select an account to continue."
         });
         return;
       }
       
-      // Fixed: Properly handle budget_id and ensure account_id is set
+      // Format date for submission
+      const formattedDate = format(data.date, "yyyy-MM-dd");
+      
+      // Create the transaction data object
       const processedData = {
-        ...data,
-        date: format(data.date, "yyyy-MM-dd"),
-        budget_id: data.budget_id === "none" ? null : data.budget_id,
-        account_id: accountId
+        description: data.description,
+        amount: data.amount,
+        date: formattedDate,
+        category: data.category,
+        type: data.type,
+        payment_source: data.payment_source,
+        notes: data.notes || "",
+        budget_id: data.budget_id,
+        account_id: data.account_id
       };
 
       if (transaction) {
         // Update existing transaction
-        await updateTransaction(transaction.id, {
-          description: processedData.description!,
-          amount: processedData.amount!,
-          date: processedData.date,
-          category: processedData.category!,
-          type: processedData.type!,
-          payment_source: processedData.payment_source!,
-          notes: processedData.notes,
-          budget_id: processedData.budget_id,
-          account_id: processedData.account_id
-        });
+        await updateTransaction(transaction.id, processedData);
         toast("Transaction updated", {
           description: "Your transaction has been updated successfully."
         });
       } else {
         // Add new transaction
-        await addTransaction({
-          description: processedData.description!,
-          amount: processedData.amount!,
-          date: processedData.date,
-          category: processedData.category!,
-          type: processedData.type!,
-          payment_source: processedData.payment_source!,
-          notes: processedData.notes,
-          budget_id: processedData.budget_id,
-          account_id: processedData.account_id
-        });
+        await addTransaction(processedData);
         toast("Transaction added", {
           description: "Your new transaction has been added successfully."
         });
       }
       
       setOpen(false);
-      form.reset(); // Reset the form state
+      form.reset(getDefaultValues()); // Reset the form with fresh defaults
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Transaction error:", error);
       
       // Handle subscription limit errors
-      if (error.message?.includes("Free users are limited to")) {
+      if (error instanceof Error && error.message?.includes("Free users are limited to")) {
         toast("Subscription Limit Reached", {
           description: error.message,
           action: {
@@ -233,12 +231,17 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
 
   // Handle transaction type change
   const handleTypeChange = (value: string) => {
-    form.setValue("type", value as "income" | "expense");
-    form.setValue("category", "");
-    
-    // Clear budget selection when switching to income
-    if (value === "income") {
-      form.setValue("budget_id", null);
+    if (value === "income" || value === "expense") {
+      form.setValue("type", value);
+      form.setValue("category", "");
+      
+      // Clear budget selection when switching to income
+      if (value === "income") {
+        form.setValue("budget_id", null);
+      }
+      
+      // Trigger validation after changing values
+      form.trigger(["type", "category", "budget_id"]);
     }
   };
 
@@ -305,7 +308,16 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      placeholder="0.00" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === "" ? undefined : parseFloat(value));
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -496,8 +508,28 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
               )}
             />
             
+            <FormField
+              control={form.control}
+              name="account_id"
+              render={({ field }) => (
+                <FormItem className="hidden">
+                  <FormControl>
+                    <Input 
+                      type="hidden"
+                      {...field} 
+                      value={field.value || currentAccountId}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <DialogFooter>
-              <Button type="submit">
+              <Button 
+                type="submit" 
+                disabled={!hasCategoriesForType || !currentAccountId}
+              >
                 {transaction ? "Update Transaction" : "Add Transaction"}
               </Button>
             </DialogFooter>

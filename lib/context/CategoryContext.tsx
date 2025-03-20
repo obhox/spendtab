@@ -1,9 +1,10 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react"
 import { supabase } from "../supabase"
 import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from './AccountContext'
+import { toast } from "sonner"
 
 // Category data interface
 export interface Category {
@@ -37,33 +38,41 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { currentAccount, isAccountSwitching } = useAccounts()
+  
+  // Use refs to prevent duplicate requests and enable caching
+  const isFetchingRef = useRef(false)
+  const categoryCacheRef = useRef<Record<string, Category[]>>({})
 
-  // Load initial data from Supabase
-  useEffect(() => {
-    async function fetchCategories() {
-      setCategories([]) // Reset categories before fetching new account data
-      setError(null) // Clear any previous errors
+  // Fetch categories with caching
+  const fetchCategories = useCallback(async (forceFetch = false) => {
+    if (!currentAccount || isAccountSwitching) {
+      setIsLoading(false)
+      return
+    }
+    
+    // Prevent duplicate fetches
+    if (isFetchingRef.current) {
+      return
+    }
+    
+    // Check cache first
+    if (!forceFetch && categoryCacheRef.current[currentAccount.id]) {
+      setCategories(categoryCacheRef.current[currentAccount.id])
+      setIsLoading(false)
       
-      if (!currentAccount || isAccountSwitching) {
-        setIsLoading(false)
-        return
-      }
-
+      // Still fetch in background to update cache, but don't show loading state
+      isFetchingRef.current = true
       try {
-        setIsLoading(true)
-        
         const { data, error } = await supabase
           .from('categories')
           .select('*')
           .eq('account_id', currentAccount.id)
           .order('name', { ascending: true })
         
-        if (error) {
-          throw error
-        }
+        if (error) throw error
         
         if (data) {
-          setCategories(data.map(item => ({
+          const formattedData = data.map(item => ({
             id: item.id,
             name: item.name,
             type: item.type,
@@ -71,57 +80,95 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
             color: item.color || undefined,
             is_default: item.is_default,
             account_id: item.account_id
-          })))
+          }))
+          
+          // Only update if data has changed
+          const currentData = JSON.stringify(categories)
+          const newData = JSON.stringify(formattedData)
+          
+          if (currentData !== newData) {
+            setCategories(formattedData)
+            categoryCacheRef.current[currentAccount.id] = formattedData
+          }
         }
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-        setError('Failed to load categories')
+      } catch (error: any) {
+        console.error('Error fetching categories in background:', error)
       } finally {
-        setIsLoading(false)
+        isFetchingRef.current = false
       }
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      isFetchingRef.current = true
+      
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('account_id', currentAccount.id)
+        .order('name', { ascending: true })
+      
+      if (error) {
+        toast(error.message)
+        throw error
+      }
+      
+      if (data) {
+        const formattedData = data.map(item => ({
+          id: item.id,
+          name: item.name,
+          type: item.type,
+          icon: item.icon || undefined,
+          color: item.color || undefined,
+          is_default: item.is_default,
+          account_id: item.account_id
+        }))
+        
+        setCategories(formattedData)
+        categoryCacheRef.current[currentAccount.id] = formattedData
+      }
+    } catch (error: any) {
+      console.error('Error fetching categories:', error)
+      setError(error.message || 'Failed to load categories')
+      toast(error.message || 'Failed to load categories')
+    } finally {
+      setIsLoading(false)
+      isFetchingRef.current = false
+    }
+  }, [currentAccount, isAccountSwitching, categories])
+
+  // Load initial data from Supabase
+  useEffect(() => {
+    if (!currentAccount) {
+      setIsLoading(false)
+      return
     }
     
-    fetchCategories()
-
-    // Clean up any existing subscription
-    const cleanupSubscription = () => {
-      const existingChannel = supabase.getChannels().find(ch => ch.topic.startsWith('realtime:categories-'));
-      if (existingChannel) {
-        supabase.removeChannel(existingChannel);
-      }
-    };
-
-    // Set up real-time subscription only for current account
-    let channel;
-    if (currentAccount) {
-      // Clean up any existing subscription first
-      cleanupSubscription();
-      
-      // Set up new subscription for current account
-      channel = supabase
-        .channel(`categories-${currentAccount.id}`)
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'categories',
-            filter: `account_id=eq.${currentAccount.id}`
-          }, 
-          () => {
-            fetchCategories()
-          }
-        )
-        .subscribe()
+    // Use cached data if available
+    if (categoryCacheRef.current[currentAccount.id]) {
+      setCategories(categoryCacheRef.current[currentAccount.id])
+      setIsLoading(false)
+    } else {
+      // Reset categories only if switching to a new account without cached data
+      setCategories([])
+      setError(null)
+      fetchCategories()
     }
+
+    // Set up periodic refresh
+    const refreshInterval = setInterval(() => {
+      if (currentAccount) {
+        fetchCategories(true);
+      }
+    }, 30000); // Refresh every 30 seconds
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      clearInterval(refreshInterval);
     }
-  }, [currentAccount]) // Only depend on currentAccount changes
+  }, [currentAccount, fetchCategories])
 
-  // Calculate derived categories
+  // Calculate derived categories - memoize these if performance is still an issue
   const incomeCategories = categories.filter(cat => cat.type === 'income')
   const expenseCategories = categories.filter(cat => cat.type === 'expense')
 
@@ -130,7 +177,28 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     if (!currentAccount) return
 
     try {
-      setIsLoading(true)
+      setError(null)
+      
+      // Generate a temporary ID for optimistic update
+      const tempId = uuidv4()
+      
+      // Optimistically update the UI
+      const newCategoryForUI = { 
+        id: tempId,
+        name: category.name,
+        type: category.type,
+        icon: category.icon,
+        color: category.color,
+        is_default: false,
+        account_id: currentAccount.id
+      }
+      
+      setCategories(prev => [...prev, newCategoryForUI])
+      
+      // Update cache
+      if (categoryCacheRef.current[currentAccount.id]) {
+        categoryCacheRef.current[currentAccount.id] = [...categoryCacheRef.current[currentAccount.id], newCategoryForUI]
+      }
       
       const newCategory = {
         ...category,
@@ -145,25 +213,19 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .insert(newCategory)
       
       if (error) {
+        // Rollback optimistic update
+        setCategories(prev => prev.filter(c => c.id !== tempId))
+        if (categoryCacheRef.current[currentAccount.id]) {
+          categoryCacheRef.current[currentAccount.id] = categoryCacheRef.current[currentAccount.id].filter(c => c.id !== tempId)
+        }
+        toast(error.message)
         throw error
       }
       
-      // Optimistically update the UI
-      setCategories(prev => [...prev, { 
-        id: uuidv4(),
-        name: category.name,
-        type: category.type,
-        icon: category.icon,
-        color: category.color,
-        is_default: false,
-        account_id: currentAccount.id
-      }])
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding category:', error)
-      setError('Failed to add category')
-    } finally {
-      setIsLoading(false)
+      setError(error.message || 'Failed to add category')
+      toast(error.message || 'Failed to add category')
     }
   }
 
@@ -172,12 +234,32 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     if (!currentAccount) return
 
     try {
-      setIsLoading(true)
+      setError(null)
       
       // Check if this is a default category
       const categoryToUpdate = categories.find(cat => cat.id === id)
       if (!categoryToUpdate) {
         throw new Error('Category not found')
+      }
+      
+      // Save the previous state for rollback
+      const previousCategories = [...categories]
+      
+      // Optimistically update the UI
+      const updatedCategories = categories.map(category =>
+        category.id === id 
+          ? { 
+              ...category, 
+              ...updatedCategory 
+            } 
+          : category
+      )
+      
+      setCategories(updatedCategories)
+      
+      // Update cache
+      if (categoryCacheRef.current[currentAccount.id]) {
+        categoryCacheRef.current[currentAccount.id] = updatedCategories
       }
       
       const updateData = {
@@ -192,26 +274,19 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
       
       if (error) {
+        // Rollback optimistic update
+        setCategories(previousCategories)
+        if (categoryCacheRef.current[currentAccount.id]) {
+          categoryCacheRef.current[currentAccount.id] = previousCategories
+        }
+        toast(error.message)
         throw error
       }
       
-      // Optimistically update the UI
-      setCategories(prev =>
-        prev.map(category =>
-          category.id === id 
-            ? { 
-                ...category, 
-                ...updatedCategory 
-              } 
-            : category
-        )
-      )
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating category:', error)
-      setError('Failed to update category')
-    } finally {
-      setIsLoading(false)
+      setError(error.message || 'Failed to update category')
+      toast(error.message || 'Failed to update category')
     }
   }
 
@@ -220,7 +295,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     if (!currentAccount) return
 
     try {
-      setIsLoading(true)
+      setError(null)
       
       // Check if this is a default category
       const categoryToDelete = categories.find(cat => cat.id === id)
@@ -229,7 +304,21 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       }
       
       if (categoryToDelete.is_default) {
-        throw new Error('Cannot delete default categories')
+        const errorMsg = 'Cannot delete default categories'
+        toast(errorMsg)
+        throw new Error(errorMsg)
+      }
+      
+      // Save previous state for rollback
+      const previousCategories = [...categories]
+      
+      // Optimistically update the UI
+      const updatedCategories = categories.filter(category => category.id !== id)
+      setCategories(updatedCategories)
+      
+      // Update cache
+      if (categoryCacheRef.current[currentAccount.id]) {
+        categoryCacheRef.current[currentAccount.id] = updatedCategories
       }
       
       const { error } = await supabase
@@ -239,17 +328,19 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
       
       if (error) {
+        // Rollback optimistic update
+        setCategories(previousCategories)
+        if (categoryCacheRef.current[currentAccount.id]) {
+          categoryCacheRef.current[currentAccount.id] = previousCategories
+        }
+        toast(error.message)
         throw error
       }
       
-      // Optimistically update the UI
-      setCategories(prev => prev.filter(category => category.id !== id))
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting category:', error)
-      setError('Failed to delete category')
-    } finally {
-      setIsLoading(false)
+      setError(error.message || 'Failed to delete category')
+      toast(error.message || 'Failed to delete category')
     }
   }
 
@@ -278,3 +369,4 @@ export function useCategories() {
   }
   return context
 }
+

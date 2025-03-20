@@ -46,35 +46,9 @@ function DashboardMetrics() {
   useEffect(() => {
     if (!currentAccount) return
 
-    // Subscribe to changes in transactions table for current account
-    const channel = supabase
-      .channel('transactions-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'transactions',
-          filter: `account_id=eq.${currentAccount.id}`
-        }, 
-        async (payload) => {
-          // Fetch updated transactions for the current account
-          const { data: updatedTransactions, error } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('account_id', currentAccount.id)
-            .order('date', { ascending: false })
+    // Removed realtime subscription - data will be fetched through context
+    return () => {}
 
-          if (!error && updatedTransactions) {
-            setTransactions(updatedTransactions)
-          }
-        }
-      )
-      .subscribe()
-
-    // Cleanup subscription on unmount or account change
-    return () => {
-      channel.unsubscribe()
-    }
   }, [currentAccount, supabase, setTransactions])
   
   // Reset metrics when account changes

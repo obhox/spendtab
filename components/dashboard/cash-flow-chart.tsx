@@ -25,27 +25,9 @@ export function CashFlowChart() {
   useEffect(() => {
     if (!currentAccount) return
 
-    // Subscribe to changes in transactions table for current account
-    const channel = supabase
-      .channel('cash-flow-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'transactions',
-          filter: `account_id=eq.${currentAccount.id}`
-        }, 
-        () => {
-          // When transactions change, the AnalyticsContext will handle the data update
-          // and provide new monthlyData through the useAnalytics hook
-        }
-      )
-      .subscribe()
+    // Removed realtime subscription - data will be updated through context
+    return () => {}
 
-    // Cleanup subscription on unmount or account change
-    return () => {
-      channel.unsubscribe()
-    }
   }, [currentAccount, supabase])
   
   // Transform analytics data for chart display with validation

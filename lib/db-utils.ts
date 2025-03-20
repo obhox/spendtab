@@ -158,26 +158,3 @@ export async function deleteData(
   
   return true
 }
-
-// Function to set up real-time subscription
-export function subscribeToTableChanges(
-  table: string,
-  callback: () => void
-) {
-  const channel = supabase
-    .channel(`${table}-changes`)
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table
-      }, 
-      () => {
-        callback()
-      }
-    )
-    .subscribe()
-  
-  // Return channel for cleanup
-  return channel
-}
