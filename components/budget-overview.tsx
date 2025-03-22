@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
-import { useBudgets } from "@/lib/context/BudgetContext"
+import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
+import { useAccounts } from "@/lib/context/AccountContext"
 
 export function BudgetOverview() {
-  const { budgets, isLoading } = useBudgets()
+  const { currentAccount } = useAccounts()
   const [topBudgets, setTopBudgets] = useState<any[]>([])
+  const { budgets, isLoading } = useBudgetQuery()
   
   // Process budgets to show the 4 with highest spending percentage
   useEffect(() => {
+    if (!budgets) return;
     const processed = budgets.map(budget => ({
       id: budget.id,
       allocated: budget.amount,

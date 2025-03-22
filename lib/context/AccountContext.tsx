@@ -1,5 +1,6 @@
 "use client";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { setCookie, getCookie, deleteCookie } from "@/lib/cookie-utils";
@@ -27,14 +28,48 @@ type AccountContextType = {
 const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
 export function AccountProvider({ children }: { children: React.ReactNode }) {
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [currentAccount, _setCurrentAccount] = useState<Account | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isAccountSwitching, setIsAccountSwitching] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadAccounts();
-  }, []);
+  const { data: userData } = useQuery({
+    queryKey: ['user-subscription'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('subscription_tier')
+        .single();
+
+      if (error) {
+        console.error('Error fetching user data:', error);
+        toast('Error fetching user data');
+        return { subscription_tier: 'free' };
+      }
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
+
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) return [];
+
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("owner_id", session.user.id);
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  });
 
   const setCurrentAccount = (account: Account, showNotification = true) => {
     if (currentAccount?.id === account.id) return;
@@ -58,177 +93,121 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }, 300);
   };
 
-  const loadAccounts = async () => {
-    try {
-      // Get user subscription tier
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('subscription_tier')
-        .single();
-
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        toast('Error fetching user data');
+  useEffect(() => {
+    if (accounts.length > 0) {
+      const storedAccountId = getCookie('currentAccountId');
+      const storedAccount = accounts.find(account => account.id === storedAccountId);
+      if (storedAccount || accounts[0]) {
+        _setCurrentAccount(storedAccount || accounts[0]);
+        setCookie('currentAccountId', (storedAccount || accounts[0]).id);
       }
+      setIsInitialLoad(false);
+    }
+  }, [accounts]);
 
-      const subscriptionTier = userData?.subscription_tier || 'free';
-      // Store subscription tier in localStorage for other contexts to use
-      setCookie('userSubscriptionTier', subscriptionTier);
+  useEffect(() => {
+    if (userData?.subscription_tier) {
+      setCookie('userSubscriptionTier', userData.subscription_tier);
+    }
+  }, [userData?.subscription_tier]);
+
+  const addAccountMutation = useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        toast(sessionError.message);
-        throw sessionError;
-      }
-      
+      if (sessionError) throw sessionError;
       if (!session) {
-        toast("Please sign in to access your accounts.");
-        return;
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) throw refreshError;
+        if (!refreshData.session) {
+          throw new Error("Your session has expired. Please sign in again.");
+        }
       }
+
+      const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
+      if (userSubscriptionTier === 'free') {
+        const { count: accountCount, error: countError } = await supabase
+          .from('accounts')
+          .select('*', { count: 'exact', head: true })
+          .eq('owner_id', session.user.id);
+
+        if (countError) throw countError;
+        if (accountCount && accountCount >= 1) {
+          throw new Error('Free users are limited to 1 account. Please upgrade to create more accounts.');
+        }
+      }
+
+      const newAccount = {
+        name,
+        description,
+        owner_id: session.user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
       const { data, error } = await supabase
         .from("accounts")
-        .select("*")
-        .eq("owner_id", session.user.id);
+        .insert([newAccount])
+        .select()
+        .single();
 
-      if (error) {
-        toast(error.message);
-        throw error;
-      }
-
-      setAccounts(data || []);
-      
-      if (data && data.length > 0) {
-        const storedAccountId = getCookie('currentAccountId');
-        const storedAccount = data.find(account => account.id === storedAccountId);
-        if (storedAccount || data[0]) {
-          _setCurrentAccount(storedAccount || data[0]);
-          setCookie('currentAccountId', (storedAccount || data[0]).id);
-        }
-      }
-      setIsInitialLoad(false);
-    } catch (error: any) {
-      console.error("Error loading accounts:", error);
-      toast(error.message || "Failed to load accounts");
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast('Account created successfully');
+    },
+    onError: (error: Error) => {
+      toast(error.message || "Failed to add account");
     }
+  });
+
+  const addAccount = (name: string, description?: string) => {
+    return addAccountMutation.mutateAsync({ name, description });
   };
 
-  const addAccount = async (name: string, description?: string) => {
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    while (retryCount < maxRetries) {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          toast(sessionError.message);
-          throw sessionError;
-        }
-        
-        if (!session) {
-          // Try to refresh the session
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            toast(refreshError.message);
-            throw refreshError;
-          }
-          if (!refreshData.session) {
-            toast("Your session has expired. Please sign in again.");
-            return;
-          }
-        }
-
-        // Check if free tier user has reached the account limit
-        const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
-        
-        if (userSubscriptionTier === 'free') {
-          const { count: accountCount, error: countError } = await supabase
-            .from('accounts')
-            .select('*', { count: 'exact', head: true })
-            .eq('owner_id', session.user.id);
-            
-          if (countError) {
-            toast(countError.message);
-            throw countError;
-          }
-          
-          if (accountCount && accountCount >= 1) {
-            const errorMsg = 'Free users are limited to 1 account. Please upgrade to create more accounts.';
-            toast(errorMsg);
-            throw new Error(errorMsg);
-          }
-        }
-
-        const newAccount = {
-          name,
-          description,
-          owner_id: session.user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        const { error } = await supabase
-          .from("accounts")
-          .insert([newAccount])
-          .select()
-          .single();
-
-        if (error) {
-          toast(error.message);
-          throw error;
-        }
-
-        // Reload accounts to get the new account with its ID
-        await loadAccounts();
-        return;
-
-      } catch (error: any) {
-        retryCount++;
-        if (retryCount === maxRetries) {
-          console.error("Error adding account:", error);
-          toast(error.message || "Failed to add account");
-          return;
-        }
-      }
-    }
-  };
-
-  const updateAccount = async (id: string, name: string, description?: string) => {
-    try {
+  const updateAccountMutation = useMutation({
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
       const { error } = await supabase
         .from("accounts")
         .update({ name, description, updated_at: new Date().toISOString() })
         .eq("id", id);
 
-      if (error) {
-        toast(error.message);
-        throw error;
-      }
-
-      await loadAccounts();
-    } catch (error: any) {
-      console.error("Error updating account:", error);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast('Account updated successfully');
+    },
+    onError: (error: Error) => {
       toast(error.message || "Failed to update account");
     }
+  });
+
+  const updateAccount = (id: string, name: string, description?: string) => {
+    return updateAccountMutation.mutateAsync({ id, name, description });
   };
 
-  const deleteAccount = async (id: string) => {
-    try {
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("accounts")
         .delete()
         .eq("id", id);
 
-      if (error) {
-        toast(error.message);
-        throw error;
-      }
-
-      await loadAccounts();
-    } catch (error: any) {
-      console.error("Error deleting account:", error);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      toast('Account deleted successfully');
+    },
+    onError: (error: Error) => {
       toast(error.message || "Failed to delete account");
     }
+  });
+
+  const deleteAccount = (id: string) => {
+    return deleteAccountMutation.mutateAsync(id);
   };
 
   return (
@@ -238,7 +217,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         currentAccount,
         isAccountSwitching,
         setCurrentAccount,
-        loadAccounts,
+        loadAccounts: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
         addAccount,
         updateAccount,
         deleteAccount,

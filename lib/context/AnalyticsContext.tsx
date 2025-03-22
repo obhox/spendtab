@@ -1,6 +1,7 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, ReactNode, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTransactions } from "./TransactionContext"
 import { useAccounts } from "./AccountContext"
 import { format, subMonths, isWithinInterval, parse } from "date-fns"
@@ -48,48 +49,21 @@ const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefin
 
 // Provider component
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
-  const { transactions, isLoading: transactionsLoading } = useTransactions()
+  const { transactions } = useTransactions()
   const { currentAccount } = useAccounts()
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   
   // Default to last 6 months
   const [dateRange, setDateRange] = useState({
     startDate: subMonths(new Date(), 6),
     endDate: new Date(),
   })
-  
-  // State for analytics data
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
-  const [incomeByCategory, setIncomeByCategory] = useState<CategoryData[]>([])
-  const [expensesByCategory, setExpensesByCategory] = useState<CategoryData[]>([])
-  const [financialSummary, setFinancialSummary] = useState<FinancialSummary>({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    totalProfit: 0,
-    profitMargin: 0,
-    cashFlow: 0,
-  })
 
   // Calculate all analytics data based on transactions and date range
-  const calculateAnalyticsData = () => {
+  const calculateAnalyticsData = async () => {
+
+
     try {
-      // Reset data if no account or transactions
-      if (!currentAccount || !transactions || transactions.length === 0) {
-        setMonthlyData([])
-        setIncomeByCategory([])
-        setExpensesByCategory([])
-        setFinancialSummary({
-          totalRevenue: 0,
-          totalExpenses: 0,
-          totalProfit: 0,
-          profitMargin: 0,
-          cashFlow: 0,
-        })
-        setIsLoading(false)
-        setError(null)
-        return
-      }
+
 
       // Filter transactions by date range and current account
       const filteredTransactions = transactions.filter(t => 
@@ -166,49 +140,57 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       const profitMargin = totalIncome ? (totalProfit / totalIncome) * 100 : 0
       const cashFlow = totalIncome - totalExpenses
 
-      // Update state
-      setMonthlyData(monthlyDataArray)
-      setIncomeByCategory(incomeCategoryData)
-      setExpensesByCategory(expensesCategoryData)
-      setFinancialSummary({
-        totalRevenue: totalIncome,
-        totalExpenses,
-        totalProfit,
-        profitMargin,
-        cashFlow,
-      })
-      setIsLoading(false)
-      setError(null)
+      return {
+        monthlyData: monthlyDataArray,
+        incomeByCategory: incomeCategoryData,
+        expensesByCategory: expensesCategoryData,
+        financialSummary: {
+          totalRevenue: totalIncome,
+          totalExpenses,
+          totalProfit,
+          profitMargin,
+          cashFlow
+        }
+      }
     } catch (error) {
       console.error('Error calculating analytics:', error)
-      setError('Failed to calculate analytics data')
-      setIsLoading(false)
+      throw new Error('Failed to calculate analytics data')
     }
   }
 
-  // Recalculate when transactions, date range, or account changes
-  useEffect(() => {
-    setIsLoading(true)
-    calculateAnalyticsData()
-  }, [transactions, dateRange, currentAccount])
+  const queryKey = ['analytics', currentAccount?.id, dateRange.startDate.toISOString(), dateRange.endDate.toISOString()]
+  
+  const {
+    data: analyticsData,
+    isLoading,
+    error,
+    refetch: refreshData
+  } = useQuery({
+    queryKey,
+    queryFn: calculateAnalyticsData,
+    enabled: !!currentAccount && !!transactions,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+  })
 
-  // Function to manually refresh data
-  const refreshData = () => {
-    setIsLoading(true)
-    calculateAnalyticsData()
-  }
 
   return (
     <AnalyticsContext.Provider
       value={{
-        monthlyData,
-        incomeByCategory,
-        expensesByCategory,
-        financialSummary,
+        monthlyData: analyticsData?.monthlyData ?? [],
+        incomeByCategory: analyticsData?.incomeByCategory ?? [],
+        expensesByCategory: analyticsData?.expensesByCategory ?? [],
+        financialSummary: analyticsData?.financialSummary ?? {
+          totalRevenue: 0,
+          totalExpenses: 0,
+          totalProfit: 0,
+          profitMargin: 0,
+          cashFlow: 0,
+        },
         dateRange,
         setDateRange,
         isLoading,
-        error,
+        error: error ? (error as Error).message : null,
         refreshData,
       }}
     >

@@ -28,7 +28,7 @@ export function RecentTransactions() {
     }
 
     try {
-      // Get the most recent 5 transactions with proper error handling for dates
+      // Get the most recent 8 transactions with proper error handling for dates
       const recent = [...transactions]
         .sort((a, b) => {
           // Safely handle date comparison
@@ -41,7 +41,7 @@ export function RecentTransactions() {
           
           return timeB - timeA;
         })
-        .slice(0, 5);
+        .slice(0, 8);
       
       setRecentTransactions(recent);
     } catch (error) {

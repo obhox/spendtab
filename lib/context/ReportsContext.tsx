@@ -1,9 +1,11 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
-import { useTransactions } from "./TransactionContext"
+import { createContext, useContext, ReactNode, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useAccounts } from "./AccountContext"
 import { format, subMonths, isWithinInterval, parse, startOfMonth, endOfMonth, subQuarters, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from "date-fns"
+import { supabase } from "../supabase"
+import { toast } from "sonner"
 
 // Cash Flow Report interfaces
 interface CashFlowCategory {
@@ -85,12 +87,12 @@ interface ReportsContextType {
 // Create the context with a default value
 const ReportsContext = createContext<ReportsContextType | undefined>(undefined)
 
+const CACHE_TIME = 30 * 60 * 1000; // 30 minutes
+const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
 // Provider component
 export function ReportsProvider({ children }: { children: ReactNode }) {
-  const { transactions, isLoading: transactionsLoading } = useTransactions()
   const { currentAccount } = useAccounts()
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   
   // Default to current quarter
   const [dateRange, setDateRange] = useState({
@@ -98,27 +100,40 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
     endDate: endOfQuarter(new Date()),
   })
   
-  // State for reports data
-  const [cashFlowData, setCashFlowData] = useState<CashFlowData | null>(null)
-  const [profitLossData, setProfitLossData] = useState<ProfitLossData | null>(null)
-  const [expenseData, setExpenseData] = useState<ExpenseData | null>(null)
-
-  // Calculate all reports data based on transactions and date range
-  const calculateReportsData = () => {
+  const calculateReportsData = async () => {
     try {
-      // Reset data if no account or transactions
-      if (!currentAccount || !transactions || transactions.length === 0) {
-        setCashFlowData(null)
-        setProfitLossData(null)
-        setExpenseData(null)
-        setIsLoading(false)
-        setError(null)
-        return
+      if (!currentAccount) {
+        return {
+          cashFlowData: null,
+          profitLossData: null,
+          expenseData: null
+        }
+      }
+
+      // Fetch transactions for the period
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('account_id', currentAccount.id)
+        .gte('date', dateRange.startDate.toISOString())
+        .lte('date', dateRange.endDate.toISOString())
+        .order('date', { ascending: true })
+
+      if (transactionsError) {
+        toast(transactionsError.message)
+        throw transactionsError
+      }
+
+      if (!transactions || transactions.length === 0) {
+        return {
+          cashFlowData: null,
+          profitLossData: null,
+          expenseData: null
+        }
       }
 
       // Filter transactions by date range and current account
       const filteredTransactions = transactions.filter(t => 
-        t.account_id === currentAccount.id &&
         isWithinInterval(new Date(t.date), {
           start: dateRange.startDate,
           end: dateRange.endDate,
@@ -172,8 +187,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         monthlyCashFlow.set(month, existing)
       })
 
-      // Update Cash Flow Data
-      setCashFlowData({
+      // Create Cash Flow Data
+      const cashFlowData = {
         period: `${format(dateRange.startDate, 'MMM d, yyyy')} - ${format(dateRange.endDate, 'MMM d, yyyy')}`,
         startingBalance: 0, // You might want to calculate this based on previous periods
         cashIn: Array.from(cashInCategories.values()),
@@ -186,10 +201,11 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
           month,
           ...data
         })).sort((a, b) => a.month.localeCompare(b.month))
-      })
+      };
 
-      // Calculate Profit & Loss Report
-      setProfitLossData({
+
+      // Create Profit & Loss Report
+      const profitLossData = {
         period: `${format(dateRange.startDate, 'MMM d, yyyy')} - ${format(dateRange.endDate, 'MMM d, yyyy')}`,
         revenue: Array.from(cashInCategories.values()),
         expenses: Array.from(cashOutCategories.values()),
@@ -198,7 +214,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         grossProfit: totalCashIn - totalCashOut,
         netProfit: totalCashIn - totalCashOut, // This is simplified
         profitMargin: totalCashIn ? ((totalCashIn - totalCashOut) / totalCashIn) * 100 : 0
-      })
+      };
+
 
       // Calculate Expense Report
       const expenseItems = filteredTransactions
@@ -236,46 +253,52 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         }))
         .sort((a, b) => b.value - a.value)
 
-      setExpenseData({
+      const expenseData = {
         period: `${format(dateRange.startDate, 'MMM d, yyyy')} - ${format(dateRange.endDate, 'MMM d, yyyy')}`,
         expenses: expenseItems,
         totalExpenses: totalCashOut,
         categoryTotals,
         paymentMethodTotals,
         topExpenses: [...expenseItems].sort((a, b) => b.amount - a.amount).slice(0, 10)
-      })
+      };
 
-      setIsLoading(false)
-      setError(null)
+
+      return {
+        cashFlowData: cashFlowData,
+        profitLossData: profitLossData,
+        expenseData: expenseData
+      }
     } catch (error) {
       console.error('Error calculating reports:', error)
-      setError('Failed to calculate reports data')
-      setIsLoading(false)
+      throw new Error('Failed to calculate reports data')
     }
   }
 
-  // Recalculate when transactions, date range, or account changes
-  useEffect(() => {
-    setIsLoading(true)
-    calculateReportsData()
-  }, [transactions, dateRange, currentAccount])
-
-  // Function to manually refresh data
-  const refreshData = () => {
-    setIsLoading(true)
-    calculateReportsData()
-  }
+  const queryKey = ['reports', currentAccount?.id, dateRange.startDate.toISOString(), dateRange.endDate.toISOString()]
+  
+  const {
+    data: reportsData,
+    isLoading,
+    error,
+    refetch: refreshData
+  } = useQuery({
+    queryKey,
+    queryFn: calculateReportsData,
+    enabled: !!currentAccount,
+    staleTime: STALE_TIME,
+    gcTime: CACHE_TIME
+  })
 
   return (
     <ReportsContext.Provider
       value={{
-        cashFlowData,
-        profitLossData,
-        expenseData,
+        cashFlowData: reportsData?.cashFlowData ?? null,
+        profitLossData: reportsData?.profitLossData ?? null,
+        expenseData: reportsData?.expenseData ?? null,
         dateRange,
         setDateRange,
         isLoading,
-        error,
+        error: error ? (error as Error).message : null,
         refreshData,
       }}
     >

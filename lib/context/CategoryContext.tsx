@@ -1,8 +1,8 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react"
+import { createContext, ReactNode, useContext, useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "../supabase"
-import { v4 as uuidv4 } from 'uuid'
 import { useAccounts } from './AccountContext'
 import { toast } from "sonner"
 
@@ -27,321 +27,230 @@ interface CategoryContextType {
   deleteCategory: (id: string) => Promise<void>
   isLoading: boolean
   error: string | null
+  errorDetails?: Error | null
 }
 
 // Create the context with a default value
 const CategoryContext = createContext<CategoryContextType | undefined>(undefined)
 
+// Cache time constants
+const CACHE_TIME = 30 * 60 * 1000 // 30 minutes
+const STALE_TIME = 5 * 60 * 1000 // 5 minutes
+
 // Provider component
 export function CategoryProvider({ children }: { children: ReactNode }) {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const { currentAccount, isAccountSwitching } = useAccounts()
-  
-  // Use refs to prevent duplicate requests and enable caching
-  const isFetchingRef = useRef(false)
-  const categoryCacheRef = useRef<Record<string, Category[]>>({})
+  const queryClient = useQueryClient()
+  const [error, setError] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<Error | null>(null)
 
-  // Fetch categories with caching
-  const fetchCategories = useCallback(async (forceFetch = false) => {
-    if (!currentAccount || isAccountSwitching) {
-      setIsLoading(false)
-      return
-    }
-    
-    // Prevent duplicate fetches
-    if (isFetchingRef.current) {
-      return
-    }
-    
-    // Check cache first
-    if (!forceFetch && categoryCacheRef.current[currentAccount.id]) {
-      setCategories(categoryCacheRef.current[currentAccount.id])
-      setIsLoading(false)
-      
-      // Still fetch in background to update cache, but don't show loading state
-      isFetchingRef.current = true
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('account_id', currentAccount.id)
-          .order('name', { ascending: true })
-        
-        if (error) throw error
-        
-        if (data) {
-          const formattedData = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            type: item.type,
-            icon: item.icon || undefined,
-            color: item.color || undefined,
-            is_default: item.is_default,
-            account_id: item.account_id
-          }))
-          
-          // Only update if data has changed
-          const currentData = JSON.stringify(categories)
-          const newData = JSON.stringify(formattedData)
-          
-          if (currentData !== newData) {
-            setCategories(formattedData)
-            categoryCacheRef.current[currentAccount.id] = formattedData
-          }
-        }
-      } catch (error: any) {
-        console.error('Error fetching categories in background:', error)
-      } finally {
-        isFetchingRef.current = false
+  // Fetch categories query
+  const { data: categories = [], isLoading, error: queryError } = useQuery<Category[], Error>({
+    queryKey: ['categories', currentAccount?.id],
+    queryFn: async () => {
+      if (!currentAccount || isAccountSwitching) {
+        return []
       }
-      return
-    }
 
-    try {
-      setIsLoading(true)
-      isFetchingRef.current = true
-      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
         .eq('account_id', currentAccount.id)
         .order('name', { ascending: true })
-      
+
       if (error) {
-        toast(error.message)
-        throw error
+        const errorMessage = error.message || 'Failed to fetch categories'
+        setError(errorMessage)
+        setErrorDetails(error)
+        toast(errorMessage)
+        return []
       }
-      
-      if (data) {
-        const formattedData = data.map(item => ({
-          id: item.id,
-          name: item.name,
-          type: item.type,
-          icon: item.icon || undefined,
-          color: item.color || undefined,
-          is_default: item.is_default,
-          account_id: item.account_id
-        }))
-        
-        setCategories(formattedData)
-        categoryCacheRef.current[currentAccount.id] = formattedData
-      }
-    } catch (error: any) {
-      console.error('Error fetching categories:', error)
-      setError(error.message || 'Failed to load categories')
-      toast(error.message || 'Failed to load categories')
-    } finally {
-      setIsLoading(false)
-      isFetchingRef.current = false
-    }
-  }, [currentAccount, isAccountSwitching, categories])
 
-  // Load initial data from Supabase
-  useEffect(() => {
-    if (!currentAccount) {
-      setIsLoading(false)
-      return
-    }
-    
-    // Use cached data if available
-    if (categoryCacheRef.current[currentAccount.id]) {
-      setCategories(categoryCacheRef.current[currentAccount.id])
-      setIsLoading(false)
-    } else {
-      // Reset categories only if switching to a new account without cached data
-      setCategories([])
-      setError(null)
-      fetchCategories()
-    }
+      return data?.map(item => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        icon: item.icon || undefined,
+        color: item.color || undefined,
+        is_default: item.is_default,
+        account_id: item.account_id
+      })) || []
+    },
+    enabled: !!currentAccount && !isAccountSwitching,
+    gcTime: CACHE_TIME,
+    staleTime: STALE_TIME,
+    refetchInterval: 30000 // Refetch every 30 seconds
+  })
 
-    // Set up periodic refresh
-    const refreshInterval = setInterval(() => {
-      if (currentAccount) {
-        fetchCategories(true);
-      }
-    }, 30000); // Refresh every 30 seconds
-
-    return () => {
-      clearInterval(refreshInterval);
-    }
-  }, [currentAccount, fetchCategories])
-
-  // Calculate derived categories - memoize these if performance is still an issue
+  // Calculate derived categories
   const incomeCategories = categories.filter(cat => cat.type === 'income')
   const expenseCategories = categories.filter(cat => cat.type === 'expense')
 
-  // Add a new category
-  const addCategory = async (category: Omit<Category, "id" | "is_default" | "account_id">) => {
-    if (!currentAccount) return
+  const addCategoryMutation = useMutation({
+    mutationFn: async (category: Omit<Category, "id" | "is_default" | "account_id">) => {
+      if (!currentAccount) throw new Error('No account selected')
 
-    try {
-      setError(null)
-      
-      // Generate a temporary ID for optimistic update
-      const tempId = uuidv4()
-      
-      // Optimistically update the UI
-      const newCategoryForUI = { 
-        id: tempId,
-        name: category.name,
-        type: category.type,
-        icon: category.icon,
-        color: category.color,
-        is_default: false,
-        account_id: currentAccount.id
-      }
-      
-      setCategories(prev => [...prev, newCategoryForUI])
-      
-      // Update cache
-      if (categoryCacheRef.current[currentAccount.id]) {
-        categoryCacheRef.current[currentAccount.id] = [...categoryCacheRef.current[currentAccount.id], newCategoryForUI]
-      }
-      
-      const newCategory = {
-        ...category,
-        is_default: false,
-        account_id: currentAccount.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('categories')
-        .insert(newCategory)
-      
+        .insert({
+          ...category,
+          account_id: currentAccount.id,
+          is_default: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
       if (error) {
-        // Rollback optimistic update
-        setCategories(prev => prev.filter(c => c.id !== tempId))
-        if (categoryCacheRef.current[currentAccount.id]) {
-          categoryCacheRef.current[currentAccount.id] = categoryCacheRef.current[currentAccount.id].filter(c => c.id !== tempId)
-        }
-        toast(error.message)
-        throw error
+        const errorMessage = error.message || 'Failed to fetch categories'
+        setError(errorMessage)
+        setErrorDetails(error)
+        toast(errorMessage)
+        return []
       }
-      
-    } catch (error: any) {
-      console.error('Error adding category:', error)
-      setError(error.message || 'Failed to add category')
+
+      return data
+    },
+    onMutate: async (newCategory) => {
+      await queryClient.cancelQueries({ queryKey: ['categories', currentAccount?.id] })
+      const previousCategories = queryClient.getQueryData<Category[]>(['categories', currentAccount?.id])
+
+      const optimisticCategory = {
+        ...newCategory,
+        id: `temp-${Date.now()}`,
+        is_default: false,
+        account_id: currentAccount?.id || ''
+      }
+
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => [
+        ...(old || []),
+        optimisticCategory
+      ])
+
+      return { previousCategories }
+    },
+    onError: (error: Error, _, context: any) => {
+      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
       toast(error.message || 'Failed to add category')
+    },
+    onSuccess: (newCategory) => {
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
+        return (old || []).map(cat => cat.id.startsWith('temp-') ? newCategory : cat)
+      })
+      toast('Category added successfully')
     }
-  }
+  })
 
-  // Update an existing category
-  const updateCategory = async (id: string, updatedCategory: Omit<Category, "id" | "is_default" | "account_id">) => {
-    if (!currentAccount) return
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, ...category }: { id: string } & Omit<Category, "id" | "is_default" | "account_id">) => {
+      if (!currentAccount) throw new Error('No account selected')
 
-    try {
-      setError(null)
-      
-      // Check if this is a default category
       const categoryToUpdate = categories.find(cat => cat.id === id)
-      if (!categoryToUpdate) {
-        throw new Error('Category not found')
-      }
-      
-      // Save the previous state for rollback
-      const previousCategories = [...categories]
-      
-      // Optimistically update the UI
-      const updatedCategories = categories.map(category =>
-        category.id === id 
-          ? { 
-              ...category, 
-              ...updatedCategory 
-            } 
-          : category
-      )
-      
-      setCategories(updatedCategories)
-      
-      // Update cache
-      if (categoryCacheRef.current[currentAccount.id]) {
-        categoryCacheRef.current[currentAccount.id] = updatedCategories
-      }
-      
-      const updateData = {
-        ...updatedCategory,
-        updated_at: new Date().toISOString()
-      }
-      
+      if (!categoryToUpdate) throw new Error('Category not found')
+
       const { error } = await supabase
         .from('categories')
-        .update(updateData)
+        .update({
+          ...category,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .eq('account_id', currentAccount.id)
-      
+
       if (error) {
-        // Rollback optimistic update
-        setCategories(previousCategories)
-        if (categoryCacheRef.current[currentAccount.id]) {
-          categoryCacheRef.current[currentAccount.id] = previousCategories
-        }
-        toast(error.message)
-        throw error
+        const errorMessage = error.message || 'Failed to fetch categories'
+        setError(errorMessage)
+        setErrorDetails(error)
+        toast(errorMessage)
+        return []
       }
-      
-    } catch (error: any) {
-      console.error('Error updating category:', error)
-      setError(error.message || 'Failed to update category')
+
+      return { id, ...category }
+    },
+    onMutate: async ({ id, ...newCategory }) => {
+      await queryClient.cancelQueries({ queryKey: ['categories', currentAccount?.id] })
+      const previousCategories = queryClient.getQueryData<Category[]>(['categories', currentAccount?.id])
+
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
+        return (old || []).map(category =>
+          category.id === id
+            ? { ...category, ...newCategory }
+            : category
+        )
+      })
+
+      return { previousCategories }
+    },
+    onError: (error: Error, _, context: any) => {
+      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
       toast(error.message || 'Failed to update category')
+    },
+    onSuccess: (updatedCategory) => {
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], (old): Category[] => {
+        const categories = old || []
+        return categories.map(cat => cat.id === updatedCategory.id ? { ...cat, ...updatedCategory, is_default: cat.is_default, account_id: cat.account_id } : cat)
+      })
+      toast('Category updated successfully')
     }
-  }
+  })
 
-  // Delete a category
-  const deleteCategory = async (id: string) => {
-    if (!currentAccount) return
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!currentAccount) throw new Error('No account selected')
 
-    try {
-      setError(null)
-      
-      // Check if this is a default category
       const categoryToDelete = categories.find(cat => cat.id === id)
-      if (!categoryToDelete) {
-        throw new Error('Category not found')
-      }
-      
-      if (categoryToDelete.is_default) {
-        const errorMsg = 'Cannot delete default categories'
-        toast(errorMsg)
-        throw new Error(errorMsg)
-      }
-      
-      // Save previous state for rollback
-      const previousCategories = [...categories]
-      
-      // Optimistically update the UI
-      const updatedCategories = categories.filter(category => category.id !== id)
-      setCategories(updatedCategories)
-      
-      // Update cache
-      if (categoryCacheRef.current[currentAccount.id]) {
-        categoryCacheRef.current[currentAccount.id] = updatedCategories
-      }
-      
+      if (!categoryToDelete) throw new Error('Category not found')
+      if (categoryToDelete.is_default) throw new Error('Cannot delete default categories')
+
       const { error } = await supabase
         .from('categories')
         .delete()
         .eq('id', id)
         .eq('account_id', currentAccount.id)
-      
+
       if (error) {
-        // Rollback optimistic update
-        setCategories(previousCategories)
-        if (categoryCacheRef.current[currentAccount.id]) {
-          categoryCacheRef.current[currentAccount.id] = previousCategories
-        }
-        toast(error.message)
-        throw error
+        const errorMessage = error.message || 'Failed to fetch categories'
+        setError(errorMessage)
+        setErrorDetails(error)
+        toast(errorMessage)
+        return []
       }
-      
-    } catch (error: any) {
-      console.error('Error deleting category:', error)
-      setError(error.message || 'Failed to delete category')
+
+      return id
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['categories', currentAccount?.id] })
+      const previousCategories = queryClient.getQueryData<Category[]>(['categories', currentAccount?.id])
+
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
+        return (old || []).filter(category => category.id !== id)
+      })
+
+      return { previousCategories }
+    },
+    onError: (error: Error, _, context: any) => {
+      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
       toast(error.message || 'Failed to delete category')
+    },
+    onSuccess: (deletedId) => {
+      queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
+        return (old || []).filter(cat => cat.id !== deletedId)
+      })
+      toast('Category deleted successfully')
     }
+  })
+
+  const addCategory = async (category: Omit<Category, "id" | "is_default" | "account_id">) => {
+    await addCategoryMutation.mutateAsync(category)
+  }
+
+  const updateCategory = async (id: string, category: Omit<Category, "id" | "is_default" | "account_id">) => {
+    await updateCategoryMutation.mutateAsync({ id, ...category })
+  }
+
+  const deleteCategory = async (id: string) => {
+    await deleteCategoryMutation.mutateAsync(id)
   }
 
   return (
@@ -354,7 +263,8 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         updateCategory,
         deleteCategory,
         isLoading,
-        error,
+        error: error || queryError?.message || null,
+        errorDetails: errorDetails
       }}
     >
       {children}

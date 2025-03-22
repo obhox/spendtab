@@ -8,6 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select"
+import { useAccounts } from "@/lib/context/AccountContext"
 import {
   Table,
   TableBody,
@@ -26,7 +27,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts"
-import { useReports } from "@/lib/context/ReportsContext"
+import { useReportQuery } from "@/lib/hooks/useReportQuery"
 import { Button } from "@/components/ui/button"
 import { Plus, AlertTriangle } from "lucide-react"
 import Link from "next/link"
@@ -72,21 +73,7 @@ const financialPeriods = [
 ];
 
 export function CashFlowReport() {
-  const { cashFlowData, isLoading, setDateRange, dateRange, refreshData } = useReports();
-  // Initialize with "current-quarter" to match the default in ReportsContext
-  const [selectedPeriod, setSelectedPeriod] = useState("current-quarter");
-  const [error, setError] = useState<string | null>(null);
-  
-  // Format currency value
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
-  };
-
-  // Date range mappings for each period option
+  // Define getPeriodDateRange before using it
   const getPeriodDateRange = (period: string): { startDate: Date, endDate: Date } => {
     const now = new Date();
     
@@ -135,6 +122,25 @@ export function CashFlowReport() {
     }
     
     return getRangeFn();
+  };
+
+  const [dateRange, setDateRange] = useState(getPeriodDateRange("current-quarter"));
+  const { currentAccount } = useAccounts();
+  const { cashFlowData, isLoading, refetch: refreshData } = useReportQuery(
+    new Date(dateRange.startDate),
+    new Date(dateRange.endDate)
+  );
+  // Initialize with "current-quarter" to match the default in ReportsContext
+  const [selectedPeriod, setSelectedPeriod] = useState("current-quarter");
+  const [error, setError] = useState<string | null>(null);
+  
+  // Format currency value
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(value);
   };
   
   // Validate a date range to ensure it contains valid dates
@@ -186,7 +192,7 @@ export function CashFlowReport() {
         <AlertTriangle size={32} />
         <h3 className="text-lg font-medium">Error Loading Data</h3>
         <p>{error}</p>
-        <Button onClick={refreshData} variant="outline">Retry</Button>
+        <Button onClick={() => refreshData()} variant="outline">Retry</Button>
       </div>
     );
   }

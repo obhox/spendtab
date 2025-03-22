@@ -3,14 +3,17 @@
 import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { useTransactions } from "@/lib/context/TransactionContext"
+import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
+import { useAccounts } from "@/lib/context/AccountContext"
 
 export function RecentTransactions() {
-  const { transactions, isLoading } = useTransactions()
+  const { currentAccount } = useAccounts()
+  const { transactions, isLoading } = useTransactionQuery()
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
   
   // Process transactions to get the 5 most recent ones
   useEffect(() => {
+    if (!transactions) return;
     const sorted = [...transactions]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5)
@@ -40,7 +43,6 @@ export function RecentTransactions() {
         recentTransactions.map((transaction) => (
           <div key={transaction.id} className="flex items-center">
             <Avatar className="h-9 w-9">
-              <AvatarImage src="" alt={transaction.name} />
               <AvatarFallback>{transaction.amount > 0 ? "IN" : "EX"}</AvatarFallback>
             </Avatar>
             <div className="ml-4 space-y-1">

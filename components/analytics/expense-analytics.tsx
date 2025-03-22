@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -11,10 +11,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell, BarChart, Bar, Area, AreaChart } from "recharts"
-import { useAnalytics } from "@/lib/context/AnalyticsContext"
+import { useAnalyticsQuery } from "@/lib/hooks/useAnalyticsQuery"
 import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useTransactions } from "@/lib/context/TransactionContext"
 
 // Time period options
 const timePeriods = [
@@ -29,19 +28,17 @@ const timePeriods = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#00A2FF'];
 
 export default function ExpenseAnalytics() {
-  const { monthlyData, expensesByCategory, financialSummary, isLoading, setDateRange } = useAnalytics();
-  const { transactions } = useTransactions();
-  const [timePeriod, setTimePeriod] = useState("");
-  
-  // Initialize time period on client-side to avoid hydration mismatch
-  useEffect(() => {
-    setTimePeriod("12m");
-  }, []);
-  
+  const [timePeriod, setTimePeriod] = useState("12m");
+  const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date }>({ 
+    startDate: subMonths(new Date(), 12),
+    endDate: new Date()
+  });
+
+  // Get analytics data using the custom hook
+  const { monthlyData = [], expensesByCategory = [], transactions = [], isLoading } = useAnalyticsQuery(dateRange);
+
   // Update date range when time period changes
   useEffect(() => {
-    if (!timePeriod) return;
-    
     const now = new Date();
     let startDate = new Date();
     
@@ -66,7 +63,8 @@ export default function ExpenseAnalytics() {
     }
     
     setDateRange({ startDate, endDate: now });
-  }, [timePeriod, setDateRange]);
+  }, [timePeriod]);
+
 
   // Get expense transactions and filter by time period
   const expenseTransactions = transactions
