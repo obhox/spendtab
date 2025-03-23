@@ -323,7 +323,7 @@ export function ExpenseReport() {
                     nameKey="name"
                     label={({ name, percentage }) => {
                       if (!name) return '';
-                      return `${truncateText(name)} (${percentage || 0}%)`;
+                      return `${truncateText(name)} (${Math.round(percentage || 0)}%)`;
                     }}
                   >
                     {expenseData.categoryTotals.map((entry, index) => (
@@ -353,7 +353,10 @@ export function ExpenseReport() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={expenseData.paymentMethodTotals}
+                    data={expenseData.paymentMethodTotals.map(total => ({
+                      ...total,
+                      name: formatPaymentMethod(total.name)
+                    }))}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -363,7 +366,7 @@ export function ExpenseReport() {
                     nameKey="name"
                     label={({ name, percentage }) => {
                       if (!name) return '';
-                      return `${truncateText(name)} (${percentage || 0}%)`;
+                      return `${truncateText(name)} (${Math.round(percentage || 0)}%)`;
                     }}
                   >
                     {expenseData.paymentMethodTotals.map((entry, index) => (
@@ -457,7 +460,7 @@ export function ExpenseReport() {
                     >
                       {truncateText(expense.description, 30)}
                     </TableCell>
-                    <TableCell>{expense.paymentMethod}</TableCell>
+                    <TableCell>{formatPaymentMethod(expense.paymentMethod)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                   </TableRow>
                 ))}
@@ -483,3 +486,12 @@ export function ExpenseReport() {
     </div>
   );
 }
+
+// Format payment method to be more readable
+const formatPaymentMethod = (method: string): string => {
+  if (!method) return 'Unknown';
+  return method
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
