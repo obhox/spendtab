@@ -24,8 +24,9 @@ export interface Transaction {
 // Context interface
 interface TransactionContextType {
   transactions: Transaction[]
+  setTransactions: (transactions: Transaction[]) => void
   addTransaction: (transaction: Omit<Transaction, "id">) => Promise<void>
-  updateTransaction: (id: string, transaction: Omit<Transaction, "id">) => Promise<void>
+  updateTransaction: (id: string, transaction: Omit<Transaction, "id">) => Promise<Transaction>
   deleteTransaction: (id: string) => Promise<void>
   isLoading: boolean
   error: Error | null
@@ -42,6 +43,11 @@ const STALE_TIME = 5 * 60 * 1000 // 5 minutes
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const { currentAccount, isAccountSwitching } = useAccounts()
   const queryClient = useQueryClient()
+
+  // Function to manually set transactions
+  const setTransactions = (newTransactions: Transaction[]) => {
+    queryClient.setQueryData(['transactions', currentAccount?.id], newTransactions)
+  }
 
   // Fetch transactions query
   const { data: transactions = [], isLoading, error } = useQuery<Transaction[], Error>({
@@ -238,6 +244,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     <TransactionContext.Provider
       value={{
         transactions,
+        setTransactions,
         addTransaction: addTransactionMutation.mutateAsync,
         updateTransaction: (id: string, transaction: Omit<Transaction, "id">) => updateTransactionMutation.mutateAsync({ id, ...transaction }),
         deleteTransaction: deleteTransactionMutation.mutateAsync,

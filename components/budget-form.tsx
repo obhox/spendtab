@@ -83,7 +83,7 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
 
       // Either update existing or add new budget
       if (budget) {
-        await updateBudget(budget.id, { ...budgetData, account_id: budget.account_id })
+        await updateBudget({ id: budget.id, ...budgetData, account_id: budget.account_id })
         toast("Budget updated", {
           description: "Your budget has been updated successfully."
         })

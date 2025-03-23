@@ -119,7 +119,8 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
         };
         
         // Update existing budget
-        await updateBudget(budget.id, {
+        await updateBudget({
+          id: budget.id,
           name: data.name,
           amount: data.amount,
           startDate: formattedStartDate,
@@ -145,14 +146,14 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
           account_id: currentAccount.id
         };
         
-        const createdBudget = await addBudget(newBudget);
+        await addBudget(newBudget);
         
         toast("Budget created", {
           description: "Your new budget has been created successfully."
         });
         
-        // Pass the created budget to onSave callback if it exists
-        if (onSave && createdBudget) onSave(createdBudget);
+        // Pass the new budget to onSave callback if it exists
+        if (onSave) onSave({ ...newBudget, id: '', spent: 0 });
       }
       
       setIsOpen(false);

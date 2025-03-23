@@ -87,14 +87,14 @@ export function useTransactionQuery() {
   });
 
   const updateTransaction = useMutation({
-    mutationFn: async ({ id, ...transaction }: Transaction) => {
+    mutationFn: async (params: { id: string, data: Omit<Transaction, 'id'> }) => {
       const { error } = await supabase
         .from('transactions')
         .update({
-          ...transaction,
+          ...params.data,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', params.id);
 
       if (error) {
         toast(error.message);

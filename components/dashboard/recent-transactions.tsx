@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useTransactions } from "@/lib/context/TransactionContext"
+import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
@@ -17,7 +17,7 @@ interface Transaction {
 }
 
 export function RecentTransactions() {
-  const { transactions, isLoading } = useTransactions()
+  const { transactions, isLoading } = useTransactionQuery()
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
   
   // Use real data from the context with proper error handling

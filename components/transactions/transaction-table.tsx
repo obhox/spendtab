@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { MoreHorizontal, Edit, Trash, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { TransactionForm } from "./transaction-form"
-import { useTransactions } from "@/lib/context/TransactionContext"
+import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -67,7 +67,7 @@ const PAYMENT_SOURCES: Record<string, string> = {
 };
 
 export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
-  const { transactions: allTransactions, deleteTransaction, isLoading, error } = useTransactions()
+  const { transactions: allTransactions, deleteTransaction, isLoading, error, isError } = useTransactionQuery()
   const { currentAccount } = useAccounts()
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -76,12 +76,14 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const [page, setPage] = useState(1)
   const ITEMS_PER_PAGE = 50
 
-  // Display any transaction context errors as toasts
+  // Display any transaction query errors as toasts
   useEffect(() => {
-    if (error) {
-      toast(error)
+    if (isError && error) {
+      toast("Error", {
+        description: error.toString()
+      })
     }
-  }, [error])
+  }, [isError, error])
   
   // Apply initial filtering when the component mounts
   useEffect(() => {

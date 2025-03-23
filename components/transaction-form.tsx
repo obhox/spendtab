@@ -71,13 +71,9 @@ interface TransactionFormProps {
 export function TransactionForm({ children, transaction }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const { addTransaction, updateTransaction } = useTransactions()
-  const { budgets, getBudgets } = useBudgets();
+  const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
   const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(transaction?.budget_id || null);
-
-  useEffect(() => {
-    getBudgets();
-  }, [getBudgets]);
 
   useEffect(() => {
     console.log("Budgets fetched:", budgets);

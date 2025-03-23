@@ -142,8 +142,8 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     }
   })
 
-  const updateCategoryMutation = useMutation({
-    mutationFn: async ({ id, ...category }: { id: string } & Omit<Category, "id" | "is_default" | "account_id">) => {
+  const updateCategoryMutation = useMutation<Category, Error, { id: string } & Omit<Category, "id" | "is_default" | "account_id">>({    
+    mutationFn: async ({ id, ...category }) => {
       if (!currentAccount) throw new Error('No account selected')
 
       const categoryToUpdate = categories.find(cat => cat.id === id)
@@ -159,14 +159,19 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
 
       if (error) {
-        const errorMessage = error.message || 'Failed to fetch categories'
+        const errorMessage = error.message || 'Failed to update category'
         setError(errorMessage)
         setErrorDetails(error)
         toast(errorMessage)
-        return []
+        throw error
       }
 
-      return { id, ...category }
+      return {
+        ...category,
+        id,
+        is_default: categoryToUpdate.is_default,
+        account_id: currentAccount.id
+      }
     },
     onMutate: async ({ id, ...newCategory }) => {
       await queryClient.cancelQueries({ queryKey: ['categories', currentAccount?.id] })
@@ -186,7 +191,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
       toast(error.message || 'Failed to update category')
     },
-    onSuccess: (updatedCategory) => {
+    onSuccess: (updatedCategory: Category) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], (old): Category[] => {
         const categories = old || []
         return categories.map(cat => cat.id === updatedCategory.id ? { ...cat, ...updatedCategory, is_default: cat.is_default, account_id: cat.account_id } : cat)

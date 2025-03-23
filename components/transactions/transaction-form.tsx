@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils"
 import { format, parse } from "date-fns"
 import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { useCategories } from "@/lib/context/CategoryContext"
-import { useTransactions } from "@/lib/context/TransactionContext"
+import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { Textarea } from "@/components/ui/textarea"
@@ -83,7 +83,7 @@ interface TransactionFormProps {
 export function TransactionForm({ children, transaction, onSuccess }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
   const { categories, incomeCategories, expenseCategories } = useCategories();
-  const { addTransaction, updateTransaction } = useTransactions();
+  const { addTransaction, updateTransaction } = useTransactionQuery();
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
   
@@ -194,7 +194,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
 
       if (transaction) {
         // Update existing transaction
-        await updateTransaction(transaction.id, processedData);
+        await updateTransaction({ id: transaction.id, data: processedData });
         toast("Transaction updated", {
           description: "Your transaction has been updated successfully."
         });
