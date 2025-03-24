@@ -64,7 +64,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .order('date', { ascending: false })
 
       if (error) {
-        toast(error.message)
+        // toast('Unable to process your request. Please try again.')
         throw error
       }
 
@@ -101,13 +101,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
           .gte('created_at', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
 
         if (countError) {
-          toast(countError.message)
+          // toast(countError.message)
           throw countError
         }
 
         if (count && count >= 50) {
           const errorMsg = 'Free users are limited to 50 transactions per month. Please upgrade to add more transactions.'
-          toast(errorMsg)
+          // toast('Free users are limited to 50 transactions per month. Please upgrade to add more transactions.')
           throw new Error(errorMsg)
         }
       }
@@ -124,7 +124,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        toast(error.message)
+        // toast('Unable to process your request. Please try again.')
         throw error
       }
 
@@ -149,14 +149,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['transactions', currentAccount?.id], context.previousTransactions)
-      toast(error.message || 'Failed to add transaction')
+      // toast(error.message || 'Failed to add transaction')
     },
     onSuccess: (newTransaction) => {
       queryClient.setQueryData<Transaction[]>(['transactions', currentAccount?.id], old => {
         const transactions = old || []
         return transactions.map(t => t.id.startsWith('temp-') ? newTransaction : t)
       })
-      toast('Transaction added successfully')
+      // toast('Transaction added successfully')
     }
   })
 
@@ -174,7 +174,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
 
       if (error) {
-        toast(error.message)
+        // toast('Unable to process your request. Please try again.')
         throw error
       }
 
@@ -196,13 +196,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['transactions', currentAccount?.id], context.previousTransactions)
-      toast(error.message || 'Failed to update transaction')
+      // toast(error.message || 'Failed to update transaction')
     },
     onSuccess: (updatedTransaction) => {
       queryClient.setQueryData<Transaction[]>(['transactions', currentAccount?.id], old => {
         return (old || []).map(t => t.id === updatedTransaction.id ? { ...t, ...updatedTransaction } : t)
       })
-      toast('Transaction updated successfully')
+      // toast('Transaction updated successfully')
     }
   })
 
@@ -217,7 +217,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
 
       if (error) {
-        toast(error.message)
+        // toast('Unable to process your request. Please try again.')
         throw error
       }
     },
@@ -233,10 +233,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['transactions', currentAccount?.id], context.previousTransactions)
-      toast(error.message || 'Failed to delete transaction')
+      // toast(error.message || 'Failed to delete transaction')
     },
     onSuccess: () => {
-      toast('Transaction deleted successfully')
+      // toast('Transaction deleted successfully')
     }
   })
 

@@ -43,7 +43,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error fetching user data:', error);
-        toast('Error fetching user data');
+        // toast('Unable to load your account information. Please try again later.');
         return { subscription_tier: 'free' };
       }
       return data;
@@ -79,9 +79,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     _setCurrentAccount(account);
     
     if (!isInitialLoad && showNotification) {
-      toast("Switched to account", {
-        description: `Now using ${account.name}`
-      });
+      // toast("Switched to account", {
+      //   description: `Now using ${account.name}`
+      // });
     }
     
     window.dispatchEvent(new CustomEvent('account-changed', { 
@@ -155,10 +155,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast('Account created successfully');
+      // toast('Your new account has been created successfully!');
     },
     onError: (error: Error) => {
-      toast(error.message || "Failed to add account");
+      // toast('Unable to create your account. Please try again later.');
     }
   });
 
@@ -177,10 +177,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast('Account updated successfully');
+      // toast('Your account details have been updated successfully!');
     },
     onError: (error: Error) => {
-      toast(error.message || "Failed to update account");
+      // toast('Unable to update your account. Please check your changes and try again.');
     }
   });
 
@@ -199,10 +199,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      toast('Account deleted successfully');
+      // toast('Your account has been permanently deleted.');
     },
     onError: (error: Error) => {
-      toast(error.message || "Failed to delete account");
+      // toast('Unable to delete your account. Please try again later.');
     }
   });
 

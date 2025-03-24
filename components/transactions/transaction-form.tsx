@@ -162,17 +162,16 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     try {
       // Validate that categories exist for the selected type
       if (!hasCategoriesForType) {
-        toast("No Categories Available", {
-          description: `Please add categories for ${transactionType} transactions before continuing.`
+        toast("Categories Required", {
+          description: `Please create at least one ${transactionType} category before adding a transaction.`
         });
         return;
       }
       
       // Ensure we have a valid account_id
       if (!data.account_id) {
-        toast("Error", {
-          description: "No account selected. Please select an account to continue."
-        });
+        toast("Account Required", {
+          description: "Please select an account for this transaction."});
         return;
       }
       
@@ -195,15 +194,13 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       if (transaction) {
         // Update existing transaction
         await updateTransaction({ id: transaction.id, data: processedData });
-        toast("Transaction updated", {
-          description: "Your transaction has been updated successfully."
-        });
+        toast("Changes Saved", {
+          description: "Your transaction has been updated successfully."});
       } else {
         // Add new transaction
         await addTransaction(processedData);
-        toast("Transaction added", {
-          description: "Your new transaction has been added successfully."
-        });
+        toast("Transaction Added", {
+          description: "Your transaction has been recorded successfully."});
       }
       
       setOpen(false);
@@ -222,9 +219,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
           }
         });
       } else {
-        toast("Error", {
-          description: "There was a problem saving your transaction."
-        });
+        toast("Unable to Save", {
+          description: "We couldn't save your transaction. Please try again."});
       }
     }
   }

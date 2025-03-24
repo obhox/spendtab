@@ -62,7 +62,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to fetch categories'
         setError(errorMessage)
         setErrorDetails(error)
-        toast(errorMessage)
+        // toast(errorMessage)
         return []
       }
 
@@ -106,7 +106,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to fetch categories'
         setError(errorMessage)
         setErrorDetails(error)
-        toast(errorMessage)
+        // toast(errorMessage)
         return []
       }
 
@@ -132,13 +132,13 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      toast(error.message || 'Failed to add category')
+      // toast(error.message || 'Failed to add category')
     },
     onSuccess: (newCategory) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
         return (old || []).map(cat => cat.id.startsWith('temp-') ? newCategory : cat)
       })
-      toast('Category added successfully')
+      // toast('Category added successfully')
     }
   })
 
@@ -162,7 +162,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to update category'
         setError(errorMessage)
         setErrorDetails(error)
-        toast(errorMessage)
+        // toast(errorMessage)
         throw error
       }
 
@@ -189,14 +189,14 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      toast(error.message || 'Failed to update category')
+      // toast(error.message || 'Failed to update category')
     },
     onSuccess: (updatedCategory: Category) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], (old): Category[] => {
         const categories = old || []
         return categories.map(cat => cat.id === updatedCategory.id ? { ...cat, ...updatedCategory, is_default: cat.is_default, account_id: cat.account_id } : cat)
       })
-      toast('Category updated successfully')
+      // toast('Category updated successfully')
     }
   })
 
@@ -218,7 +218,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to fetch categories'
         setError(errorMessage)
         setErrorDetails(error)
-        toast(errorMessage)
+        // toast(errorMessage)
         return []
       }
 
@@ -236,13 +236,13 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     },
     onError: (error: Error, _, context: any) => {
       queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      toast(error.message || 'Failed to delete category')
+      // toast(error.message || 'Failed to delete category')
     },
     onSuccess: (deletedId) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
         return (old || []).filter(cat => cat.id !== deletedId)
       })
-      toast('Category deleted successfully')
+      // toast('Category deleted successfully')
     }
   })
 
