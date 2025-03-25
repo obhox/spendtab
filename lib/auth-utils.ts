@@ -81,6 +81,24 @@ export async function signUp(email: string, password: string, firstName?: string
     if (error) {
       throw error
     }
+
+    // Send welcome email
+    try {
+      await fetch('/api/email/welcome', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          firstName: firstName || '',
+          fullName: firstName && lastName ? `${firstName} ${lastName}` : undefined
+        })
+      })
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError)
+      // Don't throw error here as signup was successful
+    }
     
     return { success: true, user: data.user }
   } catch (error: any) {
