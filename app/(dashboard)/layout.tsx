@@ -12,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const AccountSelector = dynamic(
   () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
@@ -258,6 +260,8 @@ useEffect(() => {
         <main className="flex-1 overflow-auto p-8 lg:pl-72">
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         </main>
+        <Analytics />
+        <SpeedInsights />
       </div>
     </DataProvider>
   )
