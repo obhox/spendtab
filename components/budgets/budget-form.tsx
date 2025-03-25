@@ -58,7 +58,6 @@ interface Budget {
   spent: number
   startDate?: string
   endDate?: string
-  period?: string
   account_id?: string
 }
 
@@ -115,7 +114,6 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
           endDate: formattedEndDate,
           spent: budget.spent || 0,
           account_id: currentAccount.id,
-          period: budget.period
         };
         
         // Update existing budget

@@ -266,15 +266,7 @@ export default function DashboardPage() {
       <Suspense fallback={<div className="p-4 text-center animate-pulse bg-muted rounded">Loading dashboard...</div>}>
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          {currentAccount ? (
-            <h2 className="text-xl tracking-tight text-muted-foreground">Account: {currentAccount.name}</h2>
-          ) : (
-            <h2 className="text-xl tracking-tight text-muted-foreground">No account selected</h2>
-          )}
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-            </TabsList>
             <TabsContent value="overview" className="space-y-4">
               <MemoizedDashboardMetrics />
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

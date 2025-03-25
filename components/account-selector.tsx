@@ -150,9 +150,12 @@ export function AccountSelector() {
     <div className="flex items-center gap-2 max-w-md">
       <Select
         value={currentAccount?.id}
-        onValueChange={(value) => {
+        onValueChange={async (value) => {
           const account = accounts.find((a) => a.id === value);
-          if (account) setCurrentAccount(account);
+          if (account) {
+            await setCurrentAccount(account);
+            window.location.reload();
+          }
         }}
       >
         <SelectTrigger className="w-full">

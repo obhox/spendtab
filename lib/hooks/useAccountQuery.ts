@@ -9,6 +9,7 @@ export interface Account {
   balance: number;
   currency: string;
   user_id: string;
+  description?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -50,7 +51,15 @@ export function useAccountQuery() {
   });
 
   const addAccount = useMutation({
-    mutationFn: async (newAccount: Omit<Account, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const newAccount: Omit<Account, 'id' | 'created_at' | 'updated_at'> = {
+        name,
+        description,
+        type: 'default',
+        balance: 0,
+        currency: 'USD',
+        user_id: (await supabase.auth.getUser()).data.user?.id || ''
+      }
       const { data, error } = await supabase
         .from('accounts')
         .insert({
@@ -75,7 +84,12 @@ export function useAccountQuery() {
   });
 
   const updateAccount = useMutation({
-    mutationFn: async ({ id, ...account }: Account) => {
+    mutationFn: async ({ id, name, description }: { id: string; name: string; description?: string }) => {
+      const account = {
+        name,
+        description,
+        updated_at: new Date().toISOString()
+      }
       const { error } = await supabase
         .from('accounts')
         .update({

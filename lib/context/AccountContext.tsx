@@ -71,26 +71,34 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  const setCurrentAccount = (account: Account, showNotification = true) => {
-    if (currentAccount?.id === account.id) return;
-    
-    setIsAccountSwitching(true);
-    setCookie('currentAccountId', account.id);
-    _setCurrentAccount(account);
-    
-    if (!isInitialLoad && showNotification) {
-      // toast("Switched to account", {
-      //   description: `Now using ${account.name}`
-      // });
-    }
-    
-    window.dispatchEvent(new CustomEvent('account-changed', { 
-      detail: { accountId: account.id } 
-    }));
+  const setCurrentAccount = async (account: Account, showNotification = true) => {
+    try {
+      if (currentAccount?.id === account.id) return;
+      
+      setIsAccountSwitching(true);
+      setCookie('currentAccountId', account.id);
+      _setCurrentAccount(account);
+      
+      if (!isInitialLoad && showNotification) {
+        toast("Switched to account", {
+          description: `Now using ${account.name}`
+        });
+      }
+      
+      window.dispatchEvent(new CustomEvent('account-changed', { 
+        detail: { accountId: account.id } 
+      }));
 
-    setTimeout(() => {
-      window.location.reload();
-    }, 300);
+      // Allow time for state updates and event propagation
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+    } catch (error) {
+      console.error('Error switching account:', error);
+      toast("Error", {
+        description: "Failed to switch account. Please try again."
+      });
+    } finally {
+      setIsAccountSwitching(false);
+    }
   };
 
   useEffect(() => {

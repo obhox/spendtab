@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTransactions } from '../context/TransactionContext';
 import { useAccounts } from '../context/AccountContext';
 import { format, isWithinInterval } from 'date-fns';
@@ -33,6 +33,7 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date }) {
   const { transactions } = useTransactions();
   const { currentAccount } = useAccounts();
+  const queryClient = useQueryClient();
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
 
   const calculateAnalyticsData = async () => {
@@ -146,15 +147,28 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
     queryFn: calculateAnalyticsData,
     enabled: !!currentAccount && !!transactions,
     gcTime: CACHE_TIME,
-    staleTime: STALE_TIME
+    staleTime: STALE_TIME,
+    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true
   });
 
   return {
-    ...query.data,
+    monthlyData: query.data?.monthlyData || [],
+    incomeByCategory: query.data?.incomeByCategory || [],
+    expensesByCategory: query.data?.expensesByCategory || [],
+    financialSummary: query.data?.financialSummary || {
+      totalRevenue: 0,
+      totalExpenses: 0,
+      totalProfit: 0,
+      profitMargin: 0,
+      cashFlow: 0,
+    },
     transactions: filteredTransactions,
     isLoading: query.isLoading,
     isError: query.isError,
-    error: query.error,
-    refetch: query.refetch
+    error: query.error instanceof Error ? query.error.message : 'An error occurred',
+    refetch: query.refetch,
+    invalidate: () => queryClient.invalidateQueries({ queryKey: ['analytics', currentAccount?.id] })
   };
 }

@@ -3,6 +3,10 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { format, addMonths } from "date-fns"
+import { CalendarIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -12,6 +16,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -25,7 +34,12 @@ const formSchema = z.object({
   }),
   amount: z.coerce.number().positive({
     message: "Budget amount must be positive.",
-  })
+  }),
+  startDate: z.date({ required_error: "Start date is required." }),
+  endDate: z.date({ required_error: "End date is required." })
+}).refine((data) => data.endDate > data.startDate, {
+  message: "End date must be after start date.",
+  path: ["endDate"]
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -35,8 +49,9 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  period?: string
   account_id: string
+  startDate?: string
+  endDate?: string
 }
 
 interface BudgetFormProps {
@@ -48,19 +63,21 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
   const [open, setOpen] = useState(false)
   const { addBudget, updateBudget, budgets } = useBudgets() // Import budgets from useBudgets
 
-  const defaultValues: Partial<FormValues> = budget
+  const defaultValues = budget
     ? {
         name: budget.name,
         amount: budget.amount,
-      
+        startDate: budget.startDate ? new Date(budget.startDate) : new Date(),
+        endDate: budget.endDate ? new Date(budget.endDate) : addMonths(new Date(), 1)
       }
     : {
         name: "",
-        amount: 0,
-      
+        amount: undefined,
+        startDate: new Date(),
+        endDate: addMonths(new Date(), 1)
       }
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues,
   })
@@ -74,9 +91,8 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
         name: values.name,
         amount: values.amount,
         spent: budget?.spent || 0,
-        startDate: new Date().toISOString(),
-        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-        period: "monthly",
+        startDate: values.startDate.toISOString(),
+        endDate: values.endDate.toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -144,6 +160,85 @@ export function BudgetForm({ children, budget }: BudgetFormProps) {
               )}
             />
 
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button type="submit">{budget ? "Save Changes" : "Create Budget"}</Button>

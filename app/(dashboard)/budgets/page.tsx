@@ -9,7 +9,7 @@ import { Plus } from 'lucide-react'
 import { Skeleton } from "@/components/ui/skeleton"
 
 const BudgetList = dynamic(
-  () => import("@/components/budgets/budget-list").then((mod) => mod.BudgetList),
+  () => import("@/components/budget-list").then((mod) => mod.BudgetList),
   { ssr: false }
 )
 

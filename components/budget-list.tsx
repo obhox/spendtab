@@ -65,35 +65,58 @@ export function BudgetList() {
           const remaining = budget.amount - budget.spent
 
           return (
-            <Card key={budget.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{budget.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="pb-2">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Progress</span>
-                  <span className="text-sm font-medium">{percentSpent}%</span>
-                </div>
-                <Progress value={percentSpent} className="h-2 mb-2" />
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Budget</div>
-                    <div className="text-lg font-bold">${budget.amount.toLocaleString()}</div>
+            <Card key={budget.id} className="hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-semibold">{budget.name}</CardTitle>
+                {budget.period && (
+                  <div className="text-sm text-muted-foreground">
+                    Period: {budget.period}
+                    {budget.startDate && budget.endDate && (
+                      <span> ({new Date(budget.startDate).toLocaleDateString()} - {new Date(budget.endDate).toLocaleDateString()})</span>
+                    )}
                   </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Remaining</div>
-                    <div className="text-lg font-bold">${remaining.toLocaleString()}</div>
+                )}
+              </CardHeader>
+              <CardContent className="pb-4 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Progress</span>
+                    <span className={`text-sm font-medium ${percentSpent > 90 ? "text-red-600" : percentSpent > 75 ? "text-amber-600" : "text-green-600"}`}>
+                      {percentSpent}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={percentSpent} 
+                    className={`h-2.5 ${percentSpent > 90 ? "bg-red-200" : percentSpent > 75 ? "bg-amber-200" : "bg-green-200"}`} 
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="space-y-1.5">
+                    <div className="text-sm text-muted-foreground font-medium">Budget</div>
+                    <div className="text-lg font-bold tracking-tight">${budget.amount.toLocaleString()}</div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-sm text-muted-foreground font-medium">Spent</div>
+                    <div className={`text-lg font-bold tracking-tight ${budget.spent > budget.amount ? "text-red-600" : ""}`}>
+                      ${budget.spent.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="text-sm text-muted-foreground font-medium">Remaining</div>
+                    <div className={`text-lg font-bold tracking-tight ${remaining < 0 ? "text-red-600" : remaining < budget.amount * 0.25 ? "text-amber-600" : "text-green-600"}`}>
+                      ${remaining.toLocaleString()}
+                    </div>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between pt-2">
+              <CardFooter className="flex justify-between pt-3 border-t">
                 <BudgetForm budget={budget}>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="hover:bg-muted">
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                 </BudgetForm>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(budget.id)}>
+                <Button variant="ghost" size="sm" className="hover:bg-red-100 hover:text-red-600" onClick={() => handleDelete(budget.id)}>
                   <Trash className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
