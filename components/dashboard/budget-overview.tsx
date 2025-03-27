@@ -1,11 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Progress } from "@/components/ui/progress"
-import { useBudgets } from "@/lib/context/BudgetContext"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
+import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
 
 interface Budget {
   id: string
@@ -18,8 +17,7 @@ interface Budget {
 }
 
 export function BudgetOverview() {
-  const { budgets, isLoading } = useBudgets()
-  const [totals, setTotals] = useState({ allocated: 0, spent: 0 })
+  const { budgets = [], isLoading } = useBudgetQuery()
 
   const getSpentAmount = (budget: Budget): number => {
     return budget.spent !== null && budget.spent !== undefined ? budget.spent : 0
@@ -38,13 +36,13 @@ export function BudgetOverview() {
     }).format(value)
   }
 
-  useEffect(() => {
-    if (budgets.length > 0) {
-      const totalAllocated = budgets.reduce((sum, budget) => sum + budget.amount, 0)
-      const totalSpent = budgets.reduce((sum, budget) => sum + getSpentAmount(budget), 0)
-      setTotals({ allocated: totalAllocated, spent: totalSpent })
-    }
-  }, [budgets])
+  const totals = budgets.reduce(
+    (acc, budget) => ({
+      allocated: acc.allocated + budget.amount,
+      spent: acc.spent + getSpentAmount(budget)
+    }),
+    { allocated: 0, spent: 0 }
+  )
 
   if (isLoading) {
     return (
