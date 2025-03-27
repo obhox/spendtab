@@ -2,7 +2,7 @@ import type React from "react"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
-import { PostHogProvider } from "@/app/providers/posthog-provider"
+import { PostHogProvider } from "@/components/posthog-provider"
 import { ThemeProvider } from "@/app/providers/theme-provider"
 import { QueryProvider } from "@/app/providers/query-provider"
 import { DataProvider } from "@/lib/context/DataProvider"
