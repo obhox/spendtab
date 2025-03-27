@@ -118,10 +118,6 @@ export function RecentTransactions() {
       {recentTransactions.map((transaction) => (
         <div key={transaction.id} className="flex items-center gap-4">
           <Avatar className="h-9 w-9">
-            <AvatarImage 
-              src={`/avatars/${transaction.id}.png`} 
-              alt={transaction.description || 'Transaction'} 
-            />
             <AvatarFallback 
               className={transaction.type === "income" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}
             >
