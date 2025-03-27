@@ -123,10 +123,23 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
         })
       }, 100)
     } catch (error) {
-      console.error('Error saving category:', error)
-      toast("Error", {
-        description: "There was a problem saving your category."
-      })
+      if (error instanceof TypeError && error.message.includes('startsWith')) {
+        toast("Error", {
+          description: "Invalid category ID format. Please try again."
+        })
+        return;
+      } else if (error instanceof Error && error.message.includes('Invalid category')) {
+        toast("Error", {
+          description: "Please provide a valid category."
+        });
+        return;
+      } else {
+        console.error('Error saving category:', error);
+        toast("Error", {
+          description: "There was a problem saving your category."
+        });
+        return;
+      }
     }
   }
 

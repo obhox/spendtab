@@ -67,7 +67,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       }
 
       return data?.map(item => ({
-        id: item.id,
+        id: item.id || '', // Ensure id is never null or undefined
         name: item.name,
         type: item.type,
         icon: item.icon || undefined,
@@ -103,14 +103,25 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        const errorMessage = error.message || 'Failed to fetch categories'
+        const errorMessage = error.message || 'Failed to add category'
         setError(errorMessage)
         setErrorDetails(error)
-        // toast(errorMessage)
-        return []
+        throw error
       }
 
-      return data
+      if (!data) {
+        throw new Error('No data returned from server')
+      }
+
+      return {
+        id: data.id || '',  // Ensure id is never null or undefined
+        name: data.name,
+        type: data.type,
+        icon: data.icon || undefined,
+        color: data.color || undefined,
+        is_default: data.is_default,
+        account_id: data.account_id
+      }
     },
     onMutate: async (newCategory) => {
       await queryClient.cancelQueries({ queryKey: ['categories', currentAccount?.id] })
@@ -118,7 +129,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
 
       const optimisticCategory = {
         ...newCategory,
-        id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`, // Temporary ID for optimistic update
         is_default: false,
         account_id: currentAccount?.id || ''
       }
@@ -131,20 +142,29 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       return { previousCategories }
     },
     onError: (error: Error, _, context: any) => {
-      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      // toast(error.message || 'Failed to add category')
+      queryClient.setQueryData(['categories', currentAccount?.id], context?.previousCategories)
+      console.error('Error adding category:', error)
     },
     onSuccess: (newCategory) => {
+      // Fix the startsWith error by safely handling the temporary ID replacement
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
-        return (old || []).map(cat => cat.id.startsWith('temp-') ? newCategory : cat)
+        if (!old) return [newCategory]
+        
+        return old.map(cat => {
+          // Safely check if id exists and is a string before calling startsWith
+          if (typeof cat.id === 'string' && cat.id.startsWith('temp-')) {
+            return newCategory
+          }
+          return cat
+        })
       })
-      // toast('Category added successfully')
     }
   })
 
   const updateCategoryMutation = useMutation<Category, Error, { id: string } & Omit<Category, "id" | "is_default" | "account_id">>({    
     mutationFn: async ({ id, ...category }) => {
       if (!currentAccount) throw new Error('No account selected')
+      if (!id) throw new Error('Category ID is required')
 
       const categoryToUpdate = categories.find(cat => cat.id === id)
       if (!categoryToUpdate) throw new Error('Category not found')
@@ -162,7 +182,6 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to update category'
         setError(errorMessage)
         setErrorDetails(error)
-        // toast(errorMessage)
         throw error
       }
 
@@ -178,7 +197,9 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       const previousCategories = queryClient.getQueryData<Category[]>(['categories', currentAccount?.id])
 
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
-        return (old || []).map(category =>
+        if (!old) return []
+        
+        return old.map(category =>
           category.id === id
             ? { ...category, ...newCategory }
             : category
@@ -188,21 +209,25 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       return { previousCategories }
     },
     onError: (error: Error, _, context: any) => {
-      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      // toast(error.message || 'Failed to update category')
+      queryClient.setQueryData(['categories', currentAccount?.id], context?.previousCategories)
+      console.error('Error updating category:', error)
     },
     onSuccess: (updatedCategory: Category) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], (old): Category[] => {
-        const categories = old || []
-        return categories.map(cat => cat.id === updatedCategory.id ? { ...cat, ...updatedCategory, is_default: cat.is_default, account_id: cat.account_id } : cat)
+        const categoriesList = old || []
+        return categoriesList.map(cat => 
+          cat.id === updatedCategory.id 
+            ? { ...cat, ...updatedCategory, is_default: cat.is_default, account_id: cat.account_id } 
+            : cat
+        )
       })
-      // toast('Category updated successfully')
     }
   })
 
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
       if (!currentAccount) throw new Error('No account selected')
+      if (!id) throw new Error('Category ID is required')
 
       const categoryToDelete = categories.find(cat => cat.id === id)
       if (!categoryToDelete) throw new Error('Category not found')
@@ -215,11 +240,10 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         .eq('account_id', currentAccount.id)
 
       if (error) {
-        const errorMessage = error.message || 'Failed to fetch categories'
+        const errorMessage = error.message || 'Failed to delete category'
         setError(errorMessage)
         setErrorDetails(error)
-        // toast(errorMessage)
-        return []
+        throw error
       }
 
       return id
@@ -235,27 +259,41 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
       return { previousCategories }
     },
     onError: (error: Error, _, context: any) => {
-      queryClient.setQueryData(['categories', currentAccount?.id], context.previousCategories)
-      // toast(error.message || 'Failed to delete category')
+      queryClient.setQueryData(['categories', currentAccount?.id], context?.previousCategories)
+      console.error('Error deleting category:', error)
     },
     onSuccess: (deletedId) => {
       queryClient.setQueryData<Category[]>(['categories', currentAccount?.id], old => {
         return (old || []).filter(cat => cat.id !== deletedId)
       })
-      // toast('Category deleted successfully')
     }
   })
 
   const addCategory = async (category: Omit<Category, "id" | "is_default" | "account_id">) => {
-    await addCategoryMutation.mutateAsync(category)
+    try {
+      await addCategoryMutation.mutateAsync(category)
+    } catch (error) {
+      console.error('Error in addCategory:', error)
+      throw error
+    }
   }
 
   const updateCategory = async (id: string, category: Omit<Category, "id" | "is_default" | "account_id">) => {
-    await updateCategoryMutation.mutateAsync({ id, ...category })
+    try {
+      await updateCategoryMutation.mutateAsync({ id, ...category })
+    } catch (error) {
+      console.error('Error in updateCategory:', error)
+      throw error
+    }
   }
 
   const deleteCategory = async (id: string) => {
-    await deleteCategoryMutation.mutateAsync(id)
+    try {
+      await deleteCategoryMutation.mutateAsync(id)
+    } catch (error) {
+      console.error('Error in deleteCategory:', error)
+      throw error
+    }
   }
 
   return (
@@ -284,4 +322,3 @@ export function useCategories() {
   }
   return context
 }
-
