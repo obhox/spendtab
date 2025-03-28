@@ -195,6 +195,20 @@ export function supabaseAuthStateChange(callback: (user: any) => void) {
 
 export async function signInWithGoogle() {
   try {
+    // First attempt to get current session in case we're returning from OAuth redirect
+    const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession()
+    
+    if (sessionError) {
+      throw sessionError
+    }
+
+    // If we have a session, handle account creation
+    if (existingSession?.user) {
+      await ensureUserHasAccount(existingSession.user)
+      return { session: existingSession }
+    }
+
+    // If no session, initiate Google OAuth
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -210,38 +224,33 @@ export async function signInWithGoogle() {
       throw error
     }
     
-    // For OAuth flow, we need to handle both immediate and redirect cases
+    // For immediate sign-in case (no redirect)
     if (!data.url) {
-      // Get immediate session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      const { data: { session }, error: newSessionError } = await supabase.auth.getSession()
       
-      if (sessionError) {
-        throw sessionError
+      if (newSessionError) {
+        throw newSessionError
       }
 
-      // If we have a session, check and create default account if needed
       if (session?.user) {
-        // Check if user already has an account
-        const { data: accountData, error: accountCheckError } = await supabase
-          .from('accounts')
-          .select('id')
-          .eq('owner_id', session.user.id)
-          .limit(1)
-
-        if (accountCheckError) {
-          console.error('Error checking for existing account:', accountCheckError)
-        } else if (!accountData || accountData.length === 0) {
-          // Create a default account for the Google user
-          // Silently try to create the default account
-          await supabase
-            .from('accounts')
-            .insert({
-              name: 'Default Account',
-              description: 'Your default account',
-              owner_id: session.user.id
+        await ensureUserHasAccount(session.user)
+        
+        // Send welcome email for new Google users
+        try {
+          await fetch('/api/email/welcome', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: session.user.email,
+              firstName: session.user.user_metadata?.given_name || '',
+              fullName: session.user.user_metadata?.name
             })
-            .then(() => {}, () => {})
-          // Continue regardless of account creation result
+          })
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError)
+          // Don't throw error as sign-in was successful
         }
       }
     }
@@ -250,5 +259,39 @@ export async function signInWithGoogle() {
   } catch (error) {
     console.error('Google sign-in error:', error)
     throw error
+  }
+}
+
+// Helper function to ensure user has a default account
+async function ensureUserHasAccount(user) {
+  try {
+    // Check if user already has an account
+    const { data: accountData, error: accountCheckError } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('owner_id', user.id)
+      .limit(1)
+
+    if (accountCheckError) {
+      console.error('Error checking for existing account:', accountCheckError)
+      return
+    }
+
+    if (!accountData || accountData.length === 0) {
+      // Create a default account for the user
+      const { error: createError } = await supabase
+        .from('accounts')
+        .insert({
+          name: 'Default Account',
+          description: 'Your default account',
+          owner_id: user.id
+        })
+
+      if (createError) {
+        console.error('Error creating default account:', createError)
+      }
+    }
+  } catch (error) {
+    console.error('Error ensuring user account:', error)
   }
 }
