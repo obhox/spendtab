@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { updatePassword } from "@/lib/auth-utils"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 
 export default function PasswordResetForm() {
   const [password, setPassword] = useState("")
@@ -14,8 +15,18 @@ export default function PasswordResetForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  const searchParams = useSearchParams()
+  const token = searchParams.get("token")
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!token) {
+      toast("Invalid reset token", {
+        description: "Please use a valid password reset link",
+      })
+      return
+    }
+
     if (password !== confirmPassword) {
       toast("Passwords do not match", {
         description: "Please ensure both passwords are identical",
@@ -25,7 +36,7 @@ export default function PasswordResetForm() {
 
     setLoading(true)
     try {
-      await updatePassword(password)
+      await updatePassword(password, token)
       toast("Password updated successfully", {
         description: "You can now log in with your new password",
       })

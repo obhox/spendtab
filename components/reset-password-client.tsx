@@ -13,7 +13,7 @@ export function ResetPasswordClient() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
-  const hasResetToken = searchParams.has("token")
+  const hasResetToken = searchParams.get("type") === "recovery" && searchParams.get("token")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

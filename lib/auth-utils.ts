@@ -173,13 +173,23 @@ export async function resetPassword(email: string) {
   }
 }
 
-export async function updatePassword(password: string) {
-  const { error } = await supabase.auth.updateUser({
-    password,
-  })
-  
-  if (error) {
-    throw error
+export async function updatePassword(password: string, token?: string) {
+  if (token) {
+    const { error } = await supabase.auth.updateUser({
+      password: password
+    })
+    
+    if (error) {
+      throw error
+    }
+  } else {
+    const { error } = await supabase.auth.updateUser({
+      password: password
+    })
+    
+    if (error) {
+      throw error
+    }
   }
 }
 
