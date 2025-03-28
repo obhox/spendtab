@@ -120,6 +120,11 @@ export default function LoginPage() {
               required
               disabled={loading}
             />
+            <div className="text-right">
+              <Link href="/reset-password" className="text-sm text-primary hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>

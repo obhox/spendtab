@@ -62,6 +62,7 @@ export default function SignUpPage() {
           <p className="text-sm text-muted-foreground">Enter your information to get started</p>
         </div>
 
+        {/* Temporarily disabled Google Sign-in
         <Button
           variant="outline"
           className="w-full justify-center space-x-2"
@@ -96,6 +97,7 @@ export default function SignUpPage() {
             <span className="bg-background px-2 text-muted-foreground">OR CONTINUE WITH</span>
           </div>
         </div>
+        */}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
