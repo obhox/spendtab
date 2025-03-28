@@ -133,7 +133,7 @@ import {
     },
   };
   
-  export const WeeklySummary: React.FC<Readonly<WeeklySummaryProps>> = ({
+  export const WeeklySummary: React.FC<WeeklySummaryProps> = ({
     firstName,
     fullName,
     weekStartDate = 'March 18',
