@@ -60,12 +60,44 @@ export async function signIn(email: string, password: string) {
   if (error) {
     throw error
   }
+
+  // Check if this is the first login after email verification
+  if (data.user && data.user.email_confirmed_at) {
+    // Check if user already has an account
+    const { data: accountData, error: accountCheckError } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('owner_id', data.user.id)
+      .limit(1)
+
+    if (accountCheckError) {
+      console.error('Error checking for existing account:', accountCheckError)
+    } else if (!accountData || accountData.length === 0) {
+      // Create a default account for the verified user
+      try {
+        const { error: accountError } = await supabase
+          .from('accounts')
+          .insert({
+            name: 'Default Account',
+            description: 'Your default account',
+            owner_id: data.user.id
+          })
+
+        if (accountError) {
+          console.error('Failed to create default account:', accountError)
+        }
+      } catch (accountError: any) {
+        console.error('Failed to create default account:', accountError)
+      }
+    }
+  }
   
   return data
 }
 
 export async function signUp(email: string, password: string, firstName?: string, lastName?: string, companyName?: string) {
   try {
+    // Create the user account first
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -80,6 +112,41 @@ export async function signUp(email: string, password: string, firstName?: string
     
     if (error) {
       throw error
+    }
+
+    // Create a default account for the new user
+    if (data.user) {
+      try {
+        // Try to create the default account
+        const { error: accountError } = await supabase
+          .from('accounts')
+          .insert({
+            name: 'Default Account',
+            description: 'Your default account',
+            owner_id: data.user.id
+          })
+
+        if (accountError) {
+          console.error('Failed to create default account:', accountError)
+          
+          // Check if the account was actually created despite the RLS error
+          const { data: existingAccount, error: checkError } = await supabase
+            .from('accounts')
+            .select('id')
+            .eq('owner_id', data.user.id)
+            .single()
+
+          if (checkError || !existingAccount) {
+            // Only delete user and throw error if account truly wasn't created
+            await supabase.auth.admin.deleteUser(data.user.id)
+            throw new Error('Failed to create default account: ' + accountError.message)
+          }
+          // If account exists, continue silently as it was actually created
+        }
+      } catch (accountError: any) {
+        console.error('Failed to create default account:', accountError)
+        throw new Error('Account creation failed: ' + (accountError.message || 'Unknown error'))
+      }
     }
 
     // Send welcome email
@@ -171,6 +238,37 @@ export async function signInWithGoogle() {
       
       if (sessionError) {
         throw sessionError
+      }
+
+      // If we have a session, check and create default account if needed
+      if (session?.user) {
+        // Check if user already has an account
+        const { data: accountData, error: accountCheckError } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('owner_id', session.user.id)
+          .limit(1)
+
+        if (accountCheckError) {
+          console.error('Error checking for existing account:', accountCheckError)
+        } else if (!accountData || accountData.length === 0) {
+          // Create a default account for the Google user
+          try {
+            const { error: accountError } = await supabase
+              .from('accounts')
+              .insert({
+                name: 'Default Account',
+                description: 'Your default account',
+                owner_id: session.user.id
+              })
+
+            if (accountError) {
+              console.error('Failed to create default account:', accountError)
+            }
+          } catch (accountError) {
+            console.error('Failed to create default account:', accountError)
+          }
+        }
       }
     }
     
