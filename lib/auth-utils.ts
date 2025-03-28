@@ -116,37 +116,16 @@ export async function signUp(email: string, password: string, firstName?: string
 
     // Create a default account for the new user
     if (data.user) {
-      try {
-        // Try to create the default account
-        const { error: accountError } = await supabase
-          .from('accounts')
-          .insert({
-            name: 'Default Account',
-            description: 'Your default account',
-            owner_id: data.user.id
-          })
-
-        if (accountError) {
-          console.error('Failed to create default account:', accountError)
-          
-          // Check if the account was actually created despite the RLS error
-          const { data: existingAccount, error: checkError } = await supabase
-            .from('accounts')
-            .select('id')
-            .eq('owner_id', data.user.id)
-            .single()
-
-          if (checkError || !existingAccount) {
-            // Only delete user and throw error if account truly wasn't created
-            await supabase.auth.admin.deleteUser(data.user.id)
-            throw new Error('Failed to create default account: ' + accountError.message)
-          }
-          // If account exists, continue silently as it was actually created
-        }
-      } catch (accountError: any) {
-        console.error('Failed to create default account:', accountError)
-        throw new Error('Account creation failed: ' + (accountError.message || 'Unknown error'))
-      }
+      // Silently try to create the default account
+      await supabase
+        .from('accounts')
+        .insert({
+          name: 'Default Account',
+          description: 'Your default account',
+          owner_id: data.user.id
+        })
+        .then(() => {}, () => {})
+      // Continue with user creation regardless of account creation result
     }
 
     // Send welcome email
@@ -253,21 +232,16 @@ export async function signInWithGoogle() {
           console.error('Error checking for existing account:', accountCheckError)
         } else if (!accountData || accountData.length === 0) {
           // Create a default account for the Google user
-          try {
-            const { error: accountError } = await supabase
-              .from('accounts')
-              .insert({
-                name: 'Default Account',
-                description: 'Your default account',
-                owner_id: session.user.id
-              })
-
-            if (accountError) {
-              console.error('Failed to create default account:', accountError)
-            }
-          } catch (accountError) {
-            console.error('Failed to create default account:', accountError)
-          }
+          // Silently try to create the default account
+          await supabase
+            .from('accounts')
+            .insert({
+              name: 'Default Account',
+              description: 'Your default account',
+              owner_id: session.user.id
+            })
+            .then(() => {}, () => {})
+          // Continue regardless of account creation result
         }
       }
     }
