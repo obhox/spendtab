@@ -202,9 +202,29 @@ export async function signInWithGoogle() {
       throw sessionError
     }
 
-    // If we have a session, handle account creation
+    // If we have a session from redirect or immediate sign-in
     if (existingSession?.user) {
+      // Ensure user has a default account
       await ensureUserHasAccount(existingSession.user)
+      
+      // Send welcome email
+      try {
+        await fetch('/api/email/welcome', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: existingSession.user.email,
+            firstName: existingSession.user.user_metadata?.given_name || '',
+            fullName: existingSession.user.user_metadata?.name
+          })
+        })
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError)
+        // Don't throw error as sign-in was successful
+      }
+      
       return { session: existingSession }
     }
 
@@ -222,37 +242,6 @@ export async function signInWithGoogle() {
     
     if (error) {
       throw error
-    }
-    
-    // For immediate sign-in case (no redirect)
-    if (!data.url) {
-      const { data: { session }, error: newSessionError } = await supabase.auth.getSession()
-      
-      if (newSessionError) {
-        throw newSessionError
-      }
-
-      if (session?.user) {
-        await ensureUserHasAccount(session.user)
-        
-        // Send welcome email for new Google users
-        try {
-          await fetch('/api/email/welcome', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              to: session.user.email,
-              firstName: session.user.user_metadata?.given_name || '',
-              fullName: session.user.user_metadata?.name
-            })
-          })
-        } catch (emailError) {
-          console.error('Failed to send welcome email:', emailError)
-          // Don't throw error as sign-in was successful
-        }
-      }
     }
     
     return data
