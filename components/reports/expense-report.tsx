@@ -105,8 +105,8 @@ const CustomTooltip = (props) => {
       <div className="bg-background border rounded-md p-2 shadow-sm">
         <p className="font-medium">{data.name || 'Unknown'}</p>
         <p className="text-sm">{`$${(data.value || 0).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
         })}`}</p>
         <p className="text-xs text-muted-foreground">
           {`${data.payload && data.payload.percentage ? data.payload.percentage : 0}%`}
@@ -419,7 +419,7 @@ export function ExpenseReport() {
                   tickFormatter={(value) => truncateText(value, 20)}
                 />
                 <Tooltip 
-                  formatter={(value) => [formatCurrency(value), "Amount"]}
+                  formatter={(value) => [formatCurrency(value).replace(/\.\d+/, ''), "Amount"]}
                   labelFormatter={(label, payload) => {
                     // Use the full name from our data object for the tooltip
                     return payload && payload[0] ? payload[0].payload.fullName : label;

@@ -62,7 +62,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const errorMessage = error.message || 'Failed to fetch categories'
         setError(errorMessage)
         setErrorDetails(error)
-        // toast(errorMessage)
+        toast(errorMessage)
         return []
       }
 

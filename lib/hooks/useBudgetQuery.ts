@@ -15,7 +15,7 @@ export interface Budget {
 }
 
 const CACHE_TIME = 30 * 60 * 1000; // 30 minutes
-const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+const STALE_TIME = 2 * 60 * 1000; // 2 minutes
 
 export function useBudgetQuery() {
   const { currentAccount } = useAccounts();

@@ -43,7 +43,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('Error fetching user data:', error);
-        // toast('Unable to load your account information. Please try again later.');
+        toast('Unable to load your account information. Please try again later.');
         return { subscription_tier: 'free' };
       }
       return data;
@@ -163,10 +163,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      // toast('Your new account has been created successfully!');
+      toast('Your new account has been created successfully!');
     },
     onError: (error: Error) => {
-      // toast('Unable to create your account. Please try again later.');
+      toast('Unable to create your account. Please try again later.');
     }
   });
 
@@ -185,10 +185,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      // toast('Your account details have been updated successfully!');
+      toast('Your account details have been updated successfully!');
     },
     onError: (error: Error) => {
-      // toast('Unable to update your account. Please check your changes and try again.');
+      toast('Unable to update your account. Please check your changes and try again.');
     }
   });
 
@@ -207,10 +207,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
-      // toast('Your account has been permanently deleted.');
+      toast('Your account has been permanently deleted.');
     },
     onError: (error: Error) => {
-      // toast('Unable to delete your account. Please try again later.');
+      toast('Unable to delete your account. Please try again later.');
     }
   });
 

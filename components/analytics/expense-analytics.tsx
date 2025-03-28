@@ -144,7 +144,7 @@ export default function ExpenseAnalytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Expense"]} />
+                <Tooltip formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, "Expense"]} />
                 <Area type="monotone" dataKey="expenses" stroke="#ff6b6b" fill="#ff6b6b" fillOpacity={0.3} />
               </AreaChart>
             </ResponsiveContainer>

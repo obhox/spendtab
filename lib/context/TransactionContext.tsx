@@ -64,7 +64,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .order('date', { ascending: false })
 
       if (error) {
-        // toast('Unable to process your request. Please try again.')
+         toast('Unable to process your request. Please try again.')
         throw error
       }
 
@@ -107,7 +107,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
         if (count && count >= 50) {
           const errorMsg = 'Free users are limited to 50 transactions per month. Please upgrade to add more transactions.'
-          // toast('Free users are limited to 50 transactions per month. Please upgrade to add more transactions.')
+           toast('Free users are limited to 50 transactions per month. Please upgrade to add more transactions.')
           throw new Error(errorMsg)
         }
       }
