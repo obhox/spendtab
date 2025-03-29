@@ -121,44 +121,44 @@ export default function ProfitabilityAnalytics() {
   })).filter(data => data.revenue > 0 || data.expense > 0);
   
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="py-4">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+          <Card className="p-2 sm:p-3">
+            <CardHeader className="py-2 sm:py-3">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalRevenue)}</div>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold">{formatCurrency(financialSummary.totalRevenue)}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="py-4">
+          <Card className="p-2 sm:p-3">
+            <CardHeader className="py-2 sm:py-3">
               <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalExpenses)}</div>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold">{formatCurrency(financialSummary.totalExpenses)}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="py-4">
+          <Card className="p-2 sm:p-3">
+            <CardHeader className="py-2 sm:py-3">
               <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalProfit)}</div>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold">{formatCurrency(financialSummary.totalProfit)}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="py-4">
+          <Card className="p-2 sm:p-3">
+            <CardHeader className="py-2 sm:py-3">
               <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatPercent(financialSummary.profitMargin)}</div>
+              <div className="text-lg sm:text-xl lg:text-2xl font-bold">{formatPercent(financialSummary.profitMargin)}</div>
             </CardContent>
           </Card>
         </div>
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
           <SelectContent>
@@ -176,15 +176,15 @@ export default function ProfitabilityAnalytics() {
           <CardTitle>Revenue, Expenses & Profit</CardTitle>
           <CardDescription>Monthly financial performance</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[350px]">
+        <CardContent className="p-2 sm:p-4 md:p-6">
+          <div className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={profitData}
                 margin={{
                   top: 20,
-                  right: 30,
-                  left: 20,
+                  right: 20,
+                  left: 0,
                   bottom: 20,
                 }}
               >
@@ -199,10 +199,16 @@ export default function ProfitabilityAnalytics() {
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
                     borderRadius: "6px",
                     border: "1px solid #eee",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    fontSize: "0.875rem",
+                    padding: "0.5rem"
                   }}
                 />
-                <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                <Legend wrapperStyle={{ 
+                  paddingTop: "20px",
+                  fontSize: "0.75rem"
+                }} 
+                />
                 <Area 
                   yAxisId="left" 
                   type="monotone" 
@@ -242,8 +248,8 @@ export default function ProfitabilityAnalytics() {
           <CardTitle>Profit Margin Trend</CardTitle>
           <CardDescription>Monthly profit margin percentage</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[200px]">
+        <CardContent className="p-2 sm:p-4 md:p-6">
+          <div className="h-[150px] sm:h-[175px] md:h-[200px] lg:h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={profitData}
@@ -255,8 +261,8 @@ export default function ProfitabilityAnalytics() {
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                <XAxis dataKey="month" stroke="#666" />
-                <YAxis tickFormatter={(value) => `${value}%`} stroke="#666" />
+                <XAxis dataKey="month" stroke="#666" tick={{fontSize: 10}} angle={-45} textAnchor="end" height={50} />
+                <YAxis yAxisId="left" tickFormatter={(value) => `${value}%`} stroke="#666" tick={{fontSize: 10}} width={50} />
                 <Tooltip 
                   formatter={(value: number) => [formatPercent(value), "Profit Margin"]}
                   contentStyle={{
@@ -269,6 +275,7 @@ export default function ProfitabilityAnalytics() {
                 <Line
                   type="monotone"
                   dataKey="margin"
+                  yAxisId="left"
                   stroke="#f59e0b"
                   strokeWidth={2}
                   name="Profit Margin"

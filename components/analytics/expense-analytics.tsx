@@ -108,10 +108,10 @@ export default function ExpenseAnalytics() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end mb-4">
+    <div className="space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-4 mb-4">
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
           <SelectContent>
@@ -124,122 +124,124 @@ export default function ExpenseAnalytics() {
         </Select>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense Trend</CardTitle>
-          <CardDescription>Monthly expense trend over time</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={monthlyData}
-                margin={{
-                  top: 10,
-                  right: 30,
-                  left: 0,
-                  bottom: 0,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, "Expense"]} />
-                <Area type="monotone" dataKey="expenses" stroke="#ff6b6b" fill="#ff6b6b" fillOpacity={0.3} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Expenses by Category</CardTitle>
-          <CardDescription>Distribution of expense categories</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            {expensesByCategory && expensesByCategory.length > 0 ? (
+      <div className="grid gap-4 sm:gap-6">
+        <Card className="w-full">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Expense Trend</CardTitle>
+            <CardDescription>Monthly expense trend over time</CardDescription>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6">
+            <div className="h-[200px] sm:h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={expensesByCategory}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value, payload }) => {
-                      // Use the correct property names based on the data structure
-                      const category = payload.category || name;
-                      const percentage = Math.round(payload.percentage || 0);
-                      return `${category}: ${percentage}%`;
-                    }}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="amount"
-                    nameKey="category"
-                  >
-                    {expensesByCategory.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  <Legend />
-                </PieChart>
+                <AreaChart
+                  data={monthlyData}
+                  margin={{
+                    top: 10,
+                    right: 10,
+                    left: -10,
+                    bottom: 0,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{fontSize: 10}} angle={-45} textAnchor="end" height={50} />
+                  <YAxis tickFormatter={(value) => `$${value/1000}k`} tick={{fontSize: 10}} width={50} />
+                  <Tooltip formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, "Expense"]} />
+                  <Area type="monotone" dataKey="expenses" stroke="#ff6b6b" fill="#ff6b6b" fillOpacity={0.3} />
+                </AreaChart>
               </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-sm text-muted-foreground">No expense category data available</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense Transactions</CardTitle>
-          <CardDescription>Detailed list of all expense transactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenseTransactions.length > 0 ? (
-                  expenseTransactions.map((transaction, index) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      {(() => {
-                        try {
-                          return format(new Date(transaction.date), 'MMM d, yyyy');
-                        } catch (error) {
-                          return 'Invalid date';
-                        }
-                      })()}
-                    </TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell>{transaction.category}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(Math.abs(transaction.amount))}</TableCell>
-                  </TableRow>
-                ))) : (
+        <Card className="w-full">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Expenses by Category</CardTitle>
+            <CardDescription>Distribution of expense categories</CardDescription>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6">
+            <div className="h-[200px] sm:h-[250px] md:h-[300px]">
+              {expensesByCategory && expensesByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expensesByCategory}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value, payload }) => {
+                        const category = payload.category || name;
+                        const percentage = Math.round(payload.percentage || 0);
+                        return window.innerWidth < 768 ? `${percentage}%` : `${category}: ${percentage}%`;
+                      }}
+                      outerRadius={window.innerWidth < 768 ? 50 : window.innerWidth < 1024 ? 70 : 80}
+                      fill="#8884d8"
+                      dataKey="amount"
+                      nameKey="category"
+                    >
+                      {expensesByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                    <Legend wrapperStyle={{fontSize: '10px'}} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-muted-foreground">No expense category data available</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full overflow-hidden">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Expense Transactions</CardTitle>
+            <CardDescription>Detailed list of all expense transactions</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 sm:p-2">
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No expense transactions available
-                    </TableCell>
+                    <TableHead className="whitespace-nowrap px-4 py-2 text-xs sm:text-sm">Date</TableHead>
+                    <TableHead className="whitespace-nowrap px-4 py-2 text-xs sm:text-sm">Description</TableHead>
+                    <TableHead className="whitespace-nowrap px-4 py-2 text-xs sm:text-sm">Category</TableHead>
+                    <TableHead className="text-right whitespace-nowrap px-4 py-2 text-xs sm:text-sm">Amount</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {expenseTransactions.length > 0 ? (
+                    expenseTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="whitespace-nowrap px-4 py-2 text-xs sm:text-sm">
+                          {(() => {
+                            try {
+                              return format(new Date(transaction.date), 'MMM d, yyyy');
+                            } catch (error) {
+                              return 'Invalid date';
+                            }
+                          })()}
+                        </TableCell>
+                        <TableCell className="max-w-[120px] sm:max-w-[200px] truncate px-4 py-2 text-xs sm:text-sm">{transaction.description}</TableCell>
+                        <TableCell className="whitespace-nowrap px-4 py-2 text-xs sm:text-sm">{transaction.category}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap px-4 py-2 text-xs sm:text-sm">{formatCurrency(Math.abs(transaction.amount))}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground px-4 py-2 text-xs sm:text-sm">
+                        No expense transactions available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

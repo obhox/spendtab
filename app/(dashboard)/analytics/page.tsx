@@ -14,30 +14,12 @@ export default function AnalyticsPage() {
   return (
     <DataProvider>
       <div className="flex flex-col gap-4">
-      {/* Mobile warning card */}
-      <div className="lg:hidden">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Monitor className="h-6 w-6 text-primary" />
-              <CardTitle>Desktop View Recommended</CardTitle>
-            </div>
-            <CardDescription>
-              The analytics dashboard is optimized for desktop viewing. Please open this page on your PC for the best experience.
-              Mobile version is currently under development.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Desktop analytics content */}
-      <div className="hidden lg:block">
         <h1 className="text-2xl font-bold tracking-tight">Financial Analytics</h1>
         <Tabs defaultValue="revenue" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="revenue">Revenue</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
-            <TabsTrigger value="profitability">Profitability</TabsTrigger>
+          <TabsList className="w-full flex justify-start overflow-x-auto">
+            <TabsTrigger value="revenue" className="flex-1 sm:flex-none">Revenue</TabsTrigger>
+            <TabsTrigger value="expenses" className="flex-1 sm:flex-none">Expenses</TabsTrigger>
+            <TabsTrigger value="profitability" className="flex-1 sm:flex-none">Profitability</TabsTrigger>
           </TabsList>
           <TabsContent value="revenue" className="space-y-4">
             <Card>
@@ -74,7 +56,6 @@ export default function AnalyticsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
     </DataProvider>
   )
 }

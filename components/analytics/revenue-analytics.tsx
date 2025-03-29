@@ -172,10 +172,10 @@ export default function RevenueAnalytics() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-end mb-4">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
           <SelectContent>
@@ -189,25 +189,25 @@ export default function RevenueAnalytics() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Revenue Trend</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Revenue Trend</CardTitle>
           <CardDescription>Monthly revenue trend over time</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
+        <CardContent className="p-2 sm:p-4 md:p-6">
+          <div className="h-[200px] sm:h-[250px] md:h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={revenueData}
                 margin={{
                   top: 10,
-                  right: 30,
-                  left: 0,
+                  right: 10,
+                  left: -10,
                   bottom: 0,
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
+                <XAxis dataKey="month" tick={{fontSize: 10}} angle={-45} textAnchor="end" height={50} />
+                <YAxis tickFormatter={(value) => `$${value/1000}k`} tick={{fontSize: 10}} width={50} />
                 <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Revenue"]} />
                 <Area type="monotone" dataKey="revenue" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
               </AreaChart>
@@ -217,12 +217,12 @@ export default function RevenueAnalytics() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Revenue by Category</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Revenue by Category</CardTitle>
           <CardDescription>Distribution of revenue by category</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
+        <CardContent className="p-2 sm:p-4 md:p-6">
+          <div className="h-[200px] sm:h-[250px] md:h-[300px]">
             {revenueByCategory && revenueByCategory.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -231,8 +231,12 @@ export default function RevenueAnalytics() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
+                    label={({ name, value, payload }) => {
+                      const category = payload.name || name;
+                      const percentage = Math.round((value / revenueByCategory.reduce((sum, item) => sum + item.value, 0)) * 100);
+                      return window.innerWidth < 768 ? `${percentage}%` : `${category}: ${percentage}%`;
+                    }}
+                    outerRadius={window.innerWidth < 768 ? 50 : window.innerWidth < 1024 ? 70 : 80}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -241,7 +245,7 @@ export default function RevenueAnalytics() {
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  <Legend />
+                  <Legend wrapperStyle={{fontSize: '10px'}} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -254,26 +258,26 @@ export default function RevenueAnalytics() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Income Transactions</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl">Income Transactions</CardTitle>
           <CardDescription>Detailed list of all income transactions</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
+        <CardContent className="p-2 sm:p-4 md:p-6 overflow-x-auto">
+          <div className="min-w-[600px]">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[120px]">Date</TableHead>
+                  <TableHead className="min-w-[200px]">Description</TableHead>
+                  <TableHead className="min-w-[120px]">Category</TableHead>
+                  <TableHead className="text-right w-[120px]">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {incomeTransactions && incomeTransactions.length > 0 ? (
                   incomeTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {(() => {
                           try {
                             return format(new Date(transaction.date), 'MMM d, yyyy');
@@ -282,7 +286,7 @@ export default function RevenueAnalytics() {
                           }
                         })()}
                       </TableCell>
-                      <TableCell>{transaction.description}</TableCell>
+                      <TableCell className="max-w-[300px] truncate">{transaction.description}</TableCell>
                       <TableCell>{transaction.category}</TableCell>
                       <TableCell className="text-right">{formatCurrency(transaction.amount)}</TableCell>
                     </TableRow>
