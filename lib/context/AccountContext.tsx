@@ -166,7 +166,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       toast('Your new account has been created successfully!');
     },
     onError: (error: Error) => {
-      toast('Unable to create your account. Please try again later.');
+     // toast('Unable to create your account. Please try again later.');
     }
   });
 
@@ -188,7 +188,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       toast('Your account details have been updated successfully!');
     },
     onError: (error: Error) => {
-      toast('Unable to update your account. Please check your changes and try again.');
+     // toast('Unable to update your account. Please check your changes and try again.');
     }
   });
 
