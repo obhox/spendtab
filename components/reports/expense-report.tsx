@@ -323,7 +323,7 @@ export function ExpenseReport() {
                     nameKey="name"
                     label={({ name, percentage }) => {
                       if (!name) return '';
-                      return `${truncateText(name)} (${Math.round(percentage || 0)}%)`;
+                      return `${truncateText(name)} (${Math.round(percentage)}%)`;
                     }}
                   >
                     {expenseData.categoryTotals.map((entry, index) => (
@@ -366,7 +366,7 @@ export function ExpenseReport() {
                     nameKey="name"
                     label={({ name, percentage }) => {
                       if (!name) return '';
-                      return `${truncateText(name)} (${Math.round(percentage || 0)}%)`;
+                      return `${truncateText(name)} (${Math.round(percentage)}%)`;
                     }}
                   >
                     {expenseData.paymentMethodTotals.map((entry, index) => (

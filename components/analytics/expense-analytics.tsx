@@ -170,8 +170,8 @@ export default function ExpenseAnalytics() {
                     label={({ name, value, payload }) => {
                       // Use the correct property names based on the data structure
                       const category = payload.category || name;
-                      const percentage = payload.percentage || 0;
-                      return `${category}: ${Math.round(percentage)}%`;
+                      const percentage = Math.round(payload.percentage || 0);
+                      return `${category}: ${percentage}%`;
                     }}
                     outerRadius={80}
                     fill="#8884d8"
