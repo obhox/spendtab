@@ -167,7 +167,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] p-4 md:p-6">
         <DialogHeader>
           <DialogTitle>{budget ? "Edit Budget" : "Create Budget"}</DialogTitle>
           <DialogDescription>
@@ -178,7 +178,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
@@ -186,13 +186,12 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Budget name" {...field} />
+                    <Input placeholder="Budget name" className="w-full" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
             
             <FormField
               control={form.control}
@@ -201,7 +200,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 <FormItem>
                   <FormLabel>Budget Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    <Input type="number" step="0.01" placeholder="0.00" className="w-full" {...field} />
                   </FormControl>
                   <FormDescription>
                     Set the maximum amount for this budget period.
@@ -211,7 +210,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -244,7 +243,6 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           onSelect={field.onChange}
                           initialFocus
                           disabled={(date) => {
-                            // Disable dates before 1900 (arbitrary past limit)
                             return date < new Date("1900-01-01");
                           }}
                         />
@@ -287,7 +285,6 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           onSelect={field.onChange}
                           initialFocus
                           disabled={(date) => {
-                            // Disable dates before the selected start date
                             const startDate = form.getValues("startDate");
                             return date < new Date("1900-01-01") || (startDate && date <= startDate);
                           }}
@@ -300,8 +297,8 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               />
             </div>
             
-            <DialogFooter>
-              <Button type="submit">
+            <DialogFooter className="mt-6">
+              <Button type="submit" className="w-full md:w-auto">
                 {budget ? "Update Budget" : "Create Budget"}
               </Button>
             </DialogFooter>
