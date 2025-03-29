@@ -80,7 +80,7 @@ export default function ExpenseAnalytics() {
 
   // Format percentage for tooltip
   const formatPercent = (value: number) => {
-    return `${value}%`;
+    return `${Math.round(value)}%`;
   };
 
   if (isLoading) {

@@ -80,7 +80,7 @@ export default function ProfitabilityAnalytics() {
   
   // Format percentage for tooltip
   const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`;
+    return `${Math.round(value)}%`;
   };
   
   if (isLoading) {

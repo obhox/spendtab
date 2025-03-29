@@ -109,7 +109,7 @@ const CustomTooltip = (props) => {
           maximumFractionDigits: 0
         })}`}</p>
         <p className="text-xs text-muted-foreground">
-          {`${data.payload && data.payload.percentage ? data.payload.percentage : 0}%`}
+          {`${data.payload && data.payload.percentage ? Math.round(data.payload.percentage) : 0}%`}
         </p>
       </div>
     );
