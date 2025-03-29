@@ -117,26 +117,26 @@ export function CategoryManager() {
     }
     
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {categoryList.map((category) => (
           <Card key={category.id} className="relative">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center space-x-2 min-w-0 flex-1">
                   <div
-                    className="w-4 h-4 rounded-full"
+                    className="w-4 h-4 rounded-full flex-shrink-0"
                     style={{ backgroundColor: category.color || '#888888' }}
                     aria-hidden="true"
                     title={`Color: ${category.color || '#888888'}`}
                   />
-                  <span className="font-medium">{category.name}</span>
+                  <span className="font-medium truncate">{category.name}</span>
                   {category.is_default && (
-                    <Badge variant="outline" className="ml-2">Default</Badge>
+                    <Badge variant="outline" className="ml-2 flex-shrink-0">Default</Badge>
                   )}
                 </div>
-                <div className="flex space-x-1">
+                <div className="flex space-x-1 ml-auto">
                   <CategoryForm category={category}>
-                    <Button size="sm" variant="ghost">
+                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                       <Edit className="h-4 w-4" />
                     </Button>
                   </CategoryForm>
@@ -147,6 +147,7 @@ export function CategoryManager() {
                     onClick={() => confirmDelete(category)}
                     disabled={category.is_default || isLoading || isDeleting}
                     aria-label={`Delete ${category.name} category`}
+                    className="h-8 w-8 p-0"
                   >
                     <Trash className="h-4 w-4" />
                   </Button>
@@ -181,8 +182,8 @@ export function CategoryManager() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <Card className="w-full max-w-[100vw] overflow-hidden">
+      <CardHeader className="px-4 sm:px-6">
         <CardTitle>Manage Categories</CardTitle>
         <CardDescription>
           Create, edit, and delete your custom transaction categories
@@ -190,13 +191,17 @@ export function CategoryManager() {
         </CardDescription>
       </CardHeader>
       <Tabs value={tabValue} onValueChange={setTabValue}>
-        <div className="px-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="income">Income Categories</TabsTrigger>
-            <TabsTrigger value="expense">Expense Categories</TabsTrigger>
+        <div className="px-4 sm:px-6">
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/30 p-1 rounded-lg">
+            <TabsTrigger value="income" className="text-sm sm:text-base py-3 px-6 sm:px-8 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md transition-all">
+              Income Categories
+            </TabsTrigger>
+            <TabsTrigger value="expense" className="text-sm sm:text-base py-3 px-6 sm:px-8 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md transition-all">
+              Expense Categories
+            </TabsTrigger>
           </TabsList>
         </div>
-        <ScrollArea className="h-[350px] px-6 py-4">
+        <ScrollArea className="h-[calc(100vh-20rem)] sm:h-[350px] px-4 sm:px-6 py-4">
           <TabsContent value="income" className="m-0">
             {renderCategories(incomeCategories)}
           </TabsContent>
@@ -205,9 +210,9 @@ export function CategoryManager() {
           </TabsContent>
         </ScrollArea>
       </Tabs>
-      <CardFooter className="flex justify-between px-6 py-4 border-t">
+      <CardFooter className="flex justify-between px-4 sm:px-6 py-4 border-t">
         <CategoryForm defaultType={tabValue as "income" | "expense"}>
-          <Button disabled={isLoading}>
+          <Button disabled={isLoading} className="w-full py-3 sm:py-2 sm:w-auto">
             <PlusCircle className="h-4 w-4 mr-2" />
             Add Category
           </Button>

@@ -146,7 +146,7 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] p-4 md:p-6">
         <DialogHeader>
           <DialogTitle>{category ? "Edit Category" : "Add Category"}</DialogTitle>
           <DialogDescription>
@@ -157,7 +157,7 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
@@ -165,7 +165,7 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Category name" {...field} />
+                    <Input placeholder="Category name" className="w-full h-11" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -181,10 +181,10 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={!!category} // Cannot change type of existing category
+                    disabled={!!category}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                     </FormControl>
@@ -207,18 +207,18 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
               control={form.control}
               name="color"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="w-full">
                   <FormLabel>Color</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
-                        <div className="flex h-10">
+                        <div className="flex h-12 sm:h-11 w-full">
                           <div 
-                            className="w-10 h-10 rounded-l-md border border-r-0"
+                            className="w-12 sm:w-11 h-12 sm:h-11 rounded-l-md border border-r-0"
                             style={{ backgroundColor: field.value || '#6366F1' }} 
                           />
                           <Input 
-                            className="flex-1 rounded-l-none"
+                            className="flex-1 rounded-l-none h-12 sm:h-11"
                             value={field.value || ''}
                             onChange={field.onChange}
                             placeholder="#000000"
@@ -226,10 +226,11 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
                         </div>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-3" align="start">
+                    <PopoverContent className="w-[280px] p-4" align="start">
                       <HexColorPicker 
                         color={field.value || '#6366F1'} 
-                        onChange={field.onChange} 
+                        onChange={field.onChange}
+                        className="w-full"
                       />
                     </PopoverContent>
                   </Popover>
@@ -239,7 +240,7 @@ export function CategoryForm({ children, category, defaultType = "expense" }: Ca
             />
             
             <DialogFooter>
-              <Button type="submit">
+              <Button type="submit" className="w-full sm:w-auto h-11">
                 {category ? "Update Category" : "Add Category"}
               </Button>
             </DialogFooter>
