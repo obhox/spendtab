@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { getCookie } from "@/lib/cookie-utils"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -35,25 +36,9 @@ export default function DashboardLayout({
   const { currentAccount } = useAccounts();
  const [subscriptionTier, setSubscriptionTier] = useState('free');
 
-const supabase = createClientComponentClient()
-
 useEffect(() => {
-  const fetchSubscriptionTier = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', session.user.id)
-      .single();
-
-    if (userData) {
-      setSubscriptionTier(userData.subscription_tier);
-    }
-  };
-
-  fetchSubscriptionTier();
+  const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
+  setSubscriptionTier(userSubscriptionTier);
 }, []);
 
   return (
@@ -152,7 +137,7 @@ useEffect(() => {
                   <Suspense fallback={<div>Loading account selector...</div>}>
                     <AccountSelector />
                   </Suspense>
-                  {!subscriptionTier || !['pro', 'PRO'].includes(subscriptionTier) && (
+                  {(!subscriptionTier || subscriptionTier.toLowerCase() !== 'pro') && (
                     <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
                       <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
                         Upgrade to Pro
@@ -248,7 +233,7 @@ useEffect(() => {
             <Suspense fallback={<div>Loading account selector...</div>}>
               <AccountSelector />
             </Suspense>
-            {subscriptionTier?.toLowerCase() !== 'pro' && (
+            {(!subscriptionTier || subscriptionTier.toLowerCase() !== 'pro') && (
               <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
                 <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
                   Upgrade to Pro
