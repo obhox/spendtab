@@ -112,11 +112,11 @@ export function RecentTransactions() {
             return (
               <div
                 key={transaction.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors gap-2 sm:gap-4"
               >
-                <div className="flex items-start space-x-4 mb-2 sm:mb-0">
+                <div className="flex items-start space-x-3 sm:space-x-4 w-full sm:w-auto">
                   <div
-                    className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                    className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-full flex-shrink-0 ${
                       isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
                     }`}
                   >
@@ -125,17 +125,19 @@ export function RecentTransactions() {
                       <ArrowUpIcon className="h-5 w-5" />
                     }
                   </div>
-                  <div>
-                    <div className="font-medium">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">
                       {transaction.description || 'Untitled Transaction'}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatDate(transaction.date)} • {transaction.category || 'Uncategorized'}
+                    <div className="text-xs sm:text-sm text-muted-foreground flex items-center flex-wrap gap-1">
+                      <span>{formatDate(transaction.date)}</span>
+                      <span>•</span>
+                      <span>{transaction.category || 'Uncategorized'}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end space-y-1 w-full sm:w-auto">
-                  <div className={`font-medium ${isIncome ? "text-green-600" : "text-red-600"}`}>
+                <div className="flex flex-col items-end space-y-1 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div className={`text-sm sm:text-base font-medium ${isIncome ? "text-green-600" : "text-red-600"}`}>
                     {formatCurrency(transaction.amount, transaction.type)}
                   </div>
                 </div>

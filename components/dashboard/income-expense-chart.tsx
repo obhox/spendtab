@@ -167,12 +167,12 @@ export function IncomeExpenseChart() {
   return (
     <div className="p-4 w-full">
       {values.end > 0 && (
-        <div className="mb-6 transition-all duration-200 ease-in-out">
-          <p className="text-sm font-medium text-muted-foreground/80">
+        <div className="mb-4 sm:mb-6 transition-all duration-200 ease-in-out">
+          <p className="text-sm sm:text-base font-medium text-muted-foreground/80">
             {values.label}
           </p>
           <p 
-            className="text-3xl font-bold tracking-tight transition-colors duration-200" 
+            className="text-2xl sm:text-3xl font-bold tracking-tight transition-colors duration-200" 
             style={{ 
               color: values.label.toLowerCase().includes('income') ? incomeColor : 
                     values.label.toLowerCase().includes('expense') ? expenseColor : 'inherit' 
@@ -191,10 +191,10 @@ export function IncomeExpenseChart() {
         </div>
       )}
       
-      {/* Desktop view */}
-      <div className="w-full h-[350px] transition-opacity duration-300 ease-in-out">
+      {/* Desktop and Tablet view */}
+      <div className="hidden sm:block w-full h-[250px] md:h-[350px] transition-opacity duration-300 ease-in-out">
         <BarChart
-          className="hidden h-full w-full sm:block rounded-xl"
+          className="h-full w-full rounded-xl"
           data={chartData}
           index="month"
           categories={["income", "expense"]}
@@ -210,7 +210,7 @@ export function IncomeExpenseChart() {
       </div>
       
       {/* Mobile view */}
-      <div className="w-full h-[300px] transition-opacity duration-300 ease-in-out sm:hidden">
+      <div className="sm:hidden w-full h-[200px] transition-opacity duration-300 ease-in-out">
         <BarChart
           className="h-full w-full rounded-xl"
           data={chartData}
@@ -218,7 +218,7 @@ export function IncomeExpenseChart() {
           categories={["income", "expense"]}
           colors={[incomeColor, expenseColor]}
           valueFormatter={valueFormatter}
-          showYAxis={false}
+          yAxisWidth={60}
           onValueChange={(value) => onValueChangeHandler(value)}
           stack={false}
           showLegend={true}
