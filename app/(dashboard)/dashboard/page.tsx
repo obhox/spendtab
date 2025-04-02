@@ -1,9 +1,10 @@
 "use client"
 
-import { Suspense, useEffect, useState, memo } from "react"
+import { Suspense, useEffect, useState, memo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowDown, ArrowUp, DollarSign, TrendingUp } from 'lucide-react'
+// Removed Tabs imports as they are not used currently
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowDown, ArrowUp, DollarSign, TrendingUp, CalendarIcon } from 'lucide-react'
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { IncomeExpenseChart } from "@/components/dashboard/income-expense-chart"
 import { CashFlowChart } from "@/components/dashboard/cash-flow-chart"
@@ -12,173 +13,173 @@ import { DataProvider } from "@/lib/context/DataProvider"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { format, subMonths, startOfMonth, endOfMonth, startOfYear, isWithinInterval } from "date-fns"
+import { Skeleton } from "@/components/ui/skeleton"
+import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-// If the module is not found, make sure to:
-// 1. Install the package: npm install @supabase/auth-helpers-nextjs
-// 2. Add the types: npm install -D @supabase/supabase-js
 
 // Time period options for the filter
 const timePeriods = [
-  { value: "current_month", label: "Current Month" },
+  { value: "current_month", label: "This Month" },
   { value: "last_month", label: "Last Month" },
   { value: "last_3_months", label: "Last 3 Months" },
   { value: "last_6_months", label: "Last 6 Months" },
   { value: "year_to_date", label: "Year to Date" },
   { value: "last_12_months", label: "Last 12 Months" }
-]
+];
 
+// --- Helper: Loading Skeleton for Metric Cards ---
+// Moved outside DashboardMetrics to be accessible by DashboardSkeleton
+const MetricSkeleton = () => (
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+            <Skeleton className="h-4 w-2/4" />
+            <Skeleton className="h-4 w-4" />
+        </CardHeader>
+        <CardContent className="pt-0 p-3 sm:p-4">
+            <Skeleton className="h-7 w-3/4 mb-1" />
+            <Skeleton className="h-3 w-1/2" />
+        </CardContent>
+    </Card>
+);
+
+
+// --- Metrics Component ---
 function DashboardMetrics() {
-  const { transactions = [], setTransactions } = useTransactions() || {}
-  const { currentAccount } = useAccounts() || {}
+  const { transactions = [] } = useTransactions() || {};
+  const { currentAccount } = useAccounts() || {};
   const [metrics, setMetrics] = useState({
     revenue: 0,
     expenses: 0,
     profit: 0,
     cashFlow: 0,
     transactionCount: 0
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [timePeriod, setTimePeriod] = useState("current_month")
-  const supabase = createClientComponentClient()
-  
-  // Set up real-time subscription for transactions
-  useEffect(() => {
-    if (!currentAccount) return
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState("current_month");
+  // const supabase = createClientComponentClient(); // Keep if needed for other logic
 
-    // Removed realtime subscription - data will be fetched through context
-    return () => {}
-
-  }, [currentAccount, supabase, setTransactions])
-  
-  // Reset metrics when account changes
+  // Reset metrics on account change
   useEffect(() => {
+    setIsLoading(true);
     setMetrics({
-      revenue: 0,
-      expenses: 0,
-      profit: 0,
-      cashFlow: 0,
-      transactionCount: 0
-    })
-  }, [currentAccount]) // Reset on account change
-  
-  useEffect(() => {
-    try {
-      setIsLoading(true)
-      
-      // Only calculate metrics if we have transactions and a current account
-      if (!transactions || transactions.length === 0 || !currentAccount) {
-        setIsLoading(false)
-        return // We already reset metrics in the previous effect
-      }
+      revenue: 0, expenses: 0, profit: 0, cashFlow: 0, transactionCount: 0
+    });
+    if (!currentAccount) {
+      setIsLoading(false); // Stop loading if no account
+    }
+  }, [currentAccount]);
 
-      // Calculate metrics from transactions for the current account only
-      const currentDate = new Date()
-      
-      // Determine date range based on selected time period
-      let startDate = new Date()
-      
+  // Calculate metrics when dependencies change
+  useEffect(() => {
+    // Skip calculation if no account or still loading from account change
+    if (!currentAccount || !isLoading) {
+        // If no account, we should already be not loading.
+        // If loading, let it finish the reset from the previous effect.
+        // If not loading, and we have an account, proceed.
+        if (!currentAccount) return;
+        if (isLoading && metrics.transactionCount === 0) return; // Avoid race condition on fast switch
+    }
+
+
+    // Ensure transactions is an array before proceeding
+    const validTransactions = Array.isArray(transactions) ? transactions : [];
+
+    // Start calculation process (or continue if already loading)
+    setIsLoading(true);
+    try {
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date = endOfMonth(now); // Default end date
+
       switch (timePeriod) {
         case "current_month":
-          startDate = startOfMonth(currentDate)
-          break
+          startDate = startOfMonth(now);
+          endDate = now;
+          break;
         case "last_month":
-          startDate = startOfMonth(subMonths(currentDate, 1))
-          currentDate.setDate(0) // Last day of previous month
-          break
+          const lastMonthStart = startOfMonth(subMonths(now, 1));
+          startDate = lastMonthStart;
+          endDate = endOfMonth(lastMonthStart);
+          break;
         case "last_3_months":
-          startDate = startOfMonth(subMonths(currentDate, 3))
-          break
+          startDate = startOfMonth(subMonths(now, 3));
+          endDate = now;
+          break;
         case "last_6_months":
-          startDate = startOfMonth(subMonths(currentDate, 6))
-          break
+          startDate = startOfMonth(subMonths(now, 6));
+          endDate = now;
+          break;
         case "year_to_date":
-          startDate = startOfYear(currentDate)
-          break
+          startDate = startOfYear(now);
+          endDate = now;
+          break;
         case "last_12_months":
-          startDate = startOfMonth(subMonths(currentDate, 12))
-          break
+          startDate = startOfMonth(subMonths(now, 12));
+          endDate = now;
+          break;
         default:
-          startDate = startOfMonth(currentDate)
+          startDate = startOfMonth(now);
+          endDate = now;
       }
-      
-      // Get only transactions for current account
-      const currentAccountTransactions = transactions.filter(t => 
-        t.account_id === currentAccount.id
-      )
-      
-      // Filter transactions by date range
-      const filteredTransactions = currentAccountTransactions.filter(t => {
+
+      const filteredTransactions = validTransactions.filter(t => {
+        if (t.account_id !== currentAccount.id) return false;
         try {
-          const transactionDate = new Date(t.date)
-          return isWithinInterval(transactionDate, {
-            start: startDate,
-            end: currentDate
-          })
+          if (!t.date || typeof t.date !== 'string') return false;
+          const transactionDate = new Date(t.date);
+          if (isNaN(transactionDate.getTime())) return false;
+          return isWithinInterval(transactionDate, { start: startDate, end: endDate });
         } catch (error) {
-          console.error("Error parsing transaction date:", t.date, error)
-          return false
+          console.error("Error parsing transaction date:", t.date, error);
+          return false;
         }
-      })
-      
-      // Calculate totals
+      });
+
       const revenue = filteredTransactions
         .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-        
+        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
       const expenses = filteredTransactions
         .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-      
-      // Calculate profit (income - expenses)  
-      const profit = revenue - expenses
-      
-      // Calculate cash flow (could be different from profit in a real system)
-      // For now using the same calculation, but separating them for future differentiation
-      const cashFlow = revenue - expenses
-      
+        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+      const profit = revenue - expenses;
+      const cashFlow = revenue - expenses;
+
       setMetrics({
         revenue,
         expenses,
         profit,
         cashFlow,
         transactionCount: filteredTransactions.length
-      })
+      });
+
     } catch (error) {
-      console.error("Error calculating metrics:", error)
+      console.error("Error calculating metrics:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [transactions, currentAccount, timePeriod]) // Added timePeriod to dependencies
-  
-  // Get time period label for display
-  const getTimePeriodLabel = () => {
-    const period = timePeriods.find(p => p.value === timePeriod)
-    return period ? period.label : "Current Month"
-  }
-  
-  // Safe number formatter to avoid NaN displays
-  const formatCurrency = (value) => {
-    return isNaN(value) ? "$0.00" : `$${value.toFixed(2)}`
-  }
-  
-  if (isLoading) {
-    return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {Array(4).fill(0).map((_, i) => (
-        <Card key={i}>
-          <CardContent className="pt-6">
-            <div className="animate-pulse h-8 bg-muted rounded"></div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  }
-  
+    // FIX: Dependency array should use `transactions` from context
+  }, [transactions, currentAccount, timePeriod]); // Rerun when these change
+
+  // Memoized helpers
+  const getTimePeriodLabel = useCallback(() => {
+    return timePeriods.find(p => p.value === timePeriod)?.label ?? "Selected Period";
+  }, [timePeriod]);
+
+  const formatCurrency = useCallback((value: number | undefined | null): string => {
+    const numValue = Number(value);
+    return isNaN(numValue) ? "$0.00" : `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }, []);
+
+
   return (
-    <>
-      <div className="flex justify-end mb-4">
+    <div className="space-y-4">
+      {/* Time Period Selector */}
+      <div className="flex justify-start sm:justify-end">
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[200px] h-9">
+             <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
           <SelectContent>
@@ -190,125 +191,171 @@ function DashboardMetrics() {
           </SelectContent>
         </Select>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.revenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              {getTimePeriodLabel()} revenue
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-            <ArrowDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.expenses)}</div>
-            <p className="text-xs text-muted-foreground">
-              {getTimePeriodLabel()} expenses
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit</CardTitle>
-            <ArrowUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.profit)}</div>
-            <p className="text-xs text-muted-foreground">
-              {getTimePeriodLabel()} profit
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.cashFlow)}</div>
-            <p className="text-xs text-muted-foreground">
-              {getTimePeriodLabel()} cash flow
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  )
-}
 
-// Memoized wrapper to prevent unnecessary rerenders
-const MemoizedDashboardMetrics = memo(DashboardMetrics)
+      {/* Metrics Grid */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+        {isLoading ? (
+          <>
+            {/* Use the globally defined MetricSkeleton */}
+            <MetricSkeleton />
+            <MetricSkeleton />
+            <MetricSkeleton />
+            <MetricSkeleton />
+          </>
+        ) : (
+          <>
+            {/* Revenue Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="pt-0 p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.revenue)}</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  {getTimePeriodLabel()}
+                </p>
+              </CardContent>
+            </Card>
 
-export default function DashboardPage() {
-  const { currentAccount, isAccountSwitching } = useAccounts() || {}
-  
-  // Loading overlay for account switching
-  const LoadingOverlay = () => (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="animate-pulse h-8 w-32 bg-muted rounded"></div>
-        <p className="text-lg font-medium">Switching account...</p>
+            {/* Expenses Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+                <CardTitle className="text-sm font-medium">Expenses</CardTitle>
+                <ArrowDown className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="pt-0 p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.expenses)}</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                   {getTimePeriodLabel()}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Profit Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+                <CardTitle className="text-sm font-medium">Profit</CardTitle>
+                 {metrics.profit >= 0 ? (
+                    <ArrowUp className="h-4 w-4 text-green-600" />
+                 ) : (
+                    <ArrowDown className="h-4 w-4 text-red-600" />
+                 )}
+              </CardHeader>
+              <CardContent className="pt-0 p-3 sm:p-4">
+                <div className={`text-xl sm:text-2xl font-bold ${metrics.profit >= 0 ? 'text-foreground' : 'text-red-600'}`}>
+                    {formatCurrency(metrics.profit)}
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                   {getTimePeriodLabel()}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Cash Flow Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
+                <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="pt-0 p-3 sm:p-4">
+                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.cashFlow)}</div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  {getTimePeriodLabel()}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   )
-  
+}
+
+const MemoizedDashboardMetrics = memo(DashboardMetrics);
+
+// --- Main Dashboard Page Component ---
+export default function DashboardPage() {
+  const { currentAccount, isAccountSwitching } = useAccounts() || {};
+
+  // Loading overlay remains the same
+  const LoadingOverlay = () => (
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+        <Skeleton className="h-8 w-32" />
+        <p className="text-lg font-medium text-foreground">Switching account...</p>
+    </div>
+  );
+
+  // Main page Skeleton
+  const DashboardSkeleton = () => (
+      <div className="p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
+          <Skeleton className="h-8 w-48 mb-4" /> {/* Heading */}
+          {/* Metrics Skeleton */}
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+              {/* FIX: Use the globally defined MetricSkeleton */}
+              <MetricSkeleton />
+              <MetricSkeleton />
+              <MetricSkeleton />
+              <MetricSkeleton />
+          </div>
+          {/* Charts/Overview Skeleton */}
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-1 md:col-span-1 lg:col-span-4"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[220px] sm:h-[300px] md:h-[350px]" /></CardContent></Card>
+              <Card className="col-span-1 md:col-span-1 lg:col-span-3"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[220px] sm:h-[300px] md:h-[350px]" /></CardContent></Card>
+              <Card className="col-span-1 md:col-span-1 lg:col-span-4"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px]" /></CardContent></Card>
+              <Card className="col-span-1 md:col-span-1 lg:col-span-3"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px]" /></CardContent></Card>
+          </div>
+      </div>
+  );
+
   return (
     <DataProvider>
       {isAccountSwitching && <LoadingOverlay />}
-      <Suspense fallback={<div className="p-4 text-center animate-pulse bg-muted rounded">Loading dashboard...</div>}>
-        <div className="flex flex-col gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <Tabs defaultValue="overview" className="space-y-4">
-            <TabsContent value="overview" className="space-y-4">
-              <MemoizedDashboardMetrics />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
-                  <CardHeader>
-                    <CardTitle>Income vs Expenses</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pl-2">
-                    <IncomeExpenseChart />
-                  </CardContent>
-                </Card>
-                <Card className="col-span-3">
-                  <CardHeader>
-                    <CardTitle>Cash Flow</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pl-2">
-                    <CashFlowChart />
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
-                  <CardHeader>
-                    <CardTitle>Recent Transactions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <RecentTransactions />
-                  </CardContent>
-                </Card>
-                <Card className="col-span-3">
-                  <CardHeader>
-                    <CardTitle>Budget Overview</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <BudgetOverview />
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <div className="p-4 md:p-6 lg:p-8">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-4 sm:mb-6">Dashboard</h1>
+          <div className="space-y-4 sm:space-y-6">
+            <MemoizedDashboardMetrics />
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-1 md:col-span-1 lg:col-span-4">
+                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-base sm:text-lg">Income vs Expenses</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                  <IncomeExpenseChart />
+                </CardContent>
+              </Card>
+              <Card className="col-span-1 md:col-span-1 lg:col-span-3">
+                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-base sm:text-lg">Cash Flow</CardTitle>
+                 </CardHeader>
+                 <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                  <CashFlowChart />
+                 </CardContent>
+              </Card>
+            </div>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-1 md:col-span-1 lg:col-span-4">
+                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                  <RecentTransactions />
+                </CardContent>
+              </Card>
+              <Card className="col-span-1 md:col-span-1 lg:col-span-3">
+                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-base sm:text-lg">Budget Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                  <BudgetOverview />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </Suspense>
     </DataProvider>
   )
 }
+
