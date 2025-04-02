@@ -71,20 +71,19 @@ function DashboardMetrics() {
 
   // Calculate metrics when dependencies change
   useEffect(() => {
-    // Skip calculation if no account or still loading from account change
-    if (!currentAccount || !isLoading) {
-        // If no account, we should already be not loading.
-        // If loading, let it finish the reset from the previous effect.
-        // If not loading, and we have an account, proceed.
-        if (!currentAccount) return;
-        if (isLoading && metrics.transactionCount === 0) return; // Avoid race condition on fast switch
+    // Skip calculation if no account
+    if (!currentAccount) {
+        // Ensure loading state is false if there's no account after initial check
+        if (isLoading) setIsLoading(false);
+        return;
     }
-
 
     // Ensure transactions is an array before proceeding
     const validTransactions = Array.isArray(transactions) ? transactions : [];
 
-    // Start calculation process (or continue if already loading)
+    // Start calculation process (setIsLoading moved inside the effect that depends on account)
+    // Check if we need to set loading (e.g., if dependencies changed triggering a recalc)
+    // The effect listening to currentAccount handles the initial loading state change
     setIsLoading(true);
     try {
       const now = new Date();
@@ -159,7 +158,6 @@ function DashboardMetrics() {
     } finally {
       setIsLoading(false);
     }
-    // FIX: Dependency array should use `transactions` from context
   }, [transactions, currentAccount, timePeriod]); // Rerun when these change
 
   // Memoized helpers
@@ -192,11 +190,13 @@ function DashboardMetrics() {
         </Select>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
+      {/* --- Metrics Grid --- */}
+      {/* Grid: 1 col mobile (stacked), 4 cols md+ */}
+      {/* Updated grid class */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-4">
         {isLoading ? (
           <>
-            {/* Use the globally defined MetricSkeleton */}
+            {/* Use the globally defined MetricSkeleton - layout controlled by parent grid */}
             <MetricSkeleton />
             <MetricSkeleton />
             <MetricSkeleton />
@@ -291,8 +291,8 @@ export default function DashboardPage() {
       <div className="p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
           <Skeleton className="h-8 w-48 mb-4" /> {/* Heading */}
           {/* Metrics Skeleton */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
-              {/* FIX: Use the globally defined MetricSkeleton */}
+          {/* Updated grid class to match mobile layout */}
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-4">
               <MetricSkeleton />
               <MetricSkeleton />
               <MetricSkeleton />
@@ -316,7 +316,9 @@ export default function DashboardPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-4 sm:mb-6">Dashboard</h1>
           <div className="space-y-4 sm:space-y-6">
             <MemoizedDashboardMetrics />
+            {/* Charts Grid */}
             <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+              {/* Income vs Expenses Chart Card */}
               <Card className="col-span-1 md:col-span-1 lg:col-span-4">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
                   <CardTitle className="text-base sm:text-lg">Income vs Expenses</CardTitle>
@@ -325,6 +327,7 @@ export default function DashboardPage() {
                   <IncomeExpenseChart />
                 </CardContent>
               </Card>
+              {/* Cash Flow Chart Card */}
               <Card className="col-span-1 md:col-span-1 lg:col-span-3">
                  <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
                   <CardTitle className="text-base sm:text-lg">Cash Flow</CardTitle>
@@ -334,7 +337,9 @@ export default function DashboardPage() {
                  </CardContent>
               </Card>
             </div>
+            {/* Transactions & Budget Grid */}
             <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+              {/* Recent Transactions Card */}
               <Card className="col-span-1 md:col-span-1 lg:col-span-4">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
                   <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
@@ -343,6 +348,7 @@ export default function DashboardPage() {
                   <RecentTransactions />
                 </CardContent>
               </Card>
+              {/* Budget Overview Card */}
               <Card className="col-span-1 md:col-span-1 lg:col-span-3">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
                   <CardTitle className="text-base sm:text-lg">Budget Overview</CardTitle>
@@ -358,4 +364,3 @@ export default function DashboardPage() {
     </DataProvider>
   )
 }
-
