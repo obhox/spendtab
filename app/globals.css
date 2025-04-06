@@ -31,6 +31,8 @@
     --chart-3: 32.1 94.6% 43.7%;
     --chart-4: 262.1 83.3% 57.8%;
     --chart-5: 1.9 83.2% 62.4%;
+    --chart-positive: 142 76% 36%;
+    --chart-negative: 0 72% 51%; 
   }
 
   * {
@@ -41,4 +43,3 @@
     @apply bg-background text-foreground;
   }
 }
-

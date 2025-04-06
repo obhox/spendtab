@@ -1,207 +1,180 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts"
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { useAnalytics } from "@/lib/context/AnalyticsContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Plus, AlertTriangle, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface DataPoint {
   month: string
   cashFlow: number
 }
 
-// Helper function for currency formatting (consistent)
-const formatCurrency = (value: number): string => {
-  // Handle potential non-number inputs gracefully
-  if (typeof value !== 'number' || isNaN(value)) {
-    value = 0;
+// Custom Tooltip Component for better styling
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const cashFlowData = payload[0];
+
+    const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(value);
+
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <p className="mb-1 text-sm font-medium">{`Month: ${label}`}</p>
+        <div className={`flex items-center text-sm ${cashFlowData.value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <span className={`mr-2 h-2 w-2 rounded-full ${cashFlowData.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
+          {`Cash Flow: ${formatCurrency(cashFlowData.value)}`}
+        </div>
+      </div>
+    );
   }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
+  return null;
 };
 
 export function CashFlowChart() {
-  const { monthlyData, error } = useAnalytics()
-  const { currentAccount } = useAccounts()
+  const { monthlyData, error: analyticsError, isLoading: isLoadingAnalytics } = useAnalytics()
+  const { currentAccount, isAccountSwitching } = useAccounts()
   const [chartData, setChartData] = useState<DataPoint[]>([])
-  const [transformError, setTransformError] = useState<string | null>(null)
-  const supabase = createClientComponentClient() // Initialize Supabase client
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  // Removed realtime subscription logic as per original code
+  // Set up real-time subscription
   useEffect(() => {
     if (!currentAccount) return
-    // No subscription needed here based on context setup
-    return () => {} // Cleanup function
+    const channel = supabase
+      .channel('cash-flow-changes')
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `account_id=eq.${currentAccount.id}`
+        },
+        () => {
+          // AnalyticsContext handles refetching
+        }
+      )
+      .subscribe()
+    return () => {
+      channel.unsubscribe()
+    }
   }, [currentAccount, supabase])
 
-  // Transform analytics data for chart display with validation
+  // Data Transformation
   useEffect(() => {
-    try {
-      if (!monthlyData || monthlyData.length === 0 || !currentAccount) {
-        setChartData([])
-        setTransformError(null); // Clear previous transform error if data becomes empty
-        return
-      }
-
-      const transformedData = monthlyData.map(item => {
-        // Add stronger validation
-        if (!item || typeof item.month !== 'string' ||
-            typeof item.income !== 'number' || isNaN(item.income) ||
-            typeof item.expenses !== 'number' || isNaN(item.expenses)) {
-          console.warn('Invalid data format encountered in monthly data:', item);
-          throw new Error('Invalid data format in monthly data');
-        }
-        // Ensure calculation results in a valid number
-        const cashFlow = Number((item.income - item.expenses).toFixed(2));
-        if (isNaN(cashFlow)) {
-           console.warn('NaN detected during cash flow calculation:', item);
-           throw new Error('Calculation resulted in NaN');
-        }
-        return {
-          month: item.month,
-          cashFlow: cashFlow
-        }
-      })
-      setChartData(transformedData)
-      setTransformError(null) // Clear error on success
-    } catch (err) {
-      console.error('Error transforming data:', err)
-      setTransformError(err instanceof Error ? err.message : 'Error processing chart data')
-      setChartData([]) // Clear data on error
+    if (isAccountSwitching || isLoadingAnalytics) {
+      setChartData([])
+      return
     }
-  }, [monthlyData, currentAccount]) // Dependencies for transformation
+    if (!monthlyData || monthlyData.length === 0 || !currentAccount || analyticsError) {
+      setChartData([])
+      return
+    }
+    try {
+      const transformedData = monthlyData.map(item => ({
+        month: item.month,
+        cashFlow: Number((item.income - item.expenses).toFixed(2))
+      }))
+      setChartData(transformedData)
+    } catch (err) {
+      console.error('Error transforming chart data:', err)
+      setChartData([])
+    }
+  }, [monthlyData, currentAccount, analyticsError, isAccountSwitching, isLoadingAnalytics])
 
-  // --- Responsive Error State ---
-  // Uses responsive height matching the chart container
-  if (error || transformError) {
+  const renderContent = () => {
+    if (isAccountSwitching || isLoadingAnalytics) {
+      return (
+        <div className="flex h-[350px] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      )
+    }
+
+    if (analyticsError) {
+      return (
+        <div className="flex flex-col justify-center items-center h-[350px] space-y-3 text-center">
+          <AlertTriangle className="h-10 w-10 text-destructive" />
+          <p className="text-base font-medium text-destructive">Error loading chart data</p>
+          <p className="text-sm text-muted-foreground max-w-xs">{analyticsError}</p>
+        </div>
+      )
+    }
+
+    if (chartData.length === 0) {
+      return (
+        <div className="flex flex-col justify-center items-center h-[350px] space-y-3 text-center">
+          <TrendingUp className="h-10 w-10 text-muted-foreground" />
+          <p className="text-base font-medium text-muted-foreground">No cash flow data yet</p>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Add transactions to visualize your cash flow over time.
+          </p>
+          <Link href="/transactions" className="mt-4">
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Transactions
+            </Button>
+          </Link>
+        </div>
+      )
+    }
+
     return (
-      <div className="flex flex-col justify-center items-center text-center h-[220px] sm:h-[300px] md:h-[350px] bg-muted/5 rounded-lg border border-dashed p-4 sm:p-6 space-y-2">
-        <p className="text-sm font-medium text-red-500">Error loading chart data</p>
-        {/* Adjusted max-width for better text flow */}
-        <p className="text-xs text-muted-foreground max-w-[90%] sm:max-w-sm">
-          {error || transformError}
-        </p>
-      </div>
-    )
-  }
-
-  // --- Responsive Empty State ---
-  // Uses responsive height matching the chart container
-  if (chartData.length === 0) {
-    return (
-      <div className="flex flex-col justify-center items-center text-center h-[220px] sm:h-[300px] md:h-[350px] bg-muted/5 rounded-lg border border-dashed p-4 sm:p-6">
-        <p className="text-sm sm:text-base text-muted-foreground mb-2">
-          No cash flow data available
-        </p>
-        {/* Adjusted max-width for better text flow */}
-        <p className="text-xs sm:text-sm text-muted-foreground mb-6 max-w-[90%] sm:max-w-sm md:max-w-md">
-          Add income and expense transactions to see your cash flow trends over time.
-          This chart will help you track your business liquidity and financial health.
-        </p>
-        <Link href="/transactions">
-          <Button size="sm" variant="outline">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Transactions
-          </Button>
-        </Link>
-      </div>
-    )
-  }
-
-  // --- Responsive Chart ---
-  return (
-    // Apply responsive height to the container div
-    // Reduced base height slightly to 220px
-    <div className="h-[220px] sm:h-[300px] md:h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          // Minimal margins, adjusted left slightly for Y-axis labels
-          margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/50" /> {/* Use border color */}
+      <ResponsiveContainer width="100%" height={350}>
+        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="hsl(var(--border))"
+          />
           <XAxis
             dataKey="month"
             stroke="hsl(var(--muted-foreground))"
-            fontSize={11} // Keep small for mobile
+            fontSize={12}
             tickLine={false}
             axisLine={false}
-            interval={0} // Suggest all ticks
-            tick={{ dy: 5, fill: "hsl(var(--muted-foreground))" }} // Padding and color
-            height={25} // Explicit height for axis area if needed
+            dy={5}
           />
           <YAxis
             stroke="hsl(var(--muted-foreground))"
-            fontSize={11} // Keep small for mobile
+            fontSize={12}
             tickLine={false}
             axisLine={false}
-            // Use compact notation for Y-axis labels on all sizes for consistency & space saving
-            tickFormatter={(value) => `$${new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}`}
-            tick={{ fill: "hsl(var(--muted-foreground))" }} // Color
-            width={45} // Slightly increase width for Y-axis labels like "$1.5K"
+            tickFormatter={(value) => `$${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(value)}`}
+            width={60}
+            dx={-5}
           />
           <Tooltip
-            formatter={(value: number, name: string) => {
-              const formattedValue = formatCurrency(value);
-              const displayValue = `${value >= 0 ? '+' : ''}${formattedValue}`;
-              return [displayValue, "Cash Flow"]; // Tooltip value and label
-            }}
-            labelFormatter={(label: string) => `Month: ${label}`} // Tooltip title
-            contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              borderColor: 'hsl(var(--border))',
-              borderRadius: 'var(--radius)',
-              padding: '8px 12px', // Standard padding
-              boxShadow: 'var(--shadow-md)',
-            }}
-            itemStyle={{ padding: '2px 0', fontSize: '12px' }}
-            labelStyle={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: 'hsl(var(--foreground))' }}
-            cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '3 3' }}
+            cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.1 }}
+            content={<CustomTooltip />}
           />
-          <Line
+          <defs>
+            <linearGradient id="cashFlowGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+            </linearGradient>
+          </defs>
+          <Area
             type="monotone"
             dataKey="cashFlow"
-            stroke="hsl(var(--primary))" // Use theme primary color
+            stroke="hsl(var(--primary))"
+            fill="url(#cashFlowGradient)"
             strokeWidth={2}
-            dot={({ cx, cy, payload }) => { // Custom dot rendering
-              // Added check for payload existence
-              if (!payload) return null;
-              const { cashFlow } = payload;
-               // Ensure cashFlow is a number before comparison
-              const isPositive = typeof cashFlow === 'number' && cashFlow >= 0;
-              // Define colors (using direct HSL as robust fallback, replace with theme vars if available)
-              // Example: hsl(var(--success)) or hsl(var(--destructive))
-              const fillColor = isPositive ? "hsl(142.1 76.2% 46.1%)" : "hsl(0 84.2% 60.2%)"; // Green : Red
-              const strokeColor = isPositive ? "hsl(142.1 70.2% 36.1%)" : "hsl(0 74.2% 50.2%)"; // Darker stroke
-
-              return (
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={4} // Dot radius
-                  fill={fillColor}
-                  stroke={strokeColor}
-                  strokeWidth={1}
-                />
-              );
-            }}
-            activeDot={{ // Style for dot when hovered
-              r: 6,
-              fill: "hsl(var(--primary))",
-              stroke: "hsl(var(--background))", // Use background for contrast border
-              strokeWidth: 2
-            }}
           />
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
-    </div>
-  )
+    )
+  }
+
+  return renderContent()
 }
