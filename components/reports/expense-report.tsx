@@ -259,21 +259,48 @@ export function ExpenseReport() {
     Array.isArray(expenseData.paymentMethodTotals) && expenseData.paymentMethodTotals.length > 0 &&
     Array.isArray(expenseData.topExpenses) && expenseData.topExpenses.length > 0;
 
+  // Create the period selector component
+  const PeriodSelector = () => (
+    <div className="flex items-center justify-between mb-6">
+      <div>
+        <h3 className="text-lg font-medium">Select Period</h3>
+        <p className="text-sm text-muted-foreground">
+          {hasValidData ? `Total Expenses: ${formatCurrency(expenseData.totalExpenses)}` : 'No expenses recorded'}
+        </p>
+      </div>
+      <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="Select period" />
+        </SelectTrigger>
+        <SelectContent>
+          {financialPeriods.map((period) => (
+            <SelectItem key={period.value} value={period.value}>
+              {period.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   // Show empty state if no data
   if (!hasValidData) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
-        <h3 className="text-lg font-medium">No Expense Data Available</h3>
-        <p className="text-sm text-muted-foreground text-center max-w-md">
-          Start adding expense transactions to generate your expense report.
-          This report will help you track and analyze your spending patterns over time.
-        </p>
-        <Link href="/transactions">
-          <Button size="sm" variant="outline" className="mt-2">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Expenses
-          </Button>
-        </Link>
+      <div className="space-y-8">
+        <PeriodSelector />
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <h3 className="text-lg font-medium">No Expense Data Available</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-md">
+            Start adding expense transactions to generate your expense report.
+            This report will help you track and analyze your spending patterns over time.
+          </p>
+          <Link href="/transactions">
+            <Button size="sm" variant="outline" className="mt-2">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Expenses
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -285,24 +312,7 @@ export function ExpenseReport() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Period: {expenseData.period}</h3>
-          <p className="text-sm text-muted-foreground">Total Expenses: {formatCurrency(expenseData.totalExpenses)}</p>
-        </div>
-        <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select period" />
-          </SelectTrigger>
-          <SelectContent>
-            {financialPeriods.map((period) => (
-              <SelectItem key={period.value} value={period.value}>
-                {period.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <PeriodSelector />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Expense by Category Chart */}
