@@ -120,7 +120,7 @@ useEffect(() => {
                       </div>
                     </div>
                     <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Account</h2>
+                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Project</h2>
                       <div className="space-y-1">
                         <Link
                           href="/profile"
@@ -216,7 +216,7 @@ useEffect(() => {
                 </div>
               </div>
               <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Account</h2>
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Project</h2>
                 <div className="space-y-1">
                   <Link
                     href="/profile"

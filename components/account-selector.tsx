@@ -61,12 +61,12 @@ export function AccountSelector() {
       setNewAccountName("");
       setNewAccountDescription("");
       setOpen(false);
-      toast("Account created", {
-        description: "Your new account has been created successfully."
+      toast("Project created", {
+        description: "Your new project has been created successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to create account."
+        description: "Failed to create project."
       });
     }
   };
@@ -79,12 +79,12 @@ export function AccountSelector() {
       setSelectedAccount(null);
       setEditAccountName("");
       setEditAccountDescription("");
-      toast("Account updated", {
-        description: "Your account has been updated successfully."
+      toast("Project updated", {
+        description: "Your project has been updated successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to update account."
+        description: "Failed to update project."
       });
     }
   };
@@ -98,12 +98,12 @@ export function AccountSelector() {
       setDeleteConfirmOpen(false);
       setSelectedAccount(null);
       setManageDialogOpen(false);
-      toast("Account deleted", {
-        description: "Your account has been deleted successfully."
+      toast("Project deleted", {
+        description: "Your project has been deleted successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to delete account."
+        description: "Failed to delete project."
       });
     }
   };
@@ -159,8 +159,8 @@ export function AccountSelector() {
         }}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select account">
-            {currentAccount?.name || "Select account"}
+          <SelectValue placeholder="Select project">
+            {currentAccount?.name || "Select project"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -184,14 +184,14 @@ export function AccountSelector() {
       {/* Add account dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogTitle>Add New Account</DialogTitle>
+          <DialogTitle>Add New Project</DialogTitle>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Input
                 id="name"
                 value={newAccountName}
                 onChange={(e) => setNewAccountName(e.target.value)}
-                placeholder="Enter account name"
+                placeholder="Enter project name"
               />
             </div>
             <div className="grid gap-2">
@@ -199,13 +199,13 @@ export function AccountSelector() {
                 id="description"
                 value={newAccountDescription}
                 onChange={(e) => setNewAccountDescription(e.target.value)}
-                placeholder="Enter account description"
+                placeholder="Enter project description"
               />
             </div>
           </div>
           <DialogFooter>
             <Button onClick={handleAddAccount} disabled={!newAccountName}>
-              Add Account
+              Add Project
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -214,14 +214,14 @@ export function AccountSelector() {
       {/* Edit account dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
-          <DialogTitle>Edit Account</DialogTitle>
+          <DialogTitle>Edit Project</DialogTitle>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Input
                 id="edit-name"
                 value={editAccountName}
                 onChange={(e) => setEditAccountName(e.target.value)}
-                placeholder="Enter account name"
+                placeholder="Enter project name"
               />
             </div>
             <div className="grid gap-2">
@@ -229,7 +229,7 @@ export function AccountSelector() {
                 id="edit-description"
                 value={editAccountDescription}
                 onChange={(e) => setEditAccountDescription(e.target.value)}
-                placeholder="Enter account description"
+                placeholder="Enter project description"
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ export function AccountSelector() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the account "{selectedAccount?.name}". This action cannot be undone.
+              This will permanently delete the project "{selectedAccount?.name}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -267,7 +267,7 @@ export function AccountSelector() {
           </Button>
         </DialogTrigger>
         <DialogContent>
-          <DialogTitle>Manage Accounts</DialogTitle>
+          <DialogTitle>Manage Projects</DialogTitle>
           <div className="max-h-64 overflow-y-auto">
             {renderCurrentAccountActions()}
           </div>
