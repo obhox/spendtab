@@ -73,12 +73,12 @@ export default function ProfilePage() {
       setAccountName("");
       setAccountDescription("");
       setAddDialogOpen(false);
-      toast("Project created", {
-        description: "Your new project has been created successfully."
+      toast("Account created", {
+        description: "Your new account has been created successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to create project."
+        description: "Failed to create account."
       });
     }
   };
@@ -91,12 +91,12 @@ export default function ProfilePage() {
       setSelectedAccount(null);
       setAccountName("");
       setAccountDescription("");
-      toast("Project updated", {
-        description: "Your Project has been updated successfully."
+      toast("Account updated", {
+        description: "Your account has been updated successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to update project."
+        description: "Failed to update account."
       });
     }
   };
@@ -107,12 +107,12 @@ export default function ProfilePage() {
       await deleteAccount(selectedAccount.id);
       setDeleteDialogOpen(false);
       setSelectedAccount(null);
-      toast("Project deleted", {
-        description: "Your project has been deleted successfully."
+      toast("Account deleted", {
+        description: "Your account has been deleted successfully."
       });
     } catch (error) {
       toast("Error", {
-        description: "Failed to delete project."
+        description: "Failed to delete account."
       });
     }
   };
@@ -123,7 +123,7 @@ export default function ProfilePage() {
       router.push('/dashboard');
     } catch (error) {
       toast("Error", {
-        description: "Failed to switch project. Please try again."
+        description: "Failed to switch account. Please try again."
       });
     }
   }
@@ -140,14 +140,14 @@ export default function ProfilePage() {
     <div className="container mx-auto py-6">
       <Tabs defaultValue="accounts" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="accounts">Projects</TabsTrigger>
+          <TabsTrigger value="accounts">Account</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-2xl font-bold">Project</CardTitle>
+              <CardTitle className="text-2xl font-bold">Account</CardTitle>
               <Button
                 onClick={() => {
                   setAccountName("");
@@ -155,7 +155,7 @@ export default function ProfilePage() {
                   setAddDialogOpen(true);
                 }}
               >
-                <Plus className="mr-2 h-4 w-4" /> Add Project
+                <Plus className="mr-2 h-4 w-4" /> Add Account
               </Button>
             </CardHeader>
             <CardContent>
@@ -297,14 +297,14 @@ export default function ProfilePage() {
       {/* Add Account Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent>
-          <DialogTitle>Add New Project</DialogTitle>
+          <DialogTitle>Add New Account</DialogTitle>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Input
                 id="name"
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
-                placeholder="Enter project name"
+                placeholder="Enter account name"
               />
             </div>
             <div className="grid gap-2">
@@ -312,13 +312,13 @@ export default function ProfilePage() {
                 id="description"
                 value={accountDescription}
                 onChange={(e) => setAccountDescription(e.target.value)}
-                placeholder="Enter project description"
+                placeholder="Enter account description"
               />
             </div>
           </div>
           <DialogFooter>
             <Button onClick={handleAddAccount} disabled={!accountName}>
-              Add project
+              Add account
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -327,7 +327,7 @@ export default function ProfilePage() {
       {/* Edit Account Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
-          <DialogTitle>Edit Project</DialogTitle>
+          <DialogTitle>Edit Account</DialogTitle>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Input
@@ -361,7 +361,7 @@ export default function ProfilePage() {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              project and all its associated data.
+              account and all its associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

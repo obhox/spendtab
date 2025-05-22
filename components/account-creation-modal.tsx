@@ -41,9 +41,9 @@ export function AccountCreationModal() {
       setName("")
       setDescription("")
     } catch (error) {
-      console.error("Error creating project:", error)
+      console.error("Error creating account:", error)
       toast("Error", {
-        description: "Failed to create project. Please try again."
+        description: "Failed to create account. Please try again."
       })
     }
   }
@@ -54,15 +54,15 @@ export function AccountCreationModal() {
         <DialogHeader>
           <DialogTitle>Welcome to SpendTab!</DialogTitle>
           <DialogDescription>
-            Let's create your first project to get started with managing your finances.
+            Let's create your first account to get started with managing your finances.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Project Name</Label>
+            <Label htmlFor="name">Account Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Personal Project"
+              placeholder="e.g., Personal Account"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -72,13 +72,13 @@ export function AccountCreationModal() {
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
               id="description"
-              placeholder="Add a description for your project"
+              placeholder="Add a description for your Account"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
           <Button type="submit" className="w-full">
-            Create Project
+            Create Account
           </Button>
         </form>
       </DialogContent>
