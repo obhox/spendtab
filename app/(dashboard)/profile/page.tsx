@@ -16,7 +16,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pencil, Plus, Trash } from "lucide-react"
 import { useAccounts } from "@/lib/context/AccountContext"
-import { useAccountQuery } from "@/lib/hooks/useAccountQuery"
+import { useAccountQuery, type Account } from "@/lib/hooks/useAccountQuery"
+import { supabase } from "@/lib/supabase"
 
 export default function ProfilePage() {
   const [firstName, setFirstName] = useState("")
@@ -30,7 +31,7 @@ export default function ProfilePage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedAccount, setSelectedAccount] = useState(null)
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [accountName, setAccountName] = useState("")
   const [accountDescription, setAccountDescription] = useState("")
 
@@ -69,13 +70,50 @@ export default function ProfilePage() {
   const handleAddAccount = async () => {
     if (!accountName) return;
     try {
-      await addAccount({ name: accountName, description: accountDescription });
+      const newAccount: Account | undefined = await addAccount({ name: accountName, description: accountDescription });
       setAccountName("");
       setAccountDescription("");
       setAddDialogOpen(false);
-      toast("Account created", {
-        description: "Your new account has been created successfully."
-      });
+
+      if (newAccount) {
+        const user = (await supabase.auth.getUser()).data.user;
+        if(user){
+          const defaultCategories = [
+            {
+              name: 'Uncategorized',
+              type: 'income',
+              account_id: newAccount.id,
+              user_id: user.id
+            },
+            {
+              name: 'Uncategorized',
+              type: 'expense',
+              account_id: newAccount.id,
+              user_id: user.id
+            }
+          ];
+    
+          const { error: categoryError } = await supabase
+            .from('categories')
+            .insert(defaultCategories);
+    
+          if (categoryError) {
+            console.error('Failed to create default categories:', categoryError);
+            toast("Error", {
+              description: "Account created, but failed to create default categories."
+            });
+          } else {
+            toast("Account created", {
+              description: "Your new account has been created successfully."
+            });
+          }
+        }
+
+      } else {
+        toast("Error", {
+          description: "Failed to create account."
+        });
+      }
     } catch (error) {
       toast("Error", {
         description: "Failed to create account."
@@ -117,7 +155,7 @@ export default function ProfilePage() {
     }
   };
 
-  async function handleAccountClick(account) {
+  async function handleAccountClick(account: Account) {
     try {
       await setCurrentAccount(account);
       router.push('/dashboard');

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { ensureUserHasAccount } from './account-utils'
 
 export async function getCurrentUser() {
   const { data: { session }, error } = await supabase.auth.getSession()
@@ -61,35 +62,8 @@ export async function signIn(email: string, password: string) {
     throw error
   }
 
-  // Check if this is the first login after email verification
-  if (data.user && data.user.email_confirmed_at) {
-    // Check if user already has an account
-    const { data: accountData, error: accountCheckError } = await supabase
-      .from('accounts')
-      .select('id')
-      .eq('owner_id', data.user.id)
-      .limit(1)
-
-    if (accountCheckError) {
-      console.error('Error checking for existing account:', accountCheckError)
-    } else if (!accountData || accountData.length === 0) {
-      // Create a default account for the verified user
-      try {
-        const { error: accountError } = await supabase
-          .from('accounts')
-          .insert({
-            name: 'Default Account',
-            description: 'Your default account',
-            owner_id: data.user.id
-          })
-
-        if (accountError) {
-          console.error('Failed to create default account:', accountError)
-        }
-      } catch (accountError: any) {
-        console.error('Failed to create default account:', accountError)
-      }
-    }
+  if (data.user) {
+    await ensureUserHasAccount(data.user)
   }
   
   return data
@@ -114,18 +88,8 @@ export async function signUp(email: string, password: string, firstName?: string
       throw error
     }
 
-    // Create a default account for the new user
     if (data.user) {
-      // Silently try to create the default account
-      await supabase
-        .from('accounts')
-        .insert({
-          name: 'Default Account',
-          description: 'Your default account',
-          owner_id: data.user.id
-        })
-        .then(() => {}, () => {})
-      // Continue with user creation regardless of account creation result
+      await ensureUserHasAccount(data.user)
     }
 
     // Send welcome email
@@ -258,39 +222,5 @@ export async function signInWithGoogle() {
   } catch (error) {
     console.error('Google sign-in error:', error)
     throw error
-  }
-}
-
-// Helper function to ensure user has a default account
-async function ensureUserHasAccount(user) {
-  try {
-    // Check if user already has an account
-    const { data: accountData, error: accountCheckError } = await supabase
-      .from('accounts')
-      .select('id')
-      .eq('owner_id', user.id)
-      .limit(1)
-
-    if (accountCheckError) {
-      console.error('Error checking for existing account:', accountCheckError)
-      return
-    }
-
-    if (!accountData || accountData.length === 0) {
-      // Create a default account for the user
-      const { error: createError } = await supabase
-        .from('accounts')
-        .insert({
-          name: 'Default Account',
-          description: 'Your default account',
-          owner_id: user.id
-        })
-
-      if (createError) {
-        console.error('Error creating default account:', createError)
-      }
-    }
-  } catch (error) {
-    console.error('Error ensuring user account:', error)
   }
 }

@@ -76,7 +76,7 @@ export function useAccountQuery() {
   }, [accountsQuery.data, isInitialLoad, queryClient]);
 
   // Add account mutation
-  const addAccount = useMutation({
+  const addAccountMutation = useMutation({
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -108,6 +108,10 @@ export function useAccountQuery() {
       toast(`Failed to create account: ${error.message}`);
     }
   });
+
+  const addAccount = async (variables: { name: string; description?: string }) => {
+    return await addAccountMutation.mutateAsync(variables);
+  };
 
   // Update account mutation
   const updateAccount = useMutation({
@@ -209,12 +213,12 @@ export function useAccountQuery() {
     accounts: accountsQuery.data || [],
     currentAccount: currentAccountQuery.data,
     isAccountSwitching,
-    isLoading: accountsQuery.isLoading || currentAccountQuery.isLoading,
+    isLoading: accountsQuery.isLoading || currentAccountQuery.isLoading || isAccountSwitching,
     isError: accountsQuery.isError || currentAccountQuery.isError,
     error: accountsQuery.error || currentAccountQuery.error,
-    addAccount: addAccount.mutate,
-    updateAccount: updateAccount.mutate,
-    deleteAccount: deleteAccount.mutate,
+    addAccount,
+    updateAccount: updateAccount.mutateAsync,
+    deleteAccount: deleteAccount.mutateAsync,
     setCurrentAccount,
     refetch: () => {
       accountsQuery.refetch();
