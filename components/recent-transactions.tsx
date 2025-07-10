@@ -5,10 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 export function RecentTransactions() {
   const { currentAccount } = useAccounts()
   const { transactions, isLoading } = useTransactionQuery()
+  const selectedCurrency = useSelectedCurrency()
   const [recentTransactions, setRecentTransactions] = useState<any[]>([])
   
   // Process transactions to get the 5 most recent ones
@@ -51,7 +53,7 @@ export function RecentTransactions() {
             </div>
             <div className="ml-auto font-medium">
               <span className={transaction.amount > 0 ? "text-green-500" : "text-red-500"}>
-                {transaction.amount > 0 ? "+" : ""}${Math.abs(transaction.amount).toFixed(2)}
+                {transaction.amount > 0 ? "+" : ""}{formatCurrencyUtil(Math.abs(transaction.amount), selectedCurrency.code, selectedCurrency.symbol)}
               </span>
               <Badge variant={transaction.amount > 0 ? "outline" : "secondary"} className="ml-2">
                 {transaction.category}

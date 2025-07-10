@@ -34,6 +34,7 @@ import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Transaction {
   id: string
@@ -69,6 +70,7 @@ const PAYMENT_SOURCES: Record<string, string> = {
 export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const { transactions: allTransactions, deleteTransaction, isLoading, error, isError } = useTransactionQuery()
   const { currentAccount } = useAccounts()
+  const selectedCurrency = useSelectedCurrency()
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
@@ -256,7 +258,7 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
                   <TableCell>{transaction.category}</TableCell>
                   <TableCell>{formatPaymentSource(transaction.payment_source)}</TableCell>
                   <TableCell className={`text-right ${transaction.type === "income" ? "text-green-600" : "text-red-600"}`}>
-                    {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                    {transaction.type === "income" ? "+" : "-"}{formatCurrencyUtil(transaction.amount, selectedCurrency.code, selectedCurrency.symbol).replace(/^-/, "")}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

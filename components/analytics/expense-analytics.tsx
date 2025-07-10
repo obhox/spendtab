@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CalendarIcon, Plus } from "lucide-react"
 import { format, subMonths } from "date-fns"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,7 @@ const timePeriods = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#00A2FF'];
 
 export default function ExpenseAnalytics() {
+  const selectedCurrency = useSelectedCurrency();
   const [timePeriod, setTimePeriod] = useState("12m");
   const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date }>({ 
     startDate: subMonths(new Date(), 12),
@@ -75,7 +77,7 @@ export default function ExpenseAnalytics() {
 
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString()}`;
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
   };
 
   // Format percentage for tooltip
@@ -144,8 +146,8 @@ export default function ExpenseAnalytics() {
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" tick={{fontSize: 10}} angle={-45} textAnchor="end" height={50} />
-                  <YAxis tickFormatter={(value) => `$${value/1000}k`} tick={{fontSize: 10}} width={50} />
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, "Expense"]} />
+                  <YAxis tickFormatter={(value) => `${selectedCurrency.symbol}${value/1000}k`} tick={{fontSize: 10}} width={50} />
+                  <Tooltip formatter={(value) => [formatCurrencyUtil(Number(value), selectedCurrency.code, selectedCurrency.symbol), "Expense"]} />
                   <Area type="monotone" dataKey="expenses" stroke="#ff6b6b" fill="#ff6b6b" fillOpacity={0.3} />
                 </AreaChart>
               </ResponsiveContainer>

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Plus, AlertTriangle, BarChart as BarChartIcon } from "lucide-react" // Added icons
 import Link from "next/link"
 import { createBrowserClient } from '@supabase/ssr'
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface DataPoint {
   month: string
@@ -17,16 +18,12 @@ interface DataPoint {
 }
 
 // Custom Tooltip Component for better styling
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, selectedCurrency }: any) => {
   if (active && payload && payload.length) {
     const incomeData = payload.find((p: any) => p.dataKey === 'income');
     const expenseData = payload.find((p: any) => p.dataKey === 'expense');
 
-    const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD', // Or get from context/config if dynamic
-      minimumFractionDigits: 2
-    }).format(value);
+    const formatCurrency = (value: number) => formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
 
     return (
       <div className="rounded-lg border bg-background p-2 shadow-sm">
@@ -53,6 +50,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function IncomeExpenseChart() {
   const { monthlyData, error: analyticsError, isLoading: isLoadingAnalytics } = useAnalytics() // Added isLoading
   const { currentAccount, isAccountSwitching } = useAccounts()
+  const selectedCurrency = useSelectedCurrency()
   const [chartData, setChartData] = useState<DataPoint[]>([])
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -163,13 +161,13 @@ export function IncomeExpenseChart() {
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${new Intl.NumberFormat('en-US', { notation: "compact" , maximumFractionDigits: 1 }).format(value)}`} // Compact notation for cleaner axis
+            tickFormatter={(value) => `${selectedCurrency.symbol}${new Intl.NumberFormat('en-US', { notation: "compact" , maximumFractionDigits: 1 }).format(value)}`} // Compact notation for cleaner axis
             width={60} // Give Y Axis labels some space
             dx={-5} // Adjust horizontal position
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.1 }} // Subtle hover effect
-            content={<CustomTooltip />} // Use custom styled tooltip
+            content={(props) => <CustomTooltip {...props} selectedCurrency={selectedCurrency} />} // Use custom styled tooltip
           />
           {/* Removed Legend for cleaner look, Tooltip provides info */}
           {/* <Legend /> */}

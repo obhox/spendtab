@@ -27,6 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { useAnalytics } from "@/lib/context/AnalyticsContext"
 import { format, subMonths, isWithinInterval } from "date-fns"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Time period options
 const timePeriods = [
@@ -64,6 +65,7 @@ interface Transaction {
 export default function RevenueAnalytics() {
   const { transactions } = useTransactions();
   const { incomeByCategory, monthlyData, isLoading, setDateRange } = useAnalytics();
+  const selectedCurrency = useSelectedCurrency();
   const [timePeriod, setTimePeriod] = useState("");
   
   // Initialize time period on client-side to avoid hydration mismatch
@@ -140,11 +142,7 @@ export default function RevenueAnalytics() {
 
   // Format currency
   const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
   }
 
   if (isLoading) {
@@ -207,8 +205,8 @@ export default function RevenueAnalytics() {
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{fontSize: 10}} angle={-45} textAnchor="end" height={50} />
-                <YAxis tickFormatter={(value) => `$${value/1000}k`} tick={{fontSize: 10}} width={50} />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Revenue"]} />
+                <YAxis tickFormatter={(value) => `${selectedCurrency.symbol}${value/1000}k`} tick={{fontSize: 10}} width={50} />
+                <Tooltip formatter={(value) => [formatCurrencyUtil(Number(value), selectedCurrency.code, selectedCurrency.symbol), "Revenue"]} />
                 <Area type="monotone" dataKey="revenue" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
               </AreaChart>
             </ResponsiveContainer>

@@ -12,8 +12,10 @@ import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 export function ProfitLossReport() {
+  const selectedCurrency = useSelectedCurrency()
   const [date, setDate] = useState<Date>(new Date())
   const [period, setPeriod] = useState("monthly")
 
@@ -73,19 +75,19 @@ export function ProfitLossReport() {
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Sales Revenue</TableCell>
-                <TableCell className="text-right">$42,500.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(42500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Service Revenue</TableCell>
-                <TableCell className="text-right">$15,750.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(15750, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Other Revenue</TableCell>
-                <TableCell className="text-right">$1,200.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(1200, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-medium">
                 <TableCell>Total Revenue</TableCell>
-                <TableCell className="text-right">$59,450.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(59450, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -100,35 +102,35 @@ export function ProfitLossReport() {
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Salaries & Wages</TableCell>
-                <TableCell className="text-right">$18,500.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(18500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Rent</TableCell>
-                <TableCell className="text-right">$3,500.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(3500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Utilities</TableCell>
-                <TableCell className="text-right">$1,200.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(1200, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Marketing</TableCell>
-                <TableCell className="text-right">$2,500.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(2500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Software & Subscriptions</TableCell>
-                <TableCell className="text-right">$1,800.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(1800, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Office Supplies</TableCell>
-                <TableCell className="text-right">$750.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(750, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Other Expenses</TableCell>
-                <TableCell className="text-right">$1,200.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(1200, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-medium">
                 <TableCell>Total Expenses</TableCell>
-                <TableCell className="text-right">$29,450.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(29450, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -139,7 +141,7 @@ export function ProfitLossReport() {
 
               <TableRow className="font-bold">
                 <TableCell>Net Profit</TableCell>
-                <TableCell className="text-right">$30,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(30000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

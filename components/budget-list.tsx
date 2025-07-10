@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { toast } from "sonner"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Budget {
   id: string
@@ -33,9 +34,15 @@ interface Budget {
 
 export function BudgetList() {
   const { budgets, deleteBudget, isLoading } = useBudgets()
+  const selectedCurrency = useSelectedCurrency()
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null)
+  
+  // Format currency value
+  const formatCurrency = (value: number): string => {
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol)
+  }
 
   const handleDelete = (id: string) => {
     setBudgetToDelete(id)
@@ -93,18 +100,18 @@ export function BudgetList() {
                 <div className="grid grid-cols-3 gap-6">
                   <div className="space-y-1.5">
                     <div className="text-sm text-muted-foreground font-medium">Budget</div>
-                    <div className="text-lg font-bold tracking-tight">${budget.amount.toLocaleString()}</div>
+                    <div className="text-lg font-bold tracking-tight">{formatCurrency(budget.amount)}</div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="text-sm text-muted-foreground font-medium">Spent</div>
                     <div className={`text-lg font-bold tracking-tight ${budget.spent > budget.amount ? "text-red-600" : ""}`}>
-                      ${budget.spent.toLocaleString()}
+                      {formatCurrency(budget.spent)}
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="text-sm text-muted-foreground font-medium">Remaining</div>
                     <div className={`text-lg font-bold tracking-tight ${remaining < 0 ? "text-red-600" : remaining < budget.amount * 0.25 ? "text-amber-600" : "text-green-600"}`}>
-                      ${remaining.toLocaleString()}
+                      {formatCurrency(remaining)}
                     </div>
                   </div>
                 </div>

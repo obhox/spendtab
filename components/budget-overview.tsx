@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { Progress } from "@/components/ui/progress"
 import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 export function BudgetOverview() {
   const { currentAccount } = useAccounts()
+  const selectedCurrency = useSelectedCurrency()
   const [topBudgets, setTopBudgets] = useState<any[]>([])
   const { budgets, isLoading } = useBudgetQuery()
   
@@ -45,8 +47,8 @@ export function BudgetOverview() {
               </div>
               <Progress value={budget.percentSpent} className="h-2" />
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>${budget.spent.toLocaleString()} spent</span>
-                <span>${budget.remaining.toLocaleString()} remaining</span>
+                <span>{formatCurrencyUtil(budget.spent, selectedCurrency.code, selectedCurrency.symbol)} spent</span>
+                <span>{formatCurrencyUtil(budget.remaining, selectedCurrency.code, selectedCurrency.symbol)} remaining</span>
               </div>
             </div>
           )

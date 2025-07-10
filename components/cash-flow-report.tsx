@@ -12,8 +12,10 @@ import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 export function CashFlowReport() {
+  const selectedCurrency = useSelectedCurrency()
   const [date, setDate] = useState<Date>(new Date())
   const [period, setPeriod] = useState("monthly")
 
@@ -73,23 +75,23 @@ export function CashFlowReport() {
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Net Income</TableCell>
-                <TableCell className="text-right">$30,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(30000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Accounts Receivable</TableCell>
-                <TableCell className="text-right">-$5,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(5000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Accounts Payable</TableCell>
-                <TableCell className="text-right">$2,500.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(2500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Inventory</TableCell>
-                <TableCell className="text-right">-$1,500.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(1500, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-medium">
                 <TableCell>Net Cash from Operating Activities</TableCell>
-                <TableCell className="text-right">$26,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(26000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -104,15 +106,15 @@ export function CashFlowReport() {
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Purchase of Equipment</TableCell>
-                <TableCell className="text-right">-$8,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(8000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Sale of Investments</TableCell>
-                <TableCell className="text-right">$3,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(3000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-medium">
                 <TableCell>Net Cash from Investing Activities</TableCell>
-                <TableCell className="text-right">-$5,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(5000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -127,15 +129,15 @@ export function CashFlowReport() {
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Loan Repayment</TableCell>
-                <TableCell className="text-right">-$2,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(2000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="pl-8">Dividends Paid</TableCell>
-                <TableCell className="text-right">-$5,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(5000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-medium">
                 <TableCell>Net Cash from Financing Activities</TableCell>
-                <TableCell className="text-right">-$7,000.00</TableCell>
+                <TableCell className="text-right">-{formatCurrencyUtil(7000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
 
               <TableRow>
@@ -146,15 +148,15 @@ export function CashFlowReport() {
 
               <TableRow className="font-bold">
                 <TableCell>Net Increase in Cash</TableCell>
-                <TableCell className="text-right">$14,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(14000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>Beginning Cash Balance</TableCell>
-                <TableCell className="text-right">$25,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(25000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
               <TableRow className="font-bold">
                 <TableCell>Ending Cash Balance</TableCell>
-                <TableCell className="text-right">$39,000.00</TableCell>
+                <TableCell className="text-right">{formatCurrencyUtil(39000, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

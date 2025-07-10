@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { startOfMonth, endOfMonth, subMonths, startOfQuarter, endOfQuarter, subQuarters, startOfYear, endOfYear } from "date-fns"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Types for financial data
 interface FinancialCategory {
@@ -53,14 +54,11 @@ const financialPeriods = [
 export function ProfitLossReport() {
   const { profitLossData, isLoading, error, setDateRange } = useReports();
   const [selectedPeriod, setSelectedPeriod] = useState("current-quarter");
+  const selectedCurrency = useSelectedCurrency();
   
   // Format currency value
   const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
   };
 
   // Handle period change and update date range

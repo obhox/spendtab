@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Transaction {
   id: string
@@ -18,6 +19,7 @@ interface Transaction {
 
 export function RecentTransactions() {
   const { transactions, isLoading } = useTransactionQuery()
+  const selectedCurrency = useSelectedCurrency()
   
   // Format date to more readable format
   const formatDate = (dateString: string) => {
@@ -54,10 +56,7 @@ export function RecentTransactions() {
     const isIncome = type === "income" || value > 0
     const prefix = isIncome ? "+" : ""
     
-    return prefix + new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(Math.abs(value))
+    return prefix + formatCurrencyUtil(Math.abs(value), selectedCurrency.code, selectedCurrency.symbol)
   }
   
   // Loading state

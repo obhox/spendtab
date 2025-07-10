@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Plus, AlertTriangle, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { createBrowserClient } from '@supabase/ssr'
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface DataPoint {
   month: string
@@ -16,15 +17,11 @@ interface DataPoint {
 }
 
 // Custom Tooltip Component for better styling
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, selectedCurrency }: any) => {
   if (active && payload && payload.length) {
     const cashFlowData = payload[0];
 
-    const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
+    const formatCurrency = (value: number) => formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
 
     return (
       <div className="rounded-lg border bg-background p-2 shadow-sm">
@@ -42,6 +39,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function CashFlowChart() {
   const { monthlyData, error: analyticsError, isLoading: isLoadingAnalytics } = useAnalytics()
   const { currentAccount, isAccountSwitching } = useAccounts()
+  const selectedCurrency = useSelectedCurrency()
   const [chartData, setChartData] = useState<DataPoint[]>([])
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -150,13 +148,13 @@ export function CashFlowChart() {
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(value)}`}
+            tickFormatter={(value) => `${selectedCurrency.symbol}${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(value)}`}
             width={60}
             dx={-5}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.1 }}
-            content={<CustomTooltip />}
+            content={(props) => <CustomTooltip {...props} selectedCurrency={selectedCurrency} />}
           />
           <defs>
             <linearGradient id="cashFlowGradient" x1="0" y1="0" x2="0" y2="1">

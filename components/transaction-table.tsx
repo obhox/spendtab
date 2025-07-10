@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { toast } from "sonner"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Transaction {
   id: string
@@ -44,6 +45,7 @@ interface TransactionTableProps {
 
 export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const { transactions, deleteTransaction, isLoading } = useTransactions()
+  const selectedCurrency = useSelectedCurrency()
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
@@ -117,7 +119,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   <span className={transaction.type === "income" ? "text-green-600" : "text-red-600"}>
-                    {transaction.type === "income" ? "+" : "-"}${Math.abs(transaction.amount).toFixed(2)}
+                    {transaction.type === "income" ? "+" : "-"}{formatCurrencyUtil(Math.abs(transaction.amount), selectedCurrency.code, selectedCurrency.symbol)}
                   </span>
                 </TableCell>
               </TableRow>

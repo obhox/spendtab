@@ -20,6 +20,7 @@ import { useAnalytics } from "@/lib/context/AnalyticsContext"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Time period options
 const timePeriods = [
@@ -31,6 +32,7 @@ const timePeriods = [
 ];
 
 export default function ProfitabilityAnalytics() {
+  const selectedCurrency = useSelectedCurrency();
   const { monthlyData, financialSummary, isLoading, setDateRange, error } = useAnalytics();
   const [timePeriod, setTimePeriod] = useState("");
   
@@ -71,11 +73,7 @@ export default function ProfitabilityAnalytics() {
   
   // Format currency for tooltip
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
   };
   
   // Format percentage for tooltip
@@ -190,7 +188,7 @@ export default function ProfitabilityAnalytics() {
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                 <XAxis dataKey="month" stroke="#666" />
-                <YAxis yAxisId="left" tickFormatter={(value) => `$${value / 1000}k`} stroke="#666" />
+                <YAxis yAxisId="left" tickFormatter={(value) => `${selectedCurrency.symbol}${value / 1000}k`} stroke="#666" />
                 <Tooltip 
                   formatter={(value: number, name: string) => {
                     return [formatCurrency(value), name.charAt(0).toUpperCase() + name.slice(1)];

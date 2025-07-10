@@ -12,8 +12,10 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 export function ExpenseReport() {
+  const selectedCurrency = useSelectedCurrency()
   const [date, setDate] = useState<Date>(new Date())
   const [period, setPeriod] = useState("monthly")
 
@@ -86,7 +88,7 @@ export function ExpenseReport() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                  <Tooltip formatter={(value) => formatCurrencyUtil(Number(value), selectedCurrency.code, selectedCurrency.symbol)} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -116,7 +118,7 @@ export function ExpenseReport() {
                   return (
                     <TableRow key={item.name}>
                       <TableCell>{item.name}</TableCell>
-                      <TableCell className="text-right">${item.value.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{formatCurrencyUtil(item.value, selectedCurrency.code, selectedCurrency.symbol)}</TableCell>
                       <TableCell className="text-right">{percentage}%</TableCell>
                     </TableRow>
                   )
@@ -124,7 +126,7 @@ export function ExpenseReport() {
                 <TableRow className="font-bold">
                   <TableCell>Total</TableCell>
                   <TableCell className="text-right">
-                    ${data.reduce((sum, item) => sum + item.value, 0).toLocaleString()}
+                    {formatCurrencyUtil(data.reduce((sum, item) => sum + item.value, 0), selectedCurrency.code, selectedCurrency.symbol)}
                   </TableCell>
                   <TableCell className="text-right">100%</TableCell>
                 </TableRow>

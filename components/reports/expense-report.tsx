@@ -33,6 +33,7 @@ import { useReports } from "@/lib/context/ReportsContext"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 import { 
   startOfMonth, 
   endOfMonth, 
@@ -98,16 +99,13 @@ const getColor = (index) => {
 // Custom tooltip for the pie chart
 // Define explicit types for the props to fix TypeScript errors
 const CustomTooltip = (props) => {
-  const { active, payload } = props || {};
+  const { active, payload, selectedCurrency } = props || {};
   if (active && payload && payload.length > 0) {
     const data = payload[0];
     return (
       <div className="bg-background border rounded-md p-2 shadow-sm">
         <p className="font-medium">{data.name || 'Unknown'}</p>
-        <p className="text-sm">{`$${(data.value || 0).toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0
-        })}`}</p>
+        <p className="text-sm">{formatCurrencyUtil(data.value || 0, selectedCurrency?.code || 'USD', selectedCurrency?.symbol || '$')}</p>
         <p className="text-xs text-muted-foreground">
           {`${data.payload && data.payload.percentage ? Math.round(data.payload.percentage) : 0}%`}
         </p>
@@ -118,13 +116,8 @@ const CustomTooltip = (props) => {
 };
 
 // Format currency consistently throughout the component
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
+const formatCurrency = (value, selectedCurrency) => {
+  return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
 };
 
 // Format date value safely
@@ -170,6 +163,7 @@ const truncateText = (text, maxLength = 15) => {
 export function ExpenseReport() {
   const { expenseData, dateRange, setDateRange, isLoading, error } = useReports();
   const [selectedPeriod, setSelectedPeriod] = useState("");
+  const selectedCurrency = useSelectedCurrency();
   
   // Handle period change
   const handlePeriodChange = (period) => {
@@ -265,7 +259,7 @@ export function ExpenseReport() {
       <div>
         <h3 className="text-lg font-medium">Select Period</h3>
         <p className="text-sm text-muted-foreground">
-          {hasValidData ? `Total Expenses: ${formatCurrency(expenseData.totalExpenses)}` : 'No expenses recorded'}
+          {hasValidData ? `Total Expenses: ${formatCurrency(expenseData.totalExpenses, selectedCurrency)}` : 'No expenses recorded'}
         </p>
       </div>
       <Select value={selectedPeriod} onValueChange={handlePeriodChange}>
@@ -343,7 +337,7 @@ export function ExpenseReport() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip content={CustomTooltip} />
+                  <Tooltip content={(props) => <CustomTooltip {...props} selectedCurrency={selectedCurrency} />} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -386,7 +380,7 @@ export function ExpenseReport() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip content={CustomTooltip} />
+                  <Tooltip content={(props) => <CustomTooltip {...props} selectedCurrency={selectedCurrency} />} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -419,7 +413,7 @@ export function ExpenseReport() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   type="number" 
-                  tickFormatter={(value) => formatCurrency(value)} 
+                  tickFormatter={(value) => formatCurrency(value, selectedCurrency)} 
                 />
                 <YAxis 
                   type="category" 
@@ -429,7 +423,7 @@ export function ExpenseReport() {
                   tickFormatter={(value) => truncateText(value, 20)}
                 />
                 <Tooltip 
-                  formatter={(value) => [formatCurrency(value).replace(/\.\d+/, ''), "Amount"]}
+                  formatter={(value) => [formatCurrency(value, selectedCurrency).replace(/\.\d+/, ''), "Amount"]}
                   labelFormatter={(label, payload) => {
                     // Use the full name from our data object for the tooltip
                     return payload && payload[0] ? payload[0].payload.fullName : label;
@@ -471,12 +465,12 @@ export function ExpenseReport() {
                       {truncateText(expense.description, 30)}
                     </TableCell>
                     <TableCell>{formatPaymentMethod(expense.paymentMethod)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(expense.amount, selectedCurrency)}</TableCell>
                   </TableRow>
                 ))}
                 <TableRow className="font-medium">
                   <TableCell colSpan={4}>Total</TableCell>
-                  <TableCell className="text-right">{formatCurrency(expenseData.totalExpenses)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(expenseData.totalExpenses, selectedCurrency)}</TableCell>
                 </TableRow>
               </>
             ) : (

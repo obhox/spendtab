@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Budget {
   id: string
@@ -18,6 +19,7 @@ interface Budget {
 
 export function BudgetOverview() {
   const { budgets = [], isLoading } = useBudgetQuery()
+  const selectedCurrency = useSelectedCurrency()
 
   // Helper to safely get spent amount
   const getSpentAmount = (budget: Budget): number => {
@@ -47,11 +49,7 @@ export function BudgetOverview() {
     if (typeof value !== 'number' || isNaN(value)) {
         value = 0;
     }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(value)
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol)
   }
 
   // Calculate totals using reduce

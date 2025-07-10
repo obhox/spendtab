@@ -31,6 +31,7 @@ import { useReportQuery } from "@/lib/hooks/useReportQuery"
 import { Button } from "@/components/ui/button"
 import { Plus, AlertTriangle } from "lucide-react"
 import Link from "next/link"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 // Ensure date-fns functions are available
 import { 
   startOfMonth, 
@@ -133,14 +134,11 @@ export function CashFlowReport() {
   // Initialize with "current-quarter" to match the default in ReportsContext
   const [selectedPeriod, setSelectedPeriod] = useState("current-quarter");
   const [error, setError] = useState<string | null>(null);
+  const selectedCurrency = useSelectedCurrency();
   
   // Format currency value
   const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
+    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
   };
   
   // Validate a date range to ensure it contains valid dates
@@ -266,8 +264,8 @@ export function CashFlowReport() {
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
+                <YAxis tickFormatter={(value) => `${selectedCurrency.symbol}${value / 1000}k`} />
+                <Tooltip formatter={(value) => [formatCurrency(Number(value)), ""]} />
                 <Legend />
                 <Area 
                   type="monotone" 

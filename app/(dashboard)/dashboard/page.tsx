@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { CurrencySwitcher, useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Time period options for the filter
 const timePeriods = [
@@ -47,6 +48,7 @@ const MetricSkeleton = () => (
 function DashboardMetrics() {
   const { transactions = [] } = useTransactions() || {};
   const { currentAccount } = useAccounts() || {};
+  const selectedCurrency = useSelectedCurrency();
   const [metrics, setMetrics] = useState({
     revenue: 0,
     expenses: 0,
@@ -167,14 +169,15 @@ function DashboardMetrics() {
 
   const formatCurrency = useCallback((value: number | undefined | null): string => {
     const numValue = Number(value);
-    return isNaN(numValue) ? "$0.00" : `$${numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }, []);
+    return isNaN(numValue) ? `${selectedCurrency.symbol}0.00` : formatCurrencyUtil(numValue, selectedCurrency.code, selectedCurrency.symbol);
+  }, [selectedCurrency]);
 
 
   return (
     <div className="space-y-4">
-      {/* Time Period Selector */}
-      <div className="flex justify-start sm:justify-end">
+      {/* Time Period Selector and Currency Switcher */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start sm:justify-end">
+        <CurrencySwitcher />
         <Select value={timePeriod} onValueChange={setTimePeriod}>
           <SelectTrigger className="w-full sm:w-[200px] h-9">
              <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
