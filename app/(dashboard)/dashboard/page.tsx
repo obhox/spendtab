@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { CurrencySwitcher, useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Time period options for the filter
 const timePeriods = [
@@ -175,9 +175,8 @@ function DashboardMetrics() {
 
   return (
     <div className="space-y-4">
-      {/* Time Period Selector and Currency Switcher */}
+      {/* Time Period Selector */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start sm:justify-end">
-        <CurrencySwitcher />
         <Select value={timePeriod} onValueChange={setTimePeriod}>
           <SelectTrigger className="w-full sm:w-[200px] h-9">
              <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
