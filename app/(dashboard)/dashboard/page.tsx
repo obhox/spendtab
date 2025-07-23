@@ -21,6 +21,7 @@ import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/com
 
 // Time period options for the filter
 const timePeriods = [
+  { value: "last_30_days", label: "Last 30 Days" },
   { value: "current_month", label: "This Month" },
   { value: "last_month", label: "Last Month" },
   { value: "last_3_months", label: "Last 3 Months" },
@@ -59,7 +60,7 @@ function DashboardMetrics() {
     transactionCount: 0
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [timePeriod, setTimePeriod] = useState("current_month");
+  const [timePeriod, setTimePeriod] = useState("last_30_days");
   // const supabase = createClientComponentClient(); // Keep if needed for other logic
 
   // Function to convert time period to date range
@@ -69,6 +70,10 @@ function DashboardMetrics() {
     let endDate: Date = now; // Default end date to now
 
     switch (period) {
+      case "last_30_days":
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+        endDate = now;
+        break;
       case "current_month":
         startDate = startOfMonth(now);
         endDate = now;
@@ -95,7 +100,7 @@ function DashboardMetrics() {
         endDate = now;
         break;
       default:
-        startDate = startOfMonth(now);
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to last 30 days
         endDate = now;
     }
 
