@@ -93,7 +93,7 @@ export function CashFlowChart() {
   const renderContent = () => {
     if (isAccountSwitching || isLoadingAnalytics) {
       return (
-        <div className="flex h-[250px] sm:h-[300px] md:h-[350px] items-center justify-center">
+        <div className="flex h-full items-center justify-center">
           <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       )
@@ -101,7 +101,7 @@ export function CashFlowChart() {
 
     if (analyticsError) {
       return (
-        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center">
+        <div className="flex flex-col justify-center items-center h-full space-y-3 text-center">
           <AlertTriangle className="h-8 w-8 sm:h-10 sm:w-10 text-destructive" />
           <p className="text-sm sm:text-base font-medium text-destructive">Error loading chart data</p>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">{analyticsError}</p>
@@ -111,7 +111,7 @@ export function CashFlowChart() {
 
     if (chartData.length === 0) {
       return (
-        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center px-4">
+        <div className="flex flex-col justify-center items-center h-full space-y-3 text-center px-4">
           <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
           <p className="text-sm sm:text-base font-medium text-muted-foreground">No cash flow data yet</p>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
@@ -128,7 +128,7 @@ export function CashFlowChart() {
     }
 
     return (
-      <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+      <ResponsiveContainer width="100%" height="100%">
         <AreaChart 
           data={chartData} 
           margin={{ 
@@ -186,5 +186,9 @@ export function CashFlowChart() {
     )
   }
 
-  return renderContent()
+  return (
+    <div className="h-[220px] sm:h-[280px] md:h-[320px] lg:h-[350px] w-full">
+      {renderContent()}
+    </div>
+  )
 }

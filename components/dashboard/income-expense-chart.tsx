@@ -106,7 +106,7 @@ export function IncomeExpenseChart() {
     if (isAccountSwitching || isLoadingAnalytics) {
       // Optional: Add a Skeleton Loader here for better UX
       return (
-        <div className="flex h-[250px] sm:h-[300px] md:h-[350px] items-center justify-center">
+        <div className="flex h-full items-center justify-center">
           <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       )
@@ -114,7 +114,7 @@ export function IncomeExpenseChart() {
 
     if (analyticsError) {
       return (
-        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center">
+        <div className="flex flex-col justify-center items-center h-full space-y-3 text-center">
           <AlertTriangle className="h-8 w-8 sm:h-10 sm:w-10 text-destructive" />
           <p className="text-sm sm:text-base font-medium text-destructive">Error loading chart data</p>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">{analyticsError}</p>
@@ -124,7 +124,7 @@ export function IncomeExpenseChart() {
 
     if (chartData.length === 0) {
       return (
-        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center px-4">
+        <div className="flex flex-col justify-center items-center h-full space-y-3 text-center px-4">
           <BarChartIcon className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
           <p className="text-sm sm:text-base font-medium text-muted-foreground">No income or expense data yet</p>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
@@ -141,7 +141,7 @@ export function IncomeExpenseChart() {
     }
 
     return (
-      <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart 
           data={chartData} 
           margin={{ 
@@ -203,27 +203,10 @@ export function IncomeExpenseChart() {
   }
 
   return (
-    <Card>
-      <CardContent className="h-[250px] sm:h-[300px] md:h-[350px] p-2 sm:p-4 md:p-6">
-        {renderContent()}
-      </CardContent>
-    </Card>
+    <div className="h-[220px] sm:h-[280px] md:h-[320px] lg:h-[350px] w-full">
+      {renderContent()}
+    </div>
   )
 }
 
-// Add these CSS Variables to your global CSS file (e.g., app/globals.css)
-/*
-:root {
-  --chart-positive: 142 76% 36%; // Green HSL
-  --chart-negative: 0 72% 51%; // Red HSL
-}
-
-.dark {
-  --chart-positive: 142 71% 41%; // Darker Green HSL for dark mode
-  --chart-negative: 0 84% 60%; // Lighter Red HSL for dark mode
-}
-*/
-
-// Make sure you have Card components imported/available
-// npm install @radix-ui/react-slot class-variance-authority clsx lucide-react tailwind-merge tailwindcss-animate
-// npx shadcn-ui@latest add card button
+// Note: Chart color CSS variables are now defined in app/globals.css

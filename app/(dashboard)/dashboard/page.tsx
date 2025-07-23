@@ -12,6 +12,7 @@ import { BudgetOverview } from "@/components/dashboard/budget-overview"
 import { DataProvider } from "@/lib/context/DataProvider"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { useAccounts } from "@/lib/context/AccountContext"
+import { useAnalytics } from "@/lib/context/AnalyticsContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
@@ -48,6 +49,7 @@ const MetricSkeleton = () => (
 function DashboardMetrics() {
   const { transactions = [] } = useTransactions() || {};
   const { currentAccount } = useAccounts() || {};
+  const { setDateRange, dateRange } = useAnalytics();
   const selectedCurrency = useSelectedCurrency();
   const [metrics, setMetrics] = useState({
     revenue: 0,
@@ -59,6 +61,52 @@ function DashboardMetrics() {
   const [isLoading, setIsLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState("current_month");
   // const supabase = createClientComponentClient(); // Keep if needed for other logic
+
+  // Function to convert time period to date range
+  const getDateRangeFromTimePeriod = useCallback((period: string) => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now; // Default end date to now
+
+    switch (period) {
+      case "current_month":
+        startDate = startOfMonth(now);
+        endDate = now;
+        break;
+      case "last_month":
+        const lastMonthStart = startOfMonth(subMonths(now, 1));
+        startDate = lastMonthStart;
+        endDate = endOfMonth(lastMonthStart);
+        break;
+      case "last_3_months":
+        startDate = startOfMonth(subMonths(now, 3));
+        endDate = now;
+        break;
+      case "last_6_months":
+        startDate = startOfMonth(subMonths(now, 6));
+        endDate = now;
+        break;
+      case "year_to_date":
+        startDate = startOfYear(now);
+        endDate = now;
+        break;
+      case "last_12_months":
+        startDate = startOfMonth(subMonths(now, 12));
+        endDate = now;
+        break;
+      default:
+        startDate = startOfMonth(now);
+        endDate = now;
+    }
+
+    return { startDate, endDate };
+  }, []);
+
+  // Update AnalyticsContext when time period changes
+  useEffect(() => {
+    const newDateRange = getDateRangeFromTimePeriod(timePeriod);
+    setDateRange(newDateRange);
+  }, [timePeriod, setDateRange, getDateRangeFromTimePeriod]);
 
   // Reset metrics on account change
   useEffect(() => {
@@ -88,40 +136,7 @@ function DashboardMetrics() {
     // The effect listening to currentAccount handles the initial loading state change
     setIsLoading(true);
     try {
-      const now = new Date();
-      let startDate: Date;
-      let endDate: Date = endOfMonth(now); // Default end date
-
-      switch (timePeriod) {
-        case "current_month":
-          startDate = startOfMonth(now);
-          endDate = now;
-          break;
-        case "last_month":
-          const lastMonthStart = startOfMonth(subMonths(now, 1));
-          startDate = lastMonthStart;
-          endDate = endOfMonth(lastMonthStart);
-          break;
-        case "last_3_months":
-          startDate = startOfMonth(subMonths(now, 3));
-          endDate = now;
-          break;
-        case "last_6_months":
-          startDate = startOfMonth(subMonths(now, 6));
-          endDate = now;
-          break;
-        case "year_to_date":
-          startDate = startOfYear(now);
-          endDate = now;
-          break;
-        case "last_12_months":
-          startDate = startOfMonth(subMonths(now, 12));
-          endDate = now;
-          break;
-        default:
-          startDate = startOfMonth(now);
-          endDate = now;
-      }
+      const { startDate, endDate } = getDateRangeFromTimePeriod(timePeriod);
 
       const filteredTransactions = validTransactions.filter(t => {
         if (t.account_id !== currentAccount.id) return false;
@@ -160,7 +175,7 @@ function DashboardMetrics() {
     } finally {
       setIsLoading(false);
     }
-  }, [transactions, currentAccount, timePeriod]); // Rerun when these change
+  }, [transactions, currentAccount, timePeriod, getDateRangeFromTimePeriod]); // Rerun when these change
 
   // Memoized helpers
   const getTimePeriodLabel = useCallback(() => {
