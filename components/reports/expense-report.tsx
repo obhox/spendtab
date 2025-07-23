@@ -105,7 +105,7 @@ const CustomTooltip = (props) => {
     return (
       <div className="bg-background border rounded-md p-2 shadow-sm">
         <p className="font-medium">{data.name || 'Unknown'}</p>
-        <p className="text-sm">{formatCurrencyUtil(data.value || 0, selectedCurrency?.code || 'USD', selectedCurrency?.symbol || '$')}</p>
+        <p className="text-sm">{formatCurrencyUtil(data.value || 0, selectedCurrency?.code || 'NGN', selectedCurrency?.symbol || '₦')}</p>
         <p className="text-xs text-muted-foreground">
           {`${data.payload && data.payload.percentage ? Math.round(data.payload.percentage) : 0}%`}
         </p>

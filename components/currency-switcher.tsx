@@ -175,7 +175,7 @@ const currencies = [
 ]
 
 export function CurrencySwitcher() {
-  const [selectedCurrency, setSelectedCurrency] = useState("USD")
+  const [selectedCurrency, setSelectedCurrency] = useState("NGN")
 
   // Load saved currency from localStorage on component mount
   useEffect(() => {
@@ -226,11 +226,11 @@ export function CurrencySwitcher() {
 
 // Hook to use the selected currency in other components
 export function useSelectedCurrency() {
-  const [currency, setCurrency] = useState({ code: "USD", symbol: "$" })
+  const [currency, setCurrency] = useState({ code: "NGN", symbol: "₦" })
 
   useEffect(() => {
     // Get initial currency from localStorage
-    const savedCurrency = localStorage.getItem("selectedCurrency") || "USD"
+    const savedCurrency = localStorage.getItem("selectedCurrency") || "NGN"
     const currencyData = currencies.find(c => c.code === savedCurrency)
     if (currencyData) {
       setCurrency({ code: currencyData.code, symbol: currencyData.symbol })
@@ -253,8 +253,8 @@ export function useSelectedCurrency() {
 
 // Utility function to format currency
 export function formatCurrency(amount: number, currencyCode?: string, currencySymbol?: string): string {
-  const code = currencyCode || "USD"
-  const symbol = currencySymbol || "$"
+  const code = currencyCode || "NGN"
+  const symbol = currencySymbol || "₦"
   
   // For display purposes, we'll just use the symbol since we're not doing actual conversion
   return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

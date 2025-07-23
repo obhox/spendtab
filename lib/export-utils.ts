@@ -108,9 +108,9 @@ const formatExpenseData = (data: any) => {
 };
 
 const formatCurrencyValue = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'NGN',
     minimumFractionDigits: 2
   }).format(value);
 };
