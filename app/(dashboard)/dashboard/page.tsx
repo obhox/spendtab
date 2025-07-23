@@ -32,13 +32,13 @@ const timePeriods = [
 // Moved outside DashboardMetrics to be accessible by DashboardSkeleton
 const MetricSkeleton = () => (
     <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-            <Skeleton className="h-4 w-2/4" />
-            <Skeleton className="h-4 w-4" />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
+            <Skeleton className="h-3 sm:h-4 w-2/4" />
+            <Skeleton className="h-3 sm:h-4 w-3 sm:w-4" />
         </CardHeader>
-        <CardContent className="pt-0 p-3 sm:p-4">
-            <Skeleton className="h-7 w-3/4 mb-1" />
-            <Skeleton className="h-3 w-1/2" />
+        <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
+            <Skeleton className="h-6 sm:h-7 w-3/4 mb-1" />
+            <Skeleton className="h-2 sm:h-3 w-1/2" />
         </CardContent>
     </Card>
 );
@@ -176,9 +176,9 @@ function DashboardMetrics() {
   return (
     <div className="space-y-4">
       {/* Time Period Selector */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start sm:justify-end">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-start sm:justify-end">
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-full sm:w-[200px] h-9">
+          <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] h-9">
              <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
             <SelectValue placeholder="Select time period" />
           </SelectTrigger>
@@ -193,9 +193,8 @@ function DashboardMetrics() {
       </div>
 
       {/* --- Metrics Grid --- */}
-      {/* Grid: 1 col mobile (stacked), 4 cols md+ */}
-      {/* Updated grid class */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-4">
+      {/* Grid: 1 col mobile, 2 cols tablet, 4 cols desktop */}
+      <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <>
             {/* Use the globally defined MetricSkeleton - layout controlled by parent grid */}
@@ -208,13 +207,13 @@ function DashboardMetrics() {
           <>
             {/* Revenue Card */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
+                <CardTitle className="text-xs sm:text-sm font-medium">Revenue</CardTitle>
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4">
-                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.revenue)}</div>
-                <p className="text-xs text-muted-foreground pt-1">
+              <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatCurrency(metrics.revenue)}</div>
+                <p className="text-xs text-muted-foreground">
                   {getTimePeriodLabel()}
                 </p>
               </CardContent>
@@ -222,13 +221,13 @@ function DashboardMetrics() {
 
             {/* Expenses Card */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-                <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-                <ArrowDown className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
+                <CardTitle className="text-xs sm:text-sm font-medium">Expenses</CardTitle>
+                <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4">
-                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.expenses)}</div>
-                <p className="text-xs text-muted-foreground pt-1">
+              <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatCurrency(metrics.expenses)}</div>
+                <p className="text-xs text-muted-foreground">
                    {getTimePeriodLabel()}
                 </p>
               </CardContent>
@@ -236,19 +235,17 @@ function DashboardMetrics() {
 
             {/* Profit Card */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-                <CardTitle className="text-sm font-medium">Profit</CardTitle>
-                 {metrics.profit >= 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-600" />
-                 ) : (
-                    <ArrowDown className="h-4 w-4 text-red-600" />
-                 )}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
+                <CardTitle className="text-xs sm:text-sm font-medium">
+                  {metrics.profit >= 0 ? 'Profit' : 'Loss'}
+                </CardTitle>
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4">
-                <div className={`text-xl sm:text-2xl font-bold ${metrics.profit >= 0 ? 'text-foreground' : 'text-red-600'}`}>
+              <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
+                <div className={`text-lg sm:text-xl md:text-2xl font-bold ${metrics.profit >= 0 ? 'text-foreground' : 'text-red-600'}`}>
                     {formatCurrency(metrics.profit)}
                 </div>
-                <p className="text-xs text-muted-foreground pt-1">
+                <p className="text-xs text-muted-foreground">
                    {getTimePeriodLabel()}
                 </p>
               </CardContent>
@@ -256,13 +253,13 @@ function DashboardMetrics() {
 
             {/* Cash Flow Card */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4">
-                <CardTitle className="text-sm font-medium">Cash Flow</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
+                <CardTitle className="text-xs sm:text-sm font-medium">Cash Flow</CardTitle>
+                <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4">
-                <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics.cashFlow)}</div>
-                <p className="text-xs text-muted-foreground pt-1">
+              <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatCurrency(metrics.cashFlow)}</div>
+                <p className="text-xs text-muted-foreground">
                   {getTimePeriodLabel()}
                 </p>
               </CardContent>
@@ -314,46 +311,50 @@ export default function DashboardPage() {
     <DataProvider>
       {isAccountSwitching && <LoadingOverlay />}
       <Suspense fallback={<DashboardSkeleton />}>
-        <div className="p-4 md:p-6 lg:p-8">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-4 sm:mb-6">Dashboard</h1>
-          <div className="space-y-4 sm:space-y-6">
+        <div className="p-2 sm:p-4 md:p-6 lg:p-8 space-y-3 sm:space-y-4 md:space-y-6">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Dashboard</h1>
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
             <MemoizedDashboardMetrics />
-            {/* Charts Grid */}
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-              {/* Income vs Expenses Chart Card */}
-              <Card className="col-span-1 md:col-span-1 lg:col-span-4">
+            
+            {/* Charts Grid - Responsive layout */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-7">
+              {/* Income vs Expenses Chart */}
+              <Card className="col-span-1 lg:col-span-4">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-base sm:text-lg">Income vs Expenses</CardTitle>
+                  <CardTitle className="text-sm sm:text-base md:text-lg">Income vs Expenses</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                   <IncomeExpenseChart />
                 </CardContent>
               </Card>
-              {/* Cash Flow Chart Card */}
-              <Card className="col-span-1 md:col-span-1 lg:col-span-3">
-                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-base sm:text-lg">Cash Flow</CardTitle>
-                 </CardHeader>
-                 <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              
+              {/* Cash Flow Chart */}
+              <Card className="col-span-1 lg:col-span-3">
+                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
+                  <CardTitle className="text-sm sm:text-base md:text-lg">Cash Flow</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                   <CashFlowChart />
-                 </CardContent>
+                </CardContent>
               </Card>
             </div>
-            {/* Transactions & Budget Grid */}
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-              {/* Recent Transactions Card */}
-              <Card className="col-span-1 md:col-span-1 lg:col-span-4">
+            
+            {/* Bottom Grid - Recent Transactions and Budget */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-7">
+              {/* Recent Transactions */}
+              <Card className="col-span-1 lg:col-span-4">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
+                  <CardTitle className="text-sm sm:text-base md:text-lg">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                   <RecentTransactions />
                 </CardContent>
               </Card>
-              {/* Budget Overview Card */}
-              <Card className="col-span-1 md:col-span-1 lg:col-span-3">
+              
+              {/* Budget Overview */}
+              <Card className="col-span-1 lg:col-span-3">
                 <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-base sm:text-lg">Budget Overview</CardTitle>
+                  <CardTitle className="text-sm sm:text-base md:text-lg">Budget Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                   <BudgetOverview />

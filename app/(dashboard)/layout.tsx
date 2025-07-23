@@ -45,19 +45,19 @@ useEffect(() => {
     <DataProvider>
       <AccountCreationModal />
       <div className="flex min-h-screen">
-        <div className="lg:hidden fixed right-4 top-4 z-50">
+        <div className="lg:hidden fixed right-3 top-3 z-50">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Menu className="h-6 w-6" />
+              <Button variant="outline" size="icon" className="h-10 w-10">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-72 p-0">
               <nav className="h-full flex flex-col">
-                <div className="flex h-16 items-center px-6">
+                <div className="flex h-14 items-center px-4">
                   <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-                    <DollarSign className="h-6 w-6 text-primary" />
-                    <span>spendtab</span>
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <span className="text-lg">spendtab</span>
                   </Link>
                 </div>
                 <ScrollArea className="flex-1 px-3">
@@ -242,7 +242,7 @@ useEffect(() => {
             )}
           </div>
         </aside>
-        <main className="flex-1 overflow-auto p-8 lg:pl-72">
+        <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72">
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         </main>
         <Analytics />

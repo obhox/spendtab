@@ -21,70 +21,70 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Transactions</h1>
         <TransactionForm>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button className="w-full sm:w-auto text-xs sm:text-sm">
+            <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
             Add Transaction
           </Button>
         </TransactionForm>
       </div>
-      <Tabs defaultValue="all" className="space-y-4">
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="income">Income</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
+      <Tabs defaultValue="all" className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none text-xs sm:text-sm">All</TabsTrigger>
+            <TabsTrigger value="income" className="flex-1 sm:flex-none text-xs sm:text-sm">Income</TabsTrigger>
+            <TabsTrigger value="expenses" className="flex-1 sm:flex-none text-xs sm:text-sm">Expenses</TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Label htmlFor="search" className="sr-only">
               Search
             </Label>
             <Input
               id="search"
               placeholder="Search transactions..."
-              className="w-[200px] lg:w-[300px]"
+              className="w-full sm:w-[200px] lg:w-[300px] text-xs sm:text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
-        <TabsContent value="all" className="space-y-4">
+        <TabsContent value="all" className="space-y-3 sm:space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>All Transactions</CardTitle>
-              <CardDescription>View and manage all your financial transactions.</CardDescription>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">All Transactions</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">View and manage all your financial transactions.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
                 <TransactionTable type="all" searchTerm={searchTerm} />
               </Suspense>
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="income" className="space-y-4">
+        <TabsContent value="income" className="space-y-3 sm:space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Income</CardTitle>
-              <CardDescription>View and manage your income transactions.</CardDescription>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Income</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">View and manage your income transactions.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
                 <TransactionTable type="income" searchTerm={searchTerm} />
               </Suspense>
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="expenses" className="space-y-4">
+        <TabsContent value="expenses" className="space-y-3 sm:space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Expenses</CardTitle>
-              <CardDescription>View and manage your expense transactions.</CardDescription>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg">Expenses</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">View and manage your expense transactions.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
                 <TransactionTable type="expense" searchTerm={searchTerm} />
               </Suspense>
             </CardContent>

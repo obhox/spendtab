@@ -103,42 +103,61 @@ export function RecentTransactions() {
 
   return (
     <Card>
-      <CardContent>
-        <div className="space-y-4">
+      <CardHeader className="p-3 sm:p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
+          <Link href="/transactions">
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+              View All
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+        <div className="space-y-3 sm:space-y-4">
           {recentTransactions.map((transaction) => {
             const isIncome = transaction.type === "income"
             
             return (
               <div
                 key={transaction.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors gap-2 sm:gap-4"
+                className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-accent/50 transition-colors"
               >
-                <div className="flex items-start space-x-3 sm:space-x-4 w-full sm:w-auto">
-                  <div
-                    className={`flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-full flex-shrink-0 ${
-                      isIncome ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                    }`}
-                  >
-                    {isIncome ? 
-                      <ArrowDownIcon className="h-5 w-5" /> : 
-                      <ArrowUpIcon className="h-5 w-5" />
-                    }
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs sm:text-sm font-medium text-primary">
+                        {(transaction.description || 'U').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">
+                    <p className="text-sm sm:text-base font-medium text-foreground truncate">
                       {transaction.description || 'Untitled Transaction'}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground flex items-center flex-wrap gap-1">
+                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-xs sm:text-sm text-muted-foreground">
                       <span>{formatDate(transaction.date)}</span>
-                      <span>•</span>
-                      <span>{transaction.category || 'Uncategorized'}</span>
+                      {transaction.category && (
+                        <>
+                          <span className="hidden sm:inline">•</span>
+                          <Badge variant="secondary" className="text-xs mt-1 sm:mt-0 w-fit">
+                            {transaction.category}
+                          </Badge>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end space-y-1 w-full sm:w-auto mt-2 sm:mt-0">
-                  <div className={`text-sm sm:text-base font-medium ${isIncome ? "text-green-600" : "text-red-600"}`}>
+                <div className="flex-shrink-0 text-right sm:text-left">
+                  <span
+                    className={`text-sm sm:text-base font-semibold ${
+                      transaction.type === 'income'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
                     {formatCurrency(transaction.amount, transaction.type)}
-                  </div>
+                  </span>
                 </div>
               </div>
             )

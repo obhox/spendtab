@@ -13,43 +13,43 @@ const ProfitabilityAnalytics = dynamic(() => import("@/components/analytics/prof
 export default function AnalyticsPage() {
   return (
     <DataProvider>
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Financial Analytics</h1>
-        <Tabs defaultValue="revenue" className="space-y-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Financial Analytics</h1>
+        <Tabs defaultValue="revenue" className="space-y-3 sm:space-y-4">
           <TabsList className="w-full flex justify-start overflow-x-auto">
-            <TabsTrigger value="revenue" className="flex-1 sm:flex-none">Revenue</TabsTrigger>
-            <TabsTrigger value="expenses" className="flex-1 sm:flex-none">Expenses</TabsTrigger>
-            <TabsTrigger value="profitability" className="flex-1 sm:flex-none">Profitability</TabsTrigger>
+            <TabsTrigger value="revenue" className="flex-1 sm:flex-none text-xs sm:text-sm">Revenue</TabsTrigger>
+            <TabsTrigger value="expenses" className="flex-1 sm:flex-none text-xs sm:text-sm">Expenses</TabsTrigger>
+            <TabsTrigger value="profitability" className="flex-1 sm:flex-none text-xs sm:text-sm">Profitability</TabsTrigger>
           </TabsList>
-          <TabsContent value="revenue" className="space-y-4">
+          <TabsContent value="revenue" className="space-y-3 sm:space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Revenue Analytics</CardTitle>
-                <CardDescription>Analyze your revenue streams and trends over time.</CardDescription>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-base sm:text-lg">Revenue Analytics</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Analyze your revenue streams and trends over time.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
                 <RevenueAnalytics />
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="expenses" className="space-y-4">
+          <TabsContent value="expenses" className="space-y-3 sm:space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Expense Analytics</CardTitle>
-                <CardDescription>Analyze your expense patterns and identify cost-saving opportunities.</CardDescription>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-base sm:text-lg">Expense Analytics</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Analyze your expense patterns and identify cost-saving opportunities.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
                 <ExpenseAnalytics />
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="profitability" className="space-y-4">
+          <TabsContent value="profitability" className="space-y-3 sm:space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Profitability Analytics</CardTitle>
-                <CardDescription>Analyze your profit margins and financial performance.</CardDescription>
+              <CardHeader className="p-3 sm:p-4 md:p-6">
+                <CardTitle className="text-base sm:text-lg">Profitability Analytics</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Analyze your profit margins and financial performance.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
                 <ProfitabilityAnalytics />
               </CardContent>
             </Card>

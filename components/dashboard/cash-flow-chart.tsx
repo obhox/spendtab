@@ -93,34 +93,34 @@ export function CashFlowChart() {
   const renderContent = () => {
     if (isAccountSwitching || isLoadingAnalytics) {
       return (
-        <div className="flex h-[350px] items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="flex h-[250px] sm:h-[300px] md:h-[350px] items-center justify-center">
+          <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       )
     }
 
     if (analyticsError) {
       return (
-        <div className="flex flex-col justify-center items-center h-[350px] space-y-3 text-center">
-          <AlertTriangle className="h-10 w-10 text-destructive" />
-          <p className="text-base font-medium text-destructive">Error loading chart data</p>
-          <p className="text-sm text-muted-foreground max-w-xs">{analyticsError}</p>
+        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center">
+          <AlertTriangle className="h-8 w-8 sm:h-10 sm:w-10 text-destructive" />
+          <p className="text-sm sm:text-base font-medium text-destructive">Error loading chart data</p>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">{analyticsError}</p>
         </div>
       )
     }
 
     if (chartData.length === 0) {
       return (
-        <div className="flex flex-col justify-center items-center h-[350px] space-y-3 text-center">
-          <TrendingUp className="h-10 w-10 text-muted-foreground" />
-          <p className="text-base font-medium text-muted-foreground">No cash flow data yet</p>
-          <p className="text-sm text-muted-foreground max-w-xs">
+        <div className="flex flex-col justify-center items-center h-[250px] sm:h-[300px] md:h-[350px] space-y-3 text-center px-4">
+          <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
+          <p className="text-sm sm:text-base font-medium text-muted-foreground">No cash flow data yet</p>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
             Add transactions to visualize your cash flow over time.
           </p>
           <Link href="/transactions" className="mt-4">
             <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Transactions
+              <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">Add Transactions</span>
             </Button>
           </Link>
         </div>
@@ -128,8 +128,16 @@ export function CashFlowChart() {
     }
 
     return (
-      <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+        <AreaChart 
+          data={chartData} 
+          margin={{ 
+            top: 5, 
+            right: 5, 
+            left: 5, 
+            bottom: 5 
+          }}
+        >
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
@@ -138,18 +146,22 @@ export function CashFlowChart() {
           <XAxis
             dataKey="month"
             stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
+            fontSize={10}
             tickLine={false}
             axisLine={false}
             dy={5}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
           <YAxis
             stroke="hsl(var(--muted-foreground))"
-            fontSize={12}
+            fontSize={10}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => `${selectedCurrency.symbol}${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(value)}`}
-            width={60}
+            width={45}
             dx={-5}
           />
           <Tooltip
