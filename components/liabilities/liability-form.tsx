@@ -48,10 +48,10 @@ const liabilitySchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1, 'Category is required'),
   current_balance: z.number().min(0, 'Current balance must be positive'),
-  original_amount: z.number().optional(),
-  interest_rate: z.number().min(0).max(100).optional(),
-  due_date: z.string().optional(),
-  minimum_payment: z.number().min(0).optional(),
+  original_amount: z.coerce.number().optional().nullable(),
+  interest_rate: z.coerce.number().min(0).max(100).optional().nullable(),
+  due_date: z.string().optional().nullable(),
+  minimum_payment: z.coerce.number().min(0).optional().nullable(),
   liability_type: z.enum(['current', 'long_term']),
 }) as z.ZodSchema<LiabilityFormData>
 
@@ -89,10 +89,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
       description: liability?.description || '',
       category: liability?.category || '',
       current_balance: liability?.current_balance || 0,
-      original_amount: liability?.original_amount || '',
-      interest_rate: liability?.interest_rate || '',
-      due_date: liability?.due_date || '',
-      minimum_payment: liability?.minimum_payment || '',
+      original_amount: liability?.original_amount || null,
+      interest_rate: liability?.interest_rate || null,
+      due_date: liability?.due_date || null,
+      minimum_payment: liability?.minimum_payment || null,
       liability_type: liability?.liability_type || 'current',
     },
   })
@@ -251,10 +251,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value
-                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                          field.onChange(value === '' ? null : parseFloat(value) || null)
                         }}
                       />
                     </FormControl>
@@ -279,10 +279,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         max="100"
                         placeholder="0.0"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value
-                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                          field.onChange(value === '' ? null : parseFloat(value) || null)
                         }}
                       />
                     </FormControl>
@@ -303,10 +303,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value
-                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                          field.onChange(value === '' ? null : parseFloat(value) || null)
                         }}
                       />
                     </FormControl>
@@ -343,14 +343,14 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
-                        disabled={(date) =>
-                          date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : null)}
+                          disabled={(date) =>
+                            date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
                     </PopoverContent>
                   </Popover>
                   <FormMessage />

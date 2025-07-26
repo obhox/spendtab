@@ -48,9 +48,9 @@ const assetSchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1, 'Category is required'),
   current_value: z.number().min(0, 'Current value must be positive'),
-  purchase_value: z.number().optional(),
-  purchase_date: z.string().optional(),
-  depreciation_rate: z.number().min(0).max(100).optional(),
+  purchase_value: z.coerce.number().optional().nullable(),
+  purchase_date: z.string().optional().nullable(),
+  depreciation_rate: z.coerce.number().min(0).max(100).optional().nullable(),
   asset_type: z.enum(['current', 'fixed', 'intangible']),
 }) as z.ZodSchema<AssetFormData>
 
@@ -92,9 +92,9 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
       description: asset?.description || '',
       category: asset?.category || '',
       current_value: asset?.current_value || 0,
-      purchase_value: asset?.purchase_value || '',
-      purchase_date: asset?.purchase_date || '',
-      depreciation_rate: asset?.depreciation_rate || '',
+      purchase_value: asset?.purchase_value || null,
+      purchase_date: asset?.purchase_date || null,
+      depreciation_rate: asset?.depreciation_rate || null,
       asset_type: asset?.asset_type || 'current',
     },
   })
@@ -254,10 +254,10 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value
-                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                          field.onChange(value === '' ? null : parseFloat(value) || null)
                         }}
                       />
                     </FormControl>
@@ -297,7 +297,7 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date?.toISOString().split('T')[0] || '')}
+                          onSelect={(date) => field.onChange(date?.toISOString().split('T')[0] || null)}
                           disabled={(date) =>
                             date > new Date() || date < new Date("1900-01-01")
                           }
@@ -324,10 +324,10 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         max="100"
                         placeholder="0.0"
                         {...field}
-                        value={field.value || ''}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value
-                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                          field.onChange(value === '' ? null : parseFloat(value) || null)
                         }}
                       />
                     </FormControl>
