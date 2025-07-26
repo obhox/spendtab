@@ -103,27 +103,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     mutationFn: async (newTransaction: Omit<Transaction, "id">) => {
       if (!currentAccount) throw new Error('No account selected')
 
-      const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free'
-      
-      if (userSubscriptionTier === 'free') {
-        const { count, error: countError } = await supabase
-          .from('transactions')
-          .select('*', { count: 'exact', head: true })
-          .eq('account_id', currentAccount.id)
-          .gte('created_at', new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString())
-
-        if (countError) {
-          // toast(countError.message)
-          throw countError
-        }
-
-        if (count && count >= 50) {
-          const errorMsg = 'Free users are limited to 50 transactions per month. Please upgrade to add more transactions.'
-           toast('Free users are limited to 50 transactions per month. Please upgrade to add more transactions.')
-          throw new Error(errorMsg)
-        }
-      }
-
       const { data, error } = await supabase
         .from('transactions')
         .insert({

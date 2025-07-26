@@ -35,12 +35,14 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { currentAccount } = useAccounts();
- const [subscriptionTier, setSubscriptionTier] = useState('free');
-
-useEffect(() => {
-  const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
-  setSubscriptionTier(userSubscriptionTier);
-}, []);
+ const [subscriptionTier, setSubscriptionTier] = useState('trial');
+  const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
+  useEffect(() => {
+    const userSubscriptionTier = getCookie('userSubscriptionTier') || 'trial';
+    const userTrialEndDate = getCookie('userTrialEndDate');
+    setSubscriptionTier(userSubscriptionTier);
+    setTrialEndDate(userTrialEndDate);
+  }, []);
 
   return (
     <DataProvider>
@@ -278,12 +280,19 @@ useEffect(() => {
             <Suspense fallback={<div>Loading account selector...</div>}>
               <AccountSelector />
             </Suspense>
-            {(!subscriptionTier || subscriptionTier.toLowerCase() !== 'pro') && (
-              <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
-                <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
-                  Upgrade to Pro
-                </Button>
-              </Link>
+            {subscriptionTier === 'trial' && (
+              <div className="space-y-2">
+                {trialEndDate && (
+                  <div className="text-xs text-muted-foreground text-center">
+                    Trial ends: {new Date(trialEndDate).toLocaleDateString()}
+                  </div>
+                )}
+                <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                  <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
+                    Upgrade to Pro
+                  </Button>
+                </Link>
+              </div>
             )}
           </div>
         </aside>

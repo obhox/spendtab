@@ -36,15 +36,17 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const { data: userData } = useQuery({
     queryKey: ['user-subscription'],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return { subscription_tier: 'trial', trial_end_date: null };
+      
       const { data, error } = await supabase
         .from('users')
-        .select('subscription_tier')
+        .select('subscription_tier, trial_end_date')
+        .eq('id', session.user.id)
         .single();
-
+      
       if (error) {
-        console.error('Error fetching user data:', error);
-        toast('Unable to load your account information. Please try again later.');
-        return { subscription_tier: 'free' };
+        return { subscription_tier: 'trial', trial_end_date: null };
       }
       return data;
     },
@@ -117,7 +119,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     if (userData?.subscription_tier) {
       setCookie('userSubscriptionTier', userData.subscription_tier);
     }
-  }, [userData?.subscription_tier]);
+    if (userData?.trial_end_date) {
+      setCookie('userTrialEndDate', userData.trial_end_date);
+    }
+  }, [userData?.subscription_tier, userData?.trial_end_date]);
 
   const addAccountMutation = useMutation({
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
@@ -128,19 +133,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         if (refreshError) throw refreshError;
         if (!refreshData.session) {
           throw new Error("Your session has expired. Please sign in again.");
-        }
-      }
-
-      const userSubscriptionTier = getCookie('userSubscriptionTier') || 'free';
-      if (userSubscriptionTier === 'free') {
-        const { count: accountCount, error: countError } = await supabase
-          .from('accounts')
-          .select('*', { count: 'exact', head: true })
-          .eq('owner_id', session.user.id);
-
-        if (countError) throw countError;
-        if (accountCount && accountCount >= 1) {
-          throw new Error('Free users are limited to 1 account. Please upgrade to create more accounts.');
         }
       }
 

@@ -255,20 +255,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Transaction error:", error);
-      
-      // Handle subscription limit errors
-      if (error instanceof Error && error.message?.includes("Free users are limited to")) {
-        toast("Subscription Limit Reached", {
-          description: error.message,
-          action: {
-            label: "Upgrade",
-            onClick: () => window.location.href = "/profile"
-          }
-        });
-      } else {
-        toast("Unable to Save", {
-          description: "We couldn't save your transaction. Please try again."});
-      }
+      toast("Unable to Save", {
+        description: "We couldn't save your transaction. Please try again."});
     }
   }
 

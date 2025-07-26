@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS public.users (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email text NOT NULL,
-  subscription_tier text NOT NULL DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro')),
+  subscription_tier text NOT NULL DEFAULT 'trial' CHECK (subscription_tier IN ('trial', 'pro')),
+  trial_end_date timestamp with time zone DEFAULT (now() + interval '21 days'),
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
