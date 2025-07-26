@@ -14,8 +14,9 @@ const TransactionTable = dynamic(
   { ssr: false }
 )
 import { TransactionForm } from "@/components/transactions/transaction-form"
+import { BulkTransactionUpload } from "@/components/transactions/bulk-transaction-upload"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Plus } from "lucide-react"
+import { Plus, Upload } from "lucide-react"
 
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -24,12 +25,20 @@ export default function TransactionsPage() {
     <div className="flex flex-col gap-3 sm:gap-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Transactions</h1>
-        <TransactionForm>
-          <Button className="w-full sm:w-auto text-xs sm:text-sm">
-            <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            Add Transaction
-          </Button>
-        </TransactionForm>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <TransactionForm>
+            <Button className="w-full sm:w-auto text-xs sm:text-sm">
+              <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Add Transaction
+            </Button>
+          </TransactionForm>
+          <BulkTransactionUpload>
+            <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
+              <Upload className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Bulk Import
+            </Button>
+          </BulkTransactionUpload>
+        </div>
       </div>
       <Tabs defaultValue="all" className="space-y-3 sm:space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
