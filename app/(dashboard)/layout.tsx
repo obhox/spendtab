@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown } from "lucide-react"
+import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown, GitCompare } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -11,7 +11,6 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { getCookie } from "@/lib/cookie-utils"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
@@ -89,6 +88,13 @@ useEffect(() => {
                         >
                           <TrendingUp className="mr-2 h-4 w-4" />
                           <span>Assets & Liabilities</span>
+                        </Link>
+                        <Link
+                          href="/bank-reconciliation"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <GitCompare className="mr-2 h-4 w-4" />
+                          <span>Bank Reconciliation</span>
                         </Link>
                       </div>
                     </div>
@@ -199,6 +205,13 @@ useEffect(() => {
                   >
                     <TrendingUp className="mr-2 h-4 w-4" />
                     <span>Assets & Liabilities</span>
+                  </Link>
+                  <Link
+                    href="/bank-reconciliation"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <GitCompare className="mr-2 h-4 w-4" />
+                    <span>Bank Reconciliation</span>
                   </Link>
                 </div>
               </div>

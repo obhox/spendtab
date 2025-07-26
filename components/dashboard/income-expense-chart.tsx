@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card" // Assuming shadcn/ui Card
 import { Plus, AlertTriangle, BarChart as BarChartIcon } from "lucide-react" // Added icons
 import Link from "next/link"
-import { createBrowserClient } from '@supabase/ssr'
+import { supabase } from '@/lib/supabase'
 import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface DataPoint {
@@ -52,10 +52,7 @@ export function IncomeExpenseChart() {
   const { currentAccount, isAccountSwitching } = useAccounts()
   const selectedCurrency = useSelectedCurrency()
   const [chartData, setChartData] = useState<DataPoint[]>([])
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Using centralized Supabase client to avoid multiple GoTrueClient instances
 
   // Set up real-time subscription (no changes needed here)
   useEffect(() => {

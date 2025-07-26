@@ -1,14 +1,7 @@
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { startOfWeek, endOfWeek, format, subDays } from 'date-fns';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Using centralized Supabase client to avoid multiple GoTrueClient instances
 
 async function getWeeklyData(userId: string, startDate: Date, endDate: Date) {
   // Get transactions for the week

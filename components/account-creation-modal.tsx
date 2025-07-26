@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAccounts } from "@/lib/context/AccountContext"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 
 export function AccountCreationModal() {
@@ -13,7 +13,7 @@ export function AccountCreationModal() {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const { accounts, addAccount, currentAccount } = useAccounts()
-  const supabase = createClientComponentClient()
+  // Using centralized Supabase client to avoid multiple GoTrueClient instances
 
   useEffect(() => {
     const checkUserAndAccounts = async () => {

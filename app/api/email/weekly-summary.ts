@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { WeeklySummary } from '@/react-email-starter/emails/weekly-summary';
 import { Resend } from 'resend';
-import { createClient } from '@/lib/supabase';
 
 if (!process.env.RESEND_API_KEY) {
   throw new Error('Missing RESEND_API_KEY environment variable');

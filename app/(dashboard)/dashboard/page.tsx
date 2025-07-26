@@ -16,7 +16,6 @@ import { useAnalytics } from "@/lib/context/AnalyticsContext"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 // Time period options for the filter
@@ -61,7 +60,6 @@ function DashboardMetrics() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState("last_30_days");
-  // const supabase = createClientComponentClient(); // Keep if needed for other logic
 
   // Function to convert time period to date range
   const getDateRangeFromTimePeriod = useCallback((period: string) => {

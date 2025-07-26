@@ -1,0 +1,21 @@
+Statement Date: 2024-01-31
+Period Start: 2024-01-01
+Period End: 2024-01-31
+Opening Balance: 1500.00
+Closing Balance: 1234.56
+
+2024-01-01,Opening Balance,1500.00,credit
+2024-01-02,Coffee Shop Purchase,-4.50,debit
+2024-01-03,Grocery Store,-85.32,debit
+2024-01-05,ATM Withdrawal,-100.00,debit
+2024-01-08,Salary Deposit,2500.00,credit
+2024-01-10,Electric Bill Payment,-125.75,debit
+2024-01-12,Restaurant Dinner,-45.20,debit
+2024-01-15,Gas Station,-52.30,debit
+2024-01-18,Online Shopping,-89.99,debit
+2024-01-20,Bank Interest,2.15,credit
+2024-01-22,Phone Bill,-65.00,debit
+2024-01-25,Freelance Payment,750.00,credit
+2024-01-28,Rent Payment,-1200.00,debit
+2024-01-30,Grocery Store,-67.43,debit
+2024-01-31,Monthly Fee,-12.10,debit
