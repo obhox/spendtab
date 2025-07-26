@@ -149,6 +149,103 @@ export interface Database {
           updated_at?: string
         }
       }
+      assets: {
+        Row: {
+          id: string
+          name: string
+          description?: string | null
+          category: string
+          current_value: number
+          purchase_value?: number | null
+          purchase_date?: string | null
+          depreciation_rate?: number | null
+          asset_type: 'current' | 'fixed' | 'intangible'
+          account_id?: string | null
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          category: string
+          current_value: number
+          purchase_value?: number | null
+          purchase_date?: string | null
+          depreciation_rate?: number | null
+          asset_type: 'current' | 'fixed' | 'intangible'
+          account_id?: string | null
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          current_value?: number
+          purchase_value?: number | null
+          purchase_date?: string | null
+          depreciation_rate?: number | null
+          asset_type?: 'current' | 'fixed' | 'intangible'
+          account_id?: string | null
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      liabilities: {
+        Row: {
+          id: string
+          name: string
+          description?: string | null
+          category: string
+          current_balance: number
+          original_amount?: number | null
+          interest_rate?: number | null
+          due_date?: string | null
+          minimum_payment?: number | null
+          liability_type: 'current' | 'long_term'
+          account_id?: string | null
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          category: string
+          current_balance: number
+          original_amount?: number | null
+          interest_rate?: number | null
+          due_date?: string | null
+          minimum_payment?: number | null
+          liability_type: 'current' | 'long_term'
+          account_id?: string | null
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          current_balance?: number
+          original_amount?: number | null
+          interest_rate?: number | null
+          due_date?: string | null
+          minimum_payment?: number | null
+          liability_type?: 'current' | 'long_term'
+          account_id?: string | null
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

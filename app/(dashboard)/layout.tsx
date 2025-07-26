@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator } from "lucide-react"
+import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -27,6 +27,8 @@ const AccountCreationModal = dynamic(
 )
 
 import { DataProvider } from "@/lib/context/DataProvider"
+import { AssetProvider } from "@/lib/context/AssetContext"
+import { LiabilityProvider } from "@/lib/context/LiabilityContext"
 
 export default function DashboardLayout({
   children,
@@ -43,8 +45,10 @@ useEffect(() => {
 
   return (
     <DataProvider>
-      <AccountCreationModal />
-      <div className="flex min-h-screen">
+      <AssetProvider>
+        <LiabilityProvider>
+          <AccountCreationModal />
+          <div className="flex min-h-screen">
         <div className="lg:hidden fixed right-3 top-3 z-50">
           <Sheet>
             <SheetTrigger asChild>
@@ -78,6 +82,13 @@ useEffect(() => {
                         >
                           <CreditCard className="mr-2 h-4 w-4" />
                           <span>Transactions</span>
+                        </Link>
+                        <Link
+                          href="/assets-liabilities"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <TrendingUp className="mr-2 h-4 w-4" />
+                          <span>Assets & Liabilities</span>
                         </Link>
                       </div>
                     </div>
@@ -182,6 +193,13 @@ useEffect(() => {
                     <CreditCard className="mr-2 h-4 w-4" />
                     <span>Transactions</span>
                   </Link>
+                  <Link
+                    href="/assets-liabilities"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    <span>Assets & Liabilities</span>
+                  </Link>
                 </div>
               </div>
               <div className="px-3 py-2">
@@ -262,6 +280,8 @@ useEffect(() => {
         <Analytics />
         <SpeedInsights />
       </div>
+        </LiabilityProvider>
+      </AssetProvider>
     </DataProvider>
   )
 }
