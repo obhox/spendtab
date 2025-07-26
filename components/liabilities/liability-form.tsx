@@ -89,10 +89,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
       description: liability?.description || '',
       category: liability?.category || '',
       current_balance: liability?.current_balance || 0,
-      original_amount: liability?.original_amount || undefined,
-      interest_rate: liability?.interest_rate || undefined,
-      due_date: liability?.due_date || undefined,
-      minimum_payment: liability?.minimum_payment || undefined,
+      original_amount: liability?.original_amount || '',
+      interest_rate: liability?.interest_rate || '',
+      due_date: liability?.due_date || '',
+      minimum_payment: liability?.minimum_payment || '',
       liability_type: liability?.liability_type || 'current',
     },
   })
@@ -227,7 +227,11 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? 0 : parseFloat(value) || 0)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -247,7 +251,11 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -271,7 +279,11 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         max="100"
                         placeholder="0.0"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -291,7 +303,11 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -329,8 +345,10 @@ export function LiabilityForm({ children, liability, onSuccess }: LiabilityFormP
                       <Calendar
                         mode="single"
                         selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
-                        disabled={(date) => date < new Date()}
+                        onSelect={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')}
+                        disabled={(date) =>
+                          date < new Date("1900-01-01")
+                        }
                         initialFocus
                       />
                     </PopoverContent>

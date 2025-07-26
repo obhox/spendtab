@@ -92,9 +92,9 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
       description: asset?.description || '',
       category: asset?.category || '',
       current_value: asset?.current_value || 0,
-      purchase_value: asset?.purchase_value || undefined,
-      purchase_date: asset?.purchase_date || undefined,
-      depreciation_rate: asset?.depreciation_rate || undefined,
+      purchase_value: asset?.purchase_value || '',
+      purchase_date: asset?.purchase_date || '',
+      depreciation_rate: asset?.depreciation_rate || '',
       asset_type: asset?.asset_type || 'current',
     },
   })
@@ -230,7 +230,11 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? 0 : parseFloat(value) || 0)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -250,7 +254,11 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -289,7 +297,7 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
+                          onSelect={(date) => field.onChange(date?.toISOString().split('T')[0] || '')}
                           disabled={(date) =>
                             date > new Date() || date < new Date("1900-01-01")
                           }
@@ -316,7 +324,11 @@ export function AssetForm({ children, asset, onSuccess }: AssetFormProps) {
                         max="100"
                         placeholder="0.0"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          field.onChange(value === '' ? '' : parseFloat(value) || '')
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
