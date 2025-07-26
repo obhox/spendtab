@@ -33,7 +33,7 @@ import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { toast } from "sonner"
 import Link from "next/link"
-import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil, useTaxFeaturesVisible } from "@/components/currency-switcher"
 
 interface Transaction {
   id: string
@@ -75,6 +75,7 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const { transactions: allTransactions, deleteTransaction, isLoading, error, isError } = useTransactionQuery()
   const { currentAccount } = useAccounts()
   const selectedCurrency = useSelectedCurrency()
+  const isTaxFeaturesVisible = useTaxFeaturesVisible()
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
@@ -401,7 +402,7 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
               </div>
 
               {/* Tax Information */}
-              {(selectedTransaction.tax_deductible || selectedTransaction.tax_category || selectedTransaction.business_purpose || selectedTransaction.receipt_url || selectedTransaction.mileage) && (
+              {isTaxFeaturesVisible && (selectedTransaction.tax_deductible || selectedTransaction.tax_category || selectedTransaction.business_purpose || selectedTransaction.receipt_url || selectedTransaction.mileage) && (
                 <div className="border-t pt-4">
                   <p className="text-sm font-medium mb-3">Tax Information</p>
                   <div className="space-y-3">

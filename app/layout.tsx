@@ -6,6 +6,7 @@ import { PostHogProvider } from "@/components/posthog-provider"
 import { ThemeProvider } from "@/app/providers/theme-provider"
 import { QueryProvider } from "@/app/providers/query-provider"
 import { DataProvider } from "@/lib/context/DataProvider"
+import { CurrencyProvider } from "@/components/currency-switcher"
 import { Toaster } from "sonner"
 import { LoadingBar } from "@/components/ui/loading-bar"
 import "./globals.css"
@@ -19,9 +20,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PostHogProvider>
             <QueryProvider>
               <DataProvider>
-                <LoadingBar />
-                {children}
-                <Toaster richColors closeButton />
+                <CurrencyProvider>
+                  <LoadingBar />
+                  {children}
+                  <Toaster richColors closeButton />
+                </CurrencyProvider>
               </DataProvider>
             </QueryProvider>
           </PostHogProvider>

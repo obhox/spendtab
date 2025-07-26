@@ -33,13 +33,7 @@ import { Badge } from '@/components/ui/badge'
 import { useAssets, type Asset } from '@/lib/context/AssetContext'
 import { AssetForm } from './asset-form'
 import { toast } from 'sonner'
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
+import { useFormatCurrency } from '@/components/currency-switcher'
 
 const getAssetTypeColor = (type: string) => {
   switch (type) {
@@ -74,6 +68,7 @@ interface AssetTableProps {
 
 export function AssetTable({ searchTerm, filterType }: AssetTableProps) {
   const { assets, deleteAsset, isLoading } = useAssets()
+  const formatCurrency = useFormatCurrency()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null)
 

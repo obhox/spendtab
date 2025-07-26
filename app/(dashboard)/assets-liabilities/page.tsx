@@ -13,18 +13,13 @@ import { LiabilityForm } from '@/components/liabilities/liability-form'
 import { LiabilityTable } from '@/components/liabilities/liability-table'
 import { useAssets } from '@/lib/context/AssetContext'
 import { useLiabilities } from '@/lib/context/LiabilityContext'
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
+import { useFormatCurrency } from '@/components/currency-switcher'
 
 export default function AssetsLiabilitiesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const { assets, totalAssetValue, assetsByType, isLoading: assetsLoading } = useAssets()
   const { liabilities, totalLiabilityBalance, liabilitiesByType, isLoading: liabilitiesLoading } = useLiabilities()
+  const formatCurrency = useFormatCurrency()
 
   // Asset calculations
   const currentAssetsValue = assetsByType.current.reduce((sum, asset) => sum + asset.current_value, 0)

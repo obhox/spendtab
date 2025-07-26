@@ -46,6 +46,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { toast } from "sonner"
 import { US_TAX_CATEGORIES, getTaxCategoriesByType, isTaxDeductibleCategory } from "@/lib/us-tax-categories"
+import { useTaxFeaturesVisible } from "@/components/currency-switcher"
 
 // Schema for form validation with tax optimization fields
 const transactionSchema = z.object({
@@ -101,6 +102,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const { addTransaction, updateTransaction } = useTransactionQuery();
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
+  const isTaxFeaturesVisible = useTaxFeaturesVisible();
   
   // Get current account ID for new transactions
   const currentAccountId = currentAccount?.id || "";
@@ -522,142 +524,144 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
             />
 
             {/* Tax Optimization Section */}
-            <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium">Tax Information (US)</h3>
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="tax_deductible"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Tax Deductible
-                      </FormLabel>
-                      <FormDescription>
-                        Check if this transaction is tax deductible for US tax purposes
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {taxDeductible && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="tax_category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tax Category</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tax category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableTaxCategories.map((taxCat) => (
-                              <SelectItem key={taxCat.name} value={taxCat.name}>
-                                <div className="flex flex-col">
-                                  <span>{taxCat.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {taxCat.form} - {taxCat.description}
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+            {isTaxFeaturesVisible && (
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium">Tax Information (US)</h3>
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="tax_deductible"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Tax Deductible
+                        </FormLabel>
                         <FormDescription>
-                          Select the appropriate IRS tax category for this transaction
+                          Check if this transaction is tax deductible for US tax purposes
                         </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="business_purpose"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business Purpose</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="e.g., Client meeting, office supplies for project X" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Describe the business purpose for tax documentation
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 gap-4">
+                {taxDeductible && (
+                  <>
                     <FormField
                       control={form.control}
-                      name="receipt_url"
+                      name="tax_category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormControl>
-                            <ReceiptUpload
-                              value={field.value}
-                              onChange={field.onChange}
-                              transactionId={transaction?.id}
-                            />
-                          </FormControl>
+                          <FormLabel>Tax Category</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select tax category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableTaxCategories.map((taxCat) => (
+                                <SelectItem key={taxCat.name} value={taxCat.name}>
+                                  <div className="flex flex-col">
+                                    <span>{taxCat.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {taxCat.form} - {taxCat.description}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormDescription>
-                            Upload receipt image or enter URL to supporting documentation
+                            Select the appropriate IRS tax category for this transaction
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    {form.watch("tax_category") === "Car and Truck Expenses" && (
+                    <FormField
+                      control={form.control}
+                      name="business_purpose"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business Purpose</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="e.g., Client meeting, office supplies for project X" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Describe the business purpose for tax documentation
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 gap-4">
                       <FormField
                         control={form.control}
-                        name="mileage"
+                        name="receipt_url"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Mileage</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.1" 
-                                placeholder="0.0" 
-                                {...field}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  field.onChange(value === "" ? undefined : parseFloat(value));
-                                }}
+                              <ReceiptUpload
+                                value={field.value}
+                                onChange={field.onChange}
+                                transactionId={transaction?.id}
                               />
                             </FormControl>
                             <FormDescription>
-                              Business miles driven (for vehicle expenses)
+                              Upload receipt image or enter URL to supporting documentation
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+
+                      {form.watch("tax_category") === "Car and Truck Expenses" && (
+                        <FormField
+                          control={form.control}
+                          name="mileage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mileage</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step="0.1" 
+                                  placeholder="0.0" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    field.onChange(value === "" ? undefined : parseFloat(value));
+                                  }}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Business miles driven (for vehicle expenses)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <FormField
               control={form.control}

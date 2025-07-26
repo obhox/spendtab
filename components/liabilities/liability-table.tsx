@@ -33,13 +33,7 @@ import { Badge } from '@/components/ui/badge'
 import { useLiabilities, type Liability } from '@/lib/context/LiabilityContext'
 import { LiabilityForm } from './liability-form'
 import { toast } from 'sonner'
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
+import { useFormatCurrency } from '@/components/currency-switcher'
 
 const getLiabilityTypeColor = (type: string) => {
   switch (type) {
@@ -83,6 +77,7 @@ interface LiabilityTableProps {
 
 export function LiabilityTable({ searchTerm, filterType }: LiabilityTableProps) {
   const { liabilities, deleteLiability, isLoading } = useLiabilities()
+  const formatCurrency = useFormatCurrency()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [liabilityToDelete, setLiabilityToDelete] = useState<Liability | null>(null)
 

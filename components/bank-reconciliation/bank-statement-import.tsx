@@ -15,6 +15,7 @@ import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useBankReconciliation } from '@/lib/context/BankReconciliationContext'
 import { useAccounts } from '@/lib/context/AccountContext'
+import { useFormatCurrency } from '@/components/currency-switcher'
 import { toast } from 'sonner'
 
 interface BankStatementImportProps {
@@ -24,6 +25,7 @@ interface BankStatementImportProps {
 export function BankStatementImport({ onImportComplete }: BankStatementImportProps) {
   const { currentAccount } = useAccounts()
   const { addBankStatement, addBankTransaction } = useBankReconciliation()
+  const formatCurrency = useFormatCurrency()
   
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -503,7 +505,7 @@ export function BankStatementImport({ onImportComplete }: BankStatementImportPro
                         <Label>Opening Balance</Label>
                         <p className="font-medium">
                           {parsedData.openingBalance !== undefined 
-                            ? `$${parsedData.openingBalance.toFixed(2)}` 
+                            ? formatCurrency(parsedData.openingBalance) 
                             : 'Not specified'}
                         </p>
                       </div>
@@ -511,7 +513,7 @@ export function BankStatementImport({ onImportComplete }: BankStatementImportPro
                         <Label>Closing Balance</Label>
                         <p className="font-medium">
                           {parsedData.closingBalance !== undefined 
-                            ? `$${parsedData.closingBalance.toFixed(2)}` 
+                            ? formatCurrency(parsedData.closingBalance) 
                             : 'Not specified'}
                         </p>
                       </div>
@@ -533,8 +535,8 @@ export function BankStatementImport({ onImportComplete }: BankStatementImportPro
                             <div key={index} className="text-xs p-2 bg-muted rounded flex justify-between">
                               <span>{transaction.date} - {transaction.description}</span>
                               <span className={transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'}>
-                                {transaction.type === 'credit' ? '+' : '-'}${transaction.amount.toFixed(2)}
-                              </span>
+                                  {transaction.type === 'credit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                                </span>
                             </div>
                           ))}
                           {parsedData.transactions.length > 5 && (

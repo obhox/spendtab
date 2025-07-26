@@ -36,6 +36,7 @@ import { useAccounts } from '@/lib/context/AccountContext'
 import { useTransactions } from '@/lib/context/TransactionContext'
 import { BankStatementImport } from './bank-statement-import'
 import { toast } from 'sonner'
+import { useFormatCurrency } from '@/components/currency-switcher'
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
@@ -47,6 +48,7 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
   const { currentAccount } = useAccounts()
   const { transactions } = useTransactions()
   const queryClient = useQueryClient()
+  const formatCurrency = useFormatCurrency()
   const {
     bankStatements,
     isLoadingStatements,
@@ -135,12 +137,7 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
