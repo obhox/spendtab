@@ -1,178 +1,279 @@
 "use client"
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { DollarSign, TrendingUp, AlertTriangle, Plus, Calendar, Tag } from "lucide-react"
+import { useBudgets } from "@/lib/context/BudgetContext"
+import { useFormatCurrency } from "@/components/currency-switcher"
+import { BudgetForm } from "@/components/budgets/budget-form"
+import { format } from "date-fns"
 import Link from "next/link"
-import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
-import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Budget {
   id: string
   name: string
   amount: number
   spent: number
+  start_date?: string
+  end_date?: string
   period?: string
-  startDate?: string
-  endDate?: string
+  category_id?: number
+  category_name?: string
 }
 
 export function BudgetOverview() {
-  const { budgets = [], isLoading } = useBudgetQuery()
-  const selectedCurrency = useSelectedCurrency()
+  const { budgets, isLoading } = useBudgets()
+  const formatCurrency = useFormatCurrency()
 
-  // Helper to safely get spent amount
-  const getSpentAmount = (budget: Budget): number => {
-    // Ensure spent is a number, default to 0 if null, undefined, or NaN
-    const spentValue = budget.spent;
-    return typeof spentValue === 'number' && !isNaN(spentValue) ? spentValue : 0;
-  }
-
-  // Helper to calculate percentage
-  const calculatePercentage = (spent: number, amount: number): number => {
-    // Ensure amount is a positive number for calculation
-    if (typeof amount !== 'number' || isNaN(amount) || amount <= 0) {
-        return 0;
-    }
-    // Ensure spent is a number
-    if (typeof spent !== 'number' || isNaN(spent)) {
-        spent = 0; // Treat NaN spent as 0
-    }
-    // Calculate percentage and clamp between 0 and potentially over 100
-    const percentage = Math.round((spent / amount) * 100);
-    return Math.max(0, percentage); // Ensure it's at least 0
-  }
-
-  // Helper for currency formatting
-  const formatCurrency = (value: number): string => {
-    // Ensure value is a number before formatting
-    if (typeof value !== 'number' || isNaN(value)) {
-        value = 0;
-    }
-    return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol)
-  }
-
-  // Calculate totals using reduce
-  const totals = budgets.reduce(
-    (acc, budget) => {
-      // Ensure budget.amount is a valid number, default to 0 if not
-      const amount = typeof budget.amount === 'number' && !isNaN(budget.amount) ? budget.amount : 0;
-      const spent = getSpentAmount(budget); // Use validated spent amount
-      return {
-        allocated: acc.allocated + amount,
-        spent: acc.spent + spent
-      };
-    },
-    { allocated: 0, spent: 0 }
-  )
-
-  // --- Responsive Loading State ---
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[150px] sm:h-[180px] md:h-[200px] bg-muted/5 rounded-lg border border-dashed">
-        <div className="flex flex-col items-center space-y-2">
-          {/* Use theme color for spinner */}
-          <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-xs sm:text-sm text-muted-foreground">Loading budget data...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // --- Responsive Empty State ---
-  if (budgets.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center text-center h-[150px] sm:h-[180px] md:h-[200px] bg-muted/5 rounded-lg border border-dashed p-4 space-y-2">
-        <p className="text-sm sm:text-base font-medium text-muted-foreground">No budget data available</p>
-        <p className="text-xs sm:text-sm text-muted-foreground max-w-xs sm:max-w-sm md:max-w-md">
-          Set up budgets to track your spending against planned allocations.
-        </p>
-        <Link href="/budgets" className="mt-4">
-          <Button size="sm" variant="outline">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Budget
-          </Button>
-        </Link>
-      </div>
-    )
-  }
-
-  // --- Responsive Budget List & Totals ---
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Limit displayed budgets if needed, e.g., slice(0, 5) */}
-      {budgets.slice(0, 5).map((budget) => {
-        const amount = typeof budget.amount === 'number' && !isNaN(budget.amount) ? budget.amount : 0; // Validated amount
-        const spent = getSpentAmount(budget); // Validated spent
-        const percentUsed = calculatePercentage(spent, amount); // Uses validated inputs
-
-        // Determine color classes based on percentage
-        const getStatusColorClasses = () => {
-          // Define colors for the TEXT and TRACK BACKGROUND
-          if (percentUsed > 100) return { text: "text-red-600", bg: "bg-red-100 dark:bg-red-900/30" }; // Overspent
-          // Use theme's destructive color for text and a light version for background when > 90%
-          if (percentUsed > 90) return { text: "text-destructive", bg: "bg-destructive/10" };
-          if (percentUsed > 75) return { text: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/30" }; // Amber
-          return { text: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30" }; // Default/Green
-        };
-        const statusColors = getStatusColorClasses();
-
-        return (
-          <div key={budget.id} className="space-y-2">
-            {/* Added gap-4 for spacing, items-start for alignment if text wraps */}
-            <div className="flex items-start sm:items-center justify-between gap-4">
-              <div className="space-y-0.5 overflow-hidden min-w-0"> {/* Added min-w-0 for better truncation */}
-                <p className="text-sm sm:text-base font-medium truncate" title={budget.name}> {/* Added truncate and title */}
-                  {budget.name || "Unnamed Budget"} {/* Fallback name */}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {formatCurrency(spent)} of {formatCurrency(amount)}
-                </p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Budget Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-2 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
-              {/* Added shrink-0 to prevent percentage wrapping */}
-              <p className={`text-sm sm:text-base font-semibold shrink-0 ${statusColors.text}`}>
-                {percentUsed}%
-              </p>
-            </div>
-            {/* ================================================== */}
-            {/* THE CHANGE IS HERE: indicatorClassName is removed */}
-            {/* Apply background color to the Progress track (container). */}
-            {/* The indicator inside will use the default theme color (usually primary). */}
-            <Progress
-              value={Math.min(percentUsed, 100)} // Cap visual progress bar fill at 100%
-              className={`h-2 rounded ${statusColors.bg}`} // Apply track background color class
-              // NO indicatorClassName prop here anymore!
-            />
-            {/* ================================================== */}
+            ))}
           </div>
-        )
-      })}
+        </CardContent>
+      </Card>
+    )
+  }
 
-      {/* Separator and Totals Section - Only show if budgets exist */}
-      {budgets.length > 0 && (
-        <div className="pt-4 sm:pt-6 border-t border-border/50">
-          {/* Kept grid-cols-3, adjusted gap and text size */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-            {/* Responsive text size */}
-            <div className="text-xs sm:text-sm">
-              {/* Use foreground/medium for label clarity */}
-              <p className="text-muted-foreground mb-0.5">Total Budget</p>
-              <p className="font-medium text-foreground">{formatCurrency(totals.allocated)}</p>
+  if (!budgets || budgets.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Budget Overview
+          </CardTitle>
+          <CardDescription>Track your spending against your budgets</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6">
+            <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No budgets yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Create your first budget to start tracking your expenses.
+            </p>
+            <BudgetForm>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Budget
+              </Button>
+            </BudgetForm>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Calculate totals
+  const totalBudgeted = budgets.reduce((sum, budget) => sum + budget.amount, 0)
+  const totalSpent = budgets.reduce((sum, budget) => sum + budget.spent, 0)
+  const totalRemaining = totalBudgeted - totalSpent
+  const overallProgress = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0
+
+  // Get budgets sorted by spending percentage (highest first) for display
+  const sortedBudgets = [...budgets]
+    .map(budget => ({
+      ...budget,
+      percentSpent: budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0
+    }))
+    .sort((a, b) => b.percentSpent - a.percentSpent)
+    .slice(0, 4) // Show top 4 budgets
+
+  // Count budgets by status
+  const overBudgetCount = budgets.filter(b => b.spent > b.amount).length
+  const nearLimitCount = budgets.filter(b => {
+    const percent = b.amount > 0 ? (b.spent / b.amount) * 100 : 0
+    return percent > 80 && percent <= 100
+  }).length
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Budget Overview
+            </CardTitle>
+            <CardDescription>
+              {budgets.length} budget{budgets.length !== 1 ? 's' : ''} • 
+              {overBudgetCount > 0 && (
+                <span className="text-red-600 ml-1">
+                  {overBudgetCount} over budget
+                </span>
+              )}
+              {nearLimitCount > 0 && (
+                <span className="text-amber-600 ml-1">
+                  {nearLimitCount} near limit
+                </span>
+              )}
+            </CardDescription>
+          </div>
+          <Link href="/budgets">
+            <Button variant="outline" size="sm">
+              View All
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Overall Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-muted-foreground">Total Budgeted</span>
             </div>
-            <div className="text-xs sm:text-sm">
-              <p className="text-muted-foreground mb-0.5">Total Spent</p>
-              <p className="font-medium text-foreground">{formatCurrency(totals.spent)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalBudgeted)}</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-muted-foreground">Total Spent</span>
             </div>
-            <div className="text-xs sm:text-sm">
-              <p className="text-muted-foreground mb-0.5">Remaining</p>
-              {/* Color remaining amount red if negative */}
-              <p className={`font-medium ${totals.allocated - totals.spent < 0 ? 'text-destructive' : 'text-foreground'}`}>
-                {formatCurrency(totals.allocated - totals.spent)}
-              </p>
+            <p className="text-2xl font-bold">{formatCurrency(totalSpent)}</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className={`h-4 w-4 ${totalRemaining < 0 ? 'text-red-600' : 'text-green-600'}`} />
+              <span className="text-sm font-medium text-muted-foreground">Remaining</span>
             </div>
+            <p className={`text-2xl font-bold ${totalRemaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {formatCurrency(totalRemaining)}
+            </p>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Overall Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Overall Progress</span>
+            <Badge variant={
+              overallProgress > 100 ? "destructive" : 
+              overallProgress > 80 ? "secondary" : 
+              "default"
+            }>
+              {Math.round(overallProgress)}%
+            </Badge>
+          </div>
+          <Progress 
+            value={Math.min(overallProgress, 100)} 
+            className={`h-2 ${overallProgress > 100 ? 'bg-red-100' : overallProgress > 80 ? 'bg-amber-100' : ''}`}
+          />
+        </div>
+
+        {/* Individual Budget Progress */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium text-muted-foreground">Top Spending Budgets</h4>
+          {sortedBudgets.map((budget) => {
+            const remaining = budget.amount - budget.spent
+            const isOverBudget = budget.percentSpent > 100
+            const isNearLimit = budget.percentSpent > 80 && budget.percentSpent <= 100
+
+            // Format date range
+            const formatDateRange = () => {
+              if (budget.period) {
+                return budget.period
+              }
+              if (budget.start_date && budget.end_date) {
+                const startDate = new Date(budget.start_date)
+                const endDate = new Date(budget.end_date)
+                return `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd")}`
+              }
+              return "No period"
+            }
+
+            return (
+              <div key={budget.id} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{budget.name}</span>
+                      {budget.category_name && (
+                        <div className="flex flex-wrap gap-1">
+                          {(() => {
+                            const categories = budget.category_name.split(', ').map(name => name.trim()).filter(Boolean);
+                            if (categories.length === 0) return null;
+                            
+                            if (categories.length === 1) {
+                              return (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                  {categories[0]}
+                                </span>
+                              );
+                            } else {
+                              const additionalCount = categories.length - 1;
+                              return (
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                  {categories[0]} +{additionalCount} other{additionalCount > 1 ? 's' : ''}
+                                </span>
+                              );
+                            }
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {formatDateRange()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium">
+                      {formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}
+                    </div>
+                    <div className={`text-xs ${
+                      remaining < 0 ? 'text-red-600' : 
+                      remaining < budget.amount * 0.2 ? 'text-amber-600' : 
+                      'text-muted-foreground'
+                    }`}>
+                      {remaining < 0 ? `Over by ${formatCurrency(Math.abs(remaining))}` : `${formatCurrency(remaining)} left`}
+                    </div>
+                  </div>
+                </div>
+                <Progress 
+                  value={Math.min(budget.percentSpent, 100)} 
+                  className={`h-1.5 ${
+                    isOverBudget ? 'bg-red-100' : 
+                    isNearLimit ? 'bg-amber-100' : ''
+                  }`}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="flex gap-2 pt-2 border-t">
+          <BudgetForm>
+            <Button variant="outline" size="sm" className="flex-1">
+              <Plus className="h-4 w-4 mr-2" />
+              New Budget
+            </Button>
+          </BudgetForm>
+          <Link href="/budgets" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full">
+              Manage All
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

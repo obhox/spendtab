@@ -1,51 +1,69 @@
 "use client"
+
 import { createContext, useContext, ReactNode } from "react"
-import { useAccounts } from "./AccountContext"
-import { useBudgetQuery } from "../hooks/useBudgetQuery"
+import { useBudgetQuery } from "@/lib/hooks/useBudgetQuery"
 
-import { type Budget } from "../hooks/useBudgetQuery"
-export type { Budget }
+// Define the Budget interface to match the useBudgetQuery interface
+export interface Budget {
+  id: string
+  name: string
+  amount: number
+  spent: number
+  start_date?: string
+  end_date?: string
+  period?: string
+  category_id?: number
+  category_name?: string
+  account_id: string // Required to match useBudgetQuery
+  is_recurring?: boolean
+  recurring_type?: 'monthly' | 'weekly' | 'yearly' | 'quarterly'
+  parent_budget_id?: string
+  created_at?: string
+  updated_at?: string
+}
 
-// Context interface
+// Define the context interface
 interface BudgetContextType {
   budgets: Budget[]
-  addBudget: (budget: Omit<Budget, "id" | "spent">) => void
-  updateBudget: (budget: Budget) => void
-  deleteBudget: (id: string) => void
   isLoading: boolean
   error: Error | null
+  addBudget: (budget: Omit<Budget, 'id' | 'spent' | 'created_at' | 'updated_at'>) => void
+  updateBudget: (budget: Budget) => void
+  deleteBudget: (id: string) => void
+  createNextRecurringBudget: (budgetId: string) => void
+  setBudgetCategories: (params: { budgetId: string, categoryIds: number[] }) => void
+  addCategoryToBudget: (params: { budgetId: string, categoryId: number }) => void
+  removeCategoryFromBudget: (params: { budgetId: string, categoryId: number }) => void
+  fetchBudgetCategories: (budgetId: string) => Promise<any[]>
   refetch: () => void
 }
 
-// Create the context with a default value
+// Create the context
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined)
 
 // Provider component
-export function BudgetProvider({ children }: { children: ReactNode }) {
-  const {
-    budgets,
-    isLoading,
-    error,
-    addBudget,
-    updateBudget,
-    deleteBudget,
-    refetch
-  } = useBudgetQuery()
+interface BudgetProviderProps {
+  children: ReactNode
+}
 
-  const { currentAccount } = useAccounts()
-
-  // React Query handles all the data fetching, caching, and mutations
+export function BudgetProvider({ children }: { children: React.ReactNode }) {
+  const budgetQuery = useBudgetQuery()
 
   return (
     <BudgetContext.Provider
       value={{
-        budgets,
-        addBudget,
-        updateBudget,
-        deleteBudget,
-        isLoading,
-        error,
-        refetch
+        budgets: budgetQuery.budgets,
+        isLoading: budgetQuery.isLoading,
+        error: budgetQuery.error,
+        addBudget: budgetQuery.addBudget,
+        updateBudget: budgetQuery.updateBudget,
+        deleteBudget: budgetQuery.deleteBudget,
+        createNextRecurringBudget: budgetQuery.createNextRecurringBudget,
+        setBudgetCategories: budgetQuery.setBudgetCategories,
+        addCategoryToBudget: budgetQuery.addCategoryToBudget,
+        removeCategoryFromBudget: budgetQuery.removeCategoryFromBudget,
+        fetchBudgetCategories: budgetQuery.fetchBudgetCategories,
+        refetch: budgetQuery.refetch
       }}
     >
       {children}
@@ -53,11 +71,11 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   )
 }
 
-// Custom hook to use the budget context
+// Hook to use the budget context
 export function useBudgets() {
   const context = useContext(BudgetContext)
   if (context === undefined) {
-    throw new Error('useBudgets must be used within a BudgetProvider')
+    throw new Error("useBudgets must be used within a BudgetProvider")
   }
   return context
 }

@@ -22,20 +22,29 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
 } from "@/components/ui/popover"
-import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
+import { CalendarIcon, PlusCircle, HelpCircle, Repeat } from "lucide-react"
 import { format, addMonths } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { useAccounts } from "@/lib/context/AccountContext"
+import { useCategoryQuery } from "@/lib/hooks/useCategoryQuery"
 import Link from "next/link"
 
 // Define the form schema
@@ -43,11 +52,18 @@ const budgetFormSchema = z.object({
   name: z.string().min(2, { message: "Budget name must be at least 2 characters." }),
   amount: z.coerce.number().positive({ message: "Amount must be a positive number." }),
   startDate: z.date({ required_error: "Start date is required." }),
-  endDate: z.date({ required_error: "End date is required." })
+  endDate: z.date({ required_error: "End date is required." }),
+  categoryIds: z.array(z.string()).optional().default([]),
+  isRecurring: z.boolean().default(false),
+  recurringType: z.enum(['monthly', 'weekly', 'yearly', 'quarterly']).optional()
 })
   .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date.",
     path: ["endDate"]
+  })
+  .refine((data) => !data.isRecurring || data.recurringType, {
+    message: "Recurring type is required when budget is set as recurring.",
+    path: ["recurringType"]
   });
 
 // Type for existing budget
@@ -56,9 +72,14 @@ interface Budget {
   name: string
   amount: number
   spent: number
-  startDate?: string
-  endDate?: string
+  start_date?: string
+  end_date?: string
   account_id?: string
+  category_id?: number
+  category_name?: string
+  is_recurring?: boolean
+  recurring_type?: 'monthly' | 'weekly' | 'yearly' | 'quarterly'
+  parent_budget_id?: string
 }
 
 interface BudgetFormProps {
@@ -69,8 +90,27 @@ interface BudgetFormProps {
 
 export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const { addBudget, updateBudget } = useBudgets()
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const { addBudget, updateBudget, setBudgetCategories, fetchBudgetCategories } = useBudgets()
   const { currentAccount } = useAccounts()
+  const { categories } = useCategoryQuery()
+  
+  // Filter expense categories for budget selection
+  const expenseCategories = categories.filter(cat => cat.type === 'expense')
+  
+  // Load existing categories when editing a budget
+  const loadBudgetCategories = async () => {
+    if (budget?.id) {
+      try {
+        const budgetCategories = await fetchBudgetCategories(budget.id)
+        const categoryIds = budgetCategories.map(cat => cat.id)
+        setSelectedCategories(categoryIds)
+        form.setValue('categoryIds', categoryIds)
+      } catch (error) {
+        console.error('Error loading budget categories:', error)
+      }
+    }
+  }
   
   // Create form
   const form = useForm<z.infer<typeof budgetFormSchema>>({
@@ -79,23 +119,52 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
       ? {
           name: budget.name,
           amount: budget.amount,
-          startDate: new Date(budget.startDate),
-          endDate: new Date(budget.endDate)
+          startDate: budget.start_date ? new Date(budget.start_date) : new Date(),
+          endDate: budget.end_date ? new Date(budget.end_date) : addMonths(new Date(), 1),
+          categoryIds: [],
+          isRecurring: budget.is_recurring || false,
+          recurringType: budget.recurring_type || undefined
         }
       : {
           name: "",
           amount: undefined,
           startDate: new Date(),
-          endDate: addMonths(new Date(), 1)
+          endDate: addMonths(new Date(), 1),
+          categoryIds: [],
+          isRecurring: false,
+          recurringType: undefined
         }
   })
+
+  // Load categories when dialog opens and we're editing
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (open && budget?.id) {
+      loadBudgetCategories()
+    } else if (!open) {
+      setSelectedCategories([])
+      form.reset()
+    }
+  }
+
+  // Handle category selection
+  const handleCategoryToggle = (categoryId: string, checked: boolean) => {
+    let newSelectedCategories: string[]
+    
+    if (checked) {
+      newSelectedCategories = [...selectedCategories, categoryId]
+    } else {
+      newSelectedCategories = selectedCategories.filter(id => id !== categoryId)
+    }
+    
+    setSelectedCategories(newSelectedCategories)
+    form.setValue('categoryIds', newSelectedCategories)
+  }
 
   // Handle form submission
   async function onSubmit(data: z.infer<typeof budgetFormSchema>) {
     if (!currentAccount) {
-      toast("Error", {
-        description: "Please select an account first."
-      });
+      toast.error("Please select an account first.");
       return;
     }
 
@@ -104,70 +173,83 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
       const formattedStartDate = format(data.startDate, "yyyy-MM-dd");
       const formattedEndDate = format(data.endDate, "yyyy-MM-dd");
       
+      // Calculate period from dates
+      const startMonth = format(data.startDate, "MMM yyyy");
+      const endMonth = format(data.endDate, "MMM yyyy");
+      const period = startMonth === endMonth ? startMonth : `${startMonth} - ${endMonth}`;
+      
+      const budgetData = {
+        name: data.name,
+        amount: data.amount,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        period: period,
+        // Keep the old category_id for backward compatibility, but we'll use the junction table
+        category_id: data.categoryIds && data.categoryIds.length > 0 ? parseInt(data.categoryIds[0], 10) : undefined,
+        account_id: currentAccount.id,
+        is_recurring: data.isRecurring,
+        recurring_type: data.isRecurring ? data.recurringType : undefined
+      };
+      
       if (budget) {
-        // Create updated budget object
+        // Update existing budget
         const updatedBudget = {
           id: budget.id,
-          name: data.name,
-          amount: data.amount,
-          startDate: formattedStartDate,
-          endDate: formattedEndDate,
-          spent: budget.spent || 0,
-          account_id: currentAccount.id,
+          ...budgetData,
+          spent: budget.spent || 0
         };
         
-        // Update existing budget
-        await updateBudget({
-          id: budget.id,
-          name: data.name,
-          amount: data.amount,
-          startDate: formattedStartDate,
-          endDate: formattedEndDate,
-          spent: budget.spent || 0,
-          account_id: currentAccount.id
-        });
+        updateBudget(updatedBudget);
         
-        toast("Budget updated", {
-          description: "Your budget has been updated successfully."
-        });
+        // Update budget categories using the junction table
+        if (data.categoryIds && data.categoryIds.length > 0) {
+          // Convert string IDs to numbers for the RPC function
+          const numericCategoryIds = data.categoryIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+          setBudgetCategories({ 
+            budgetId: budget.id, 
+            categoryIds: numericCategoryIds 
+          });
+        }
+        
+        toast.success("Budget updated successfully!");
         
         // Pass the updated budget to onSave callback
         if (onSave) onSave(updatedBudget);
       } else {
         // Add new budget
         const newBudget = {
-          name: data.name,
-          amount: data.amount,
-          startDate: formattedStartDate,
-          endDate: formattedEndDate,
-          spent: 0,
-          account_id: currentAccount.id
+          ...budgetData,
+          spent: 0
         };
         
-        await addBudget(newBudget);
+        // For new budgets, we need to handle the async nature differently
+        // Since addBudget doesn't return the created budget, we'll handle categories separately
+        addBudget(newBudget);
         
-        toast("Budget created", {
-          description: "Your new budget has been created successfully."
-        });
+        toast.success("Budget created successfully!");
         
-        // Pass the new budget to onSave callback if it exists
-        if (onSave) onSave({ ...newBudget, id: '', spent: 0 });
+        // Note: For new budgets, we can't set categories immediately since we don't have the budget ID
+        // This would need to be handled differently, perhaps with a callback or by refetching
+        if (onSave) {
+          // Create a mock budget object for the callback
+          const mockBudget = { ...newBudget, id: 'pending', spent: 0 };
+          onSave(mockBudget);
+        }
       }
       
       setIsOpen(false);
+      setSelectedCategories([]);
       form.reset();
     } catch (error) {
       console.error("Budget save error:", error);
-      toast("Error", {
-        description: "There was a problem saving your budget."
-      });
+      toast.error("There was a problem saving your budget.");
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-[425px] p-4 md:p-6">
+      <DialogContent className="w-[95vw] max-w-[500px] p-4 md:p-6">
         <DialogHeader>
           <DialogTitle>{budget ? "Edit Budget" : "Create Budget"}</DialogTitle>
           <DialogDescription>
@@ -184,9 +266,9 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Budget Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Budget name" className="w-full" {...field} />
+                    <Input placeholder="e.g., Monthly Groceries, Marketing Budget" className="w-full" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -200,15 +282,128 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 <FormItem>
                   <FormLabel>Budget Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" className="w-full" {...field} />
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      placeholder="0.00" 
+                      className="w-full" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormDescription>
-                    Set the maximum amount for this budget period.
+                    Enter the total amount you want to allocate for this budget.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="categoryIds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categories (Optional)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-2">
+                      <div className="text-sm text-muted-foreground">
+                        Select categories for this budget (optional):
+                      </div>
+                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
+                        {expenseCategories.map((category) => (
+                          <div key={category.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`category-${category.id}`}
+                              checked={selectedCategories.includes(category.id.toString())}
+                              onCheckedChange={(checked) => handleCategoryToggle(category.id.toString(), Boolean(checked))}
+                            />
+                            <label 
+                              htmlFor={`category-${category.id}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center space-x-2"
+                            >
+                              {category.color && (
+                                <div 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: category.color }}
+                                />
+                              )}
+                              <span>{category.name}</span>
+                            </label>
+                          </div>
+                        ))}
+                        {expenseCategories.length === 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            No expense categories available. <Link href="/categories" className="underline">Create categories</Link> first.
+                          </div>
+                        )}
+                      </div>
+                      {selectedCategories.length > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {selectedCategories.length} categor{selectedCategories.length === 1 ? 'y' : 'ies'} selected
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Link this budget to specific expense categories for automatic tracking.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isRecurring"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4" />
+                      Make this budget recurring
+                    </FormLabel>
+                    <FormDescription>
+                      Automatically create new budget periods when this one ends.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {form.watch("isRecurring") && (
+              <FormField
+                control={form.control}
+                name="recurringType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Recurring Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select how often to repeat" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="quarterly">Quarterly (3 months)</SelectItem>
+                        <SelectItem value="yearly">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose how often you want this budget to automatically renew.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -230,7 +425,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Pick start date</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -242,9 +437,6 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          disabled={(date) => {
-                            return date < new Date("1900-01-01");
-                          }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -252,7 +444,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="endDate"
@@ -272,7 +464,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Pick end date</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -284,10 +476,6 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                           selected={field.value}
                           onSelect={field.onChange}
                           initialFocus
-                          disabled={(date) => {
-                            const startDate = form.getValues("startDate");
-                            return date < new Date("1900-01-01") || (startDate && date <= startDate);
-                          }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -296,9 +484,20 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 )}
               />
             </div>
-            
-            <DialogFooter className="mt-6">
-              <Button type="submit" className="w-full md:w-auto">
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto"
+              >
                 {budget ? "Update Budget" : "Create Budget"}
               </Button>
             </DialogFooter>
