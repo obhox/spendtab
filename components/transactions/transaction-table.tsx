@@ -9,15 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Edit, Trash, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Edit, Trash, Calendar, DollarSign, Tag, CreditCard, FileText, Receipt, ExternalLink, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { TransactionForm } from "./transaction-form"
 import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
@@ -47,6 +46,11 @@ interface Transaction {
   notes?: string
   budget_id?: string | null
   account_id: string
+  tax_deductible?: boolean
+  tax_category?: string
+  business_purpose?: string
+  receipt_url?: string
+  mileage?: number
 }
 
 interface TransactionTableProps {
@@ -76,6 +80,8 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [page, setPage] = useState(1)
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const ITEMS_PER_PAGE = 50
 
   // Display any transaction query errors as toasts
@@ -148,6 +154,11 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
     }
   }
 
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction)
+    setDetailsDialogOpen(true)
+  }
+
   // Handle page change
   const handlePreviousPage = () => setPage(p => Math.max(1, p - 1))
   const handleNextPage = () => {
@@ -180,9 +191,18 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
     return <div className="flex justify-center items-center py-8">Loading transactions...</div>
   }
 
-  // Format date safely
+  // Format date safely without timezone conversion
   const formatDate = (dateString: string) => {
     try {
+      // Parse date as local date to avoid timezone issues
+      // If dateString is in YYYY-MM-DD format, parse it directly
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number)
+        const date = new Date(year, month - 1, day) // month is 0-indexed
+        return date.toLocaleDateString()
+      }
+      
+      // Fallback for other date formats
       const date = new Date(dateString)
       return date.toLocaleDateString()
     } catch (e) {
@@ -226,13 +246,12 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
                 <TableHead className="hidden sm:table-cell">Category</TableHead>
                 <TableHead className="hidden md:table-cell">Payment Source</TableHead>
                 <TableHead className="text-right min-w-[80px]">Amount</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     <div className="flex flex-col items-center justify-center space-y-3 py-4">
                       <p className="text-sm text-muted-foreground">No transactions found</p>
                       <p className="text-xs text-muted-foreground">
@@ -253,7 +272,11 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
                 </TableRow>
               ) : (
                 currentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
+                  <TableRow 
+                    key={transaction.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleTransactionClick(transaction)}
+                  >
                     <TableCell className="text-xs sm:text-sm">
                       <div className="font-medium">
                         {formatDate(transaction.date)}
@@ -275,39 +298,6 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
                     </TableCell>
                     <TableCell className={`text-right text-xs sm:text-sm font-medium ${transaction.type === "income" ? "text-green-600" : "text-red-600"}`}>
                       {transaction.type === "income" ? "+" : "-"}{formatCurrencyUtil(transaction.amount, selectedCurrency.code, selectedCurrency.symbol).replace(/^-/, "")}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <TransactionForm transaction={transaction}>
-                            <DropdownMenuItem onSelect={(e) => {
-                              // Prevent the dropdown from closing but allow TransactionForm to open
-                              e.preventDefault()
-                            }}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                          </TransactionForm>
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setTransactionToDelete(transaction.id)
-                              setDeleteDialogOpen(true)
-                            }}
-                            className="text-red-600"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -349,6 +339,158 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
           </div>
         </div>
       )}
+
+      {/* Transaction Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="w-[95vw] sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Transaction Details</DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="space-y-4">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Date</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(selectedTransaction.date)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Amount</p>
+                    <p className={`text-sm font-medium ${selectedTransaction.type === "income" ? "text-green-600" : "text-red-600"}`}>
+                      {selectedTransaction.type === "income" ? "+" : "-"}{formatCurrencyUtil(selectedTransaction.amount, selectedCurrency.code, selectedCurrency.symbol).replace(/^-/, "")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <p className="text-sm font-medium mb-1">Description</p>
+                <p className="text-sm text-muted-foreground">{selectedTransaction.description}</p>
+              </div>
+
+              {/* Category and Payment Source */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Category</p>
+                    <p className="text-sm text-muted-foreground">{selectedTransaction.category}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Payment Source</p>
+                    <p className="text-sm text-muted-foreground">{formatPaymentSource(selectedTransaction.payment_source)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Type */}
+              <div>
+                <p className="text-sm font-medium mb-1">Type</p>
+                <Badge variant={selectedTransaction.type === "income" ? "default" : "secondary"}>
+                  {selectedTransaction.type === "income" ? "Income" : "Expense"}
+                </Badge>
+              </div>
+
+              {/* Tax Information */}
+              {(selectedTransaction.tax_deductible || selectedTransaction.tax_category || selectedTransaction.business_purpose || selectedTransaction.receipt_url || selectedTransaction.mileage) && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-3">Tax Information</p>
+                  <div className="space-y-3">
+                    {selectedTransaction.tax_deductible && (
+                      <div className="flex items-center space-x-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant="secondary" className="text-xs">
+                          Tax Deductible
+                        </Badge>
+                      </div>
+                    )}
+                    {selectedTransaction.tax_category && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Tax Category</p>
+                        <p className="text-sm">{selectedTransaction.tax_category}</p>
+                      </div>
+                    )}
+                    {selectedTransaction.business_purpose && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Business Purpose</p>
+                        <p className="text-sm">{selectedTransaction.business_purpose}</p>
+                      </div>
+                    )}
+                    {selectedTransaction.mileage && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Mileage</p>
+                        <p className="text-sm">{selectedTransaction.mileage} miles</p>
+                      </div>
+                    )}
+                    {selectedTransaction.receipt_url && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Receipt</p>
+                        <a 
+                          href={selectedTransaction.receipt_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          <Receipt className="h-4 w-4 mr-1" />
+                          View Receipt
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedTransaction.notes && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-1">Notes</p>
+                  <p className="text-sm text-muted-foreground">{selectedTransaction.notes}</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-2 border-t pt-4">
+                <TransactionForm transaction={selectedTransaction}>
+                  <Button variant="outline" size="sm">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </Button>
+                </TransactionForm>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setTransactionToDelete(selectedTransaction.id)
+                    setDeleteDialogOpen(true)
+                    setDetailsDialogOpen(false)
+                  }}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setDetailsDialogOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="w-[95vw] sm:max-w-[425px]">

@@ -110,7 +110,7 @@ const formatExpenseData = (data: any) => {
 const formatCurrencyValue = (value: number): string => {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency: 'NGN',
+    currency: 'USD',
     minimumFractionDigits: 2
   }).format(value);
 };

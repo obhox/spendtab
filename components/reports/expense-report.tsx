@@ -105,7 +105,7 @@ const CustomTooltip = (props) => {
     return (
       <div className="bg-background border rounded-md p-2 shadow-sm">
         <p className="font-medium">{data.name || 'Unknown'}</p>
-        <p className="text-sm">{formatCurrencyUtil(data.value || 0, selectedCurrency?.code || 'NGN', selectedCurrency?.symbol || '₦')}</p>
+        <p className="text-sm">{formatCurrencyUtil(data.value || 0, selectedCurrency?.code || 'USD', selectedCurrency?.symbol || '$')}</p>
         <p className="text-xs text-muted-foreground">
           {`${data.payload && data.payload.percentage ? Math.round(data.payload.percentage) : 0}%`}
         </p>
@@ -120,7 +120,7 @@ const formatCurrency = (value, selectedCurrency) => {
   return formatCurrencyUtil(value, selectedCurrency.code, selectedCurrency.symbol);
 };
 
-// Format date value safely
+// Format date value safely without timezone conversion
 const formatDate = (dateStr: string): string => {
   try {
     // Ensure we have a valid date string
@@ -128,7 +128,18 @@ const formatDate = (dateStr: string): string => {
       throw new Error('Date string is empty');
     }
 
-    // Try parsing with different date formats
+    // Parse date as local date to avoid timezone issues
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateStr.split('-').map(Number)
+      const date = new Date(year, month - 1, day) // month is 0-indexed
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).format(date);
+    }
+
+    // Try parsing with different date formats for fallback
     let date = new Date(dateStr);
     
     // Check if the date is valid
@@ -145,8 +156,7 @@ const formatDate = (dateStr: string): string => {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC' // Ensure consistent timezone handling
+      day: 'numeric'
     }).format(date);
   } catch (error) {
     console.error('Error formatting date:', error, 'Date string:', dateStr);

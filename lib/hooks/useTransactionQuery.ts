@@ -14,6 +14,12 @@ export interface Transaction {
   account_id: string;
   payment_source?: string;
   budget_id?: string | null;
+  // Tax optimization fields
+  tax_deductible?: boolean;
+  tax_category?: string;
+  business_purpose?: string;
+  receipt_url?: string;
+  mileage?: number;
 }
 
 const CACHE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -49,7 +55,13 @@ export function useTransactionQuery() {
       notes: item.notes || undefined,
       account_id: item.account_id,
       payment_source: item.payment_source || undefined,
-      budget_id: item.budget_id || null
+      budget_id: item.budget_id || null,
+      // Tax optimization fields
+      tax_deductible: item.tax_deductible || false,
+      tax_category: item.tax_category || undefined,
+      business_purpose: item.business_purpose || undefined,
+      receipt_url: item.receipt_url || undefined,
+      mileage: item.mileage || undefined
     })) || [];
   };
 

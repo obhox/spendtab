@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag } from "lucide-react"
+import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -97,6 +97,13 @@ useEffect(() => {
                         >
                           <FileText className="mr-2 h-4 w-4" />
                           <span>Reports</span>
+                        </Link>
+                        <Link
+                          href="/tax-reports"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Calculator className="mr-2 h-4 w-4" />
+                          <span>Tax Reports</span>
                         </Link>
                       </div>
                     </div>
@@ -193,6 +200,13 @@ useEffect(() => {
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     <span>Reports</span>
+                  </Link>
+                  <Link
+                    href="/tax-reports"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <Calculator className="mr-2 h-4 w-4" />
+                    <span>Tax Reports</span>
                   </Link>
                 </div>
               </div>

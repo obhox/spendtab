@@ -2,8 +2,8 @@
 
 // Nigerian Naira currency configuration
 const NGN_CURRENCY = {
-  code: "NGN",
-  symbol: "₦",
+  code: "USD",
+  symbol: "$",
   name: "Nigerian Naira"
 }
 
@@ -14,7 +14,7 @@ export function useSelectedCurrency() {
 
 // Utility function to format currency in Nigerian Naira
 export function formatCurrency(amount: number, currencyCode?: string, currencySymbol?: string): string {
-  const symbol = "₦"
+  const symbol = "$"
   
   // Format with Nigerian locale and Naira symbol
   return `${symbol}${amount.toLocaleString('en-NG', { 
