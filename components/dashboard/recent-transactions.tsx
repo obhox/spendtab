@@ -74,7 +74,7 @@ export function RecentTransactions() {
   // Loading state
   if (isLoading) {
     return (
-      <Card>
+      <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardContent>
           <div className="py-2 text-sm text-center">Loading transactions...</div>
         </CardContent>
@@ -94,7 +94,7 @@ export function RecentTransactions() {
   // Empty state
   if (!recentTransactions || recentTransactions.length === 0) {
     return (
-      <Card>
+      <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardContent>
           <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
             <p className="text-sm font-medium text-muted-foreground">No transactions yet</p>
@@ -114,7 +114,7 @@ export function RecentTransactions() {
   }
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#F9F9FA' }}>
       <CardHeader className="p-3 sm:p-4 md:p-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>

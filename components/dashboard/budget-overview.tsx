@@ -29,7 +29,7 @@ export function BudgetOverview() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
@@ -53,7 +53,7 @@ export function BudgetOverview() {
 
   if (!budgets || budgets.length === 0) {
     return (
-      <Card>
+      <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
@@ -103,7 +103,7 @@ export function BudgetOverview() {
   }).length
 
   return (
-    <Card>
+    <Card style={{ backgroundColor: '#F9F9FA' }}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

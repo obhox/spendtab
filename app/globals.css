@@ -44,3 +44,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Responsive Typography */
+  .text-responsive-h1 {
+    @apply text-h6 md:text-h4 lg:text-h2 xl:text-h1 font-bold tracking-tight;
+  }
+  
+  .text-responsive-h2 {
+    @apply text-h6 md:text-h5 lg:text-h3 xl:text-h2 font-bold tracking-tight;
+  }
+  
+  .text-responsive-h3 {
+    @apply text-subheading md:text-h6 lg:text-h4 xl:text-h3 font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  /* Text scaling utilities for different screen sizes */
+  .text-scale-sm {
+    @apply text-xs sm:text-sm md:text-base;
+  }
+  
+  .text-scale-base {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .text-scale-lg {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+  
+  .text-scale-xl {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+}

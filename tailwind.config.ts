@@ -8,7 +8,34 @@ const config: Config = {
   ],
   theme: {
     fontFamily: {
-      sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      sans: ['var(--font-geist-sans)', 'Geist', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+    },
+    fontSize: {
+      // Typography Scale based on design guide
+      'h1': ['96px', { lineHeight: '1.1', fontWeight: '700' }],
+      'h2': ['64px', { lineHeight: '1.2', fontWeight: '700' }],
+      'h3': ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+      'h4': ['40px', { lineHeight: '1.3', fontWeight: '700' }],
+      'h5': ['32px', { lineHeight: '1.3', fontWeight: '700' }],
+      'h6': ['24px', { lineHeight: '1.4', fontWeight: '700' }],
+      'subheading': ['18px', { lineHeight: '1.4', fontWeight: '700' }],
+      'body': ['16px', { lineHeight: '1.5', fontWeight: '600' }],
+      'subtitle': ['14px', { lineHeight: '1.5', fontWeight: '500' }],
+      'caption': ['12px', { lineHeight: '1.4', fontWeight: '500' }],
+      // Keep existing Tailwind sizes for compatibility
+      'xs': ['12px', { lineHeight: '16px' }],
+      'sm': ['14px', { lineHeight: '20px' }],
+      'base': ['16px', { lineHeight: '24px' }],
+      'lg': ['18px', { lineHeight: '28px' }],
+      'xl': ['20px', { lineHeight: '28px' }],
+      '2xl': ['24px', { lineHeight: '32px' }],
+      '3xl': ['30px', { lineHeight: '36px' }],
+      '4xl': ['36px', { lineHeight: '40px' }],
+      '5xl': ['48px', { lineHeight: '1' }],
+      '6xl': ['60px', { lineHeight: '1' }],
+      '7xl': ['72px', { lineHeight: '1' }],
+      '8xl': ['96px', { lineHeight: '1' }],
+      '9xl': ['128px', { lineHeight: '1' }],
     },
     container: {
       center: true,
