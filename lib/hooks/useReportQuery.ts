@@ -40,6 +40,28 @@ export function useReportQuery(startDate: Date, endDate: Date) {
       throw transactionsError;
     }
 
+    // Fetch previous transactions to calculate starting balance
+    const { data: previousTransactions, error: previousTransactionsError } = await supabase
+      .from('transactions')
+      .select('amount, type')
+      .eq('account_id', currentAccount.id)
+      .lt('date', startDate.toISOString())
+      .order('date', { ascending: true });
+
+    if (previousTransactionsError) {
+      console.warn('Error fetching previous transactions for starting balance:', previousTransactionsError.message);
+    }
+
+    // Calculate starting balance
+    let startingBalance = 0;
+    if (previousTransactions) {
+      startingBalance = previousTransactions.reduce((balance, transaction) => {
+        return transaction.type === 'income' 
+          ? balance + transaction.amount 
+          : balance - transaction.amount;
+      }, 0);
+    }
+
     // Process transactions into cash flow data
     const cashIn = transactions
       ?.filter(tx => tx.type === 'income')
@@ -106,13 +128,13 @@ export function useReportQuery(startDate: Date, endDate: Date) {
 
     return {
       period: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
-      startingBalance: 0, // You might want to calculate this based on your needs
+      startingBalance: startingBalance,
       cashIn,
       cashOut,
       totalCashIn,
       totalCashOut,
       netCashFlow,
-      endingBalance: netCashFlow, // This might need adjustment based on starting balance
+      endingBalance: startingBalance + netCashFlow,
       monthlyCashFlow
     };
   };

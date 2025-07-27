@@ -140,6 +140,28 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         })
       )
 
+      // Calculate starting balance from transactions before the report period
+      const { data: previousTransactions, error: previousTransactionsError } = await supabase
+        .from('transactions')
+        .select('amount, type')
+        .eq('account_id', currentAccount.id)
+        .lt('date', dateRange.startDate.toISOString())
+        .order('date', { ascending: true })
+
+      if (previousTransactionsError) {
+        console.warn('Error fetching previous transactions for starting balance:', previousTransactionsError.message)
+      }
+
+      // Calculate starting balance
+      let startingBalance = 0
+      if (previousTransactions) {
+        startingBalance = previousTransactions.reduce((balance, transaction) => {
+          return transaction.type === 'income' 
+            ? balance + transaction.amount 
+            : balance - transaction.amount
+        }, 0)
+      }
+
       // Calculate Cash Flow Report
       const cashInCategories = new Map<string, CashFlowCategory>()
       const cashOutCategories = new Map<string, CashFlowCategory>()
@@ -190,13 +212,13 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       // Create Cash Flow Data
       const cashFlowData = {
         period: `${format(dateRange.startDate, 'MMM d, yyyy')} - ${format(dateRange.endDate, 'MMM d, yyyy')}`,
-        startingBalance: 0, // You might want to calculate this based on previous periods
+        startingBalance: startingBalance,
         cashIn: Array.from(cashInCategories.values()),
         cashOut: Array.from(cashOutCategories.values()),
         totalCashIn,
         totalCashOut,
         netCashFlow: totalCashIn - totalCashOut,
-        endingBalance: totalCashIn - totalCashOut, // This is simplified
+        endingBalance: startingBalance + totalCashIn - totalCashOut,
         monthlyCashFlow: Array.from(monthlyCashFlow.entries()).map(([month, data]) => ({
           month,
           ...data

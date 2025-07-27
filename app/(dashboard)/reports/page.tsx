@@ -74,9 +74,9 @@ export default function ReportsPage() {
 
   return (
     <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Financial Reports</h1>
-        <div className="flex items-center gap-2">
+      <div className="space-y-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Financial Reports</h1>
+        <div className="flex items-center gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Export

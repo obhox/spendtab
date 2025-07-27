@@ -52,53 +52,9 @@ export default function AssetsLiabilitiesPage() {
     <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
       <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Assets & Liabilities</h1>
 
-      {/* Net Worth Summary */}
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalAssetValue)}</div>
-            <p className="text-xs text-muted-foreground">
-              {assets.length} asset{assets.length !== 1 ? 's' : ''}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalLiabilityBalance)}</div>
-            <p className="text-xs text-muted-foreground">
-              {liabilities.length} liabilit{liabilities.length !== 1 ? 'ies' : 'y'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Worth</CardTitle>
-            <TrendingUp className={`h-4 w-4 ${netWorth >= 0 ? 'text-green-600' : 'text-red-600'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${netWorth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(netWorth)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Assets - Liabilities
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Search */}
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex items-center justify-end space-x-2">
+        <div className="relative max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search assets and liabilities..."

@@ -107,13 +107,6 @@ export default function DashboardLayout({
                       <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
                       <div className="space-y-1">
                         <Link
-                          href="/analytics"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <PieChart className="mr-2 h-4 w-4" />
-                          <span>Analytics</span>
-                        </Link>
-                        <Link
                           href="/reports"
                           className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
@@ -227,13 +220,6 @@ export default function DashboardLayout({
               <div className="px-3 py-2">
                 <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
                 <div className="space-y-1">
-                  <Link
-                    href="/analytics"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <PieChart className="mr-2 h-4 w-4" />
-                    <span>Analytics</span>
-                  </Link>
                   <Link
                     href="/reports"
                     className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
