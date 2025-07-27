@@ -31,8 +31,7 @@ export function BudgetOverview() {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+          <CardTitle>
             Budget Overview
           </CardTitle>
         </CardHeader>
@@ -55,8 +54,7 @@ export function BudgetOverview() {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+          <CardTitle>
             Budget Overview
           </CardTitle>
           <CardDescription>Track your spending against your budgets</CardDescription>
@@ -107,23 +105,9 @@ export function BudgetOverview() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+            <CardTitle>
               Budget Overview
             </CardTitle>
-            <CardDescription>
-              {budgets.length} budget{budgets.length !== 1 ? 's' : ''} • 
-              {overBudgetCount > 0 && (
-                <span className="text-red-600 ml-1">
-                  {overBudgetCount} over budget
-                </span>
-              )}
-              {nearLimitCount > 0 && (
-                <span className="text-amber-600 ml-1">
-                  {nearLimitCount} near limit
-                </span>
-              )}
-            </CardDescription>
           </div>
           <Link href="/budgets">
             <Button variant="outline" size="sm">
@@ -133,33 +117,6 @@ export function BudgetOverview() {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Overall Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-muted-foreground">Total Budgeted</span>
-            </div>
-            <p className="text-2xl font-bold">{formatCurrency(totalBudgeted)}</p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-muted-foreground">Total Spent</span>
-            </div>
-            <p className="text-2xl font-bold">{formatCurrency(totalSpent)}</p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className={`h-4 w-4 ${totalRemaining < 0 ? 'text-red-600' : 'text-green-600'}`} />
-              <span className="text-sm font-medium text-muted-foreground">Remaining</span>
-            </div>
-            <p className={`text-2xl font-bold ${totalRemaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
-              {formatCurrency(totalRemaining)}
-            </p>
-          </div>
-        </div>
-
         {/* Overall Progress */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -205,29 +162,6 @@ export function BudgetOverview() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{budget.name}</span>
-                      {budget.category_name && (
-                        <div className="flex flex-wrap gap-1">
-                          {(() => {
-                            const categories = budget.category_name.split(', ').map(name => name.trim()).filter(Boolean);
-                            if (categories.length === 0) return null;
-                            
-                            if (categories.length === 1) {
-                              return (
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                  {categories[0]}
-                                </span>
-                              );
-                            } else {
-                              const additionalCount = categories.length - 1;
-                              return (
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                  {categories[0]} +{additionalCount} other{additionalCount > 1 ? 's' : ''}
-                                </span>
-                              );
-                            }
-                          })()}
-                        </div>
-                      )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
@@ -235,16 +169,13 @@ export function BudgetOverview() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">
-                      {formatCurrency(budget.spent)} / {formatCurrency(budget.amount)}
-                    </div>
-                    <div className={`text-xs ${
-                      remaining < 0 ? 'text-red-600' : 
-                      remaining < budget.amount * 0.2 ? 'text-amber-600' : 
-                      'text-muted-foreground'
-                    }`}>
-                      {remaining < 0 ? `Over by ${formatCurrency(Math.abs(remaining))}` : `${formatCurrency(remaining)} left`}
-                    </div>
+                    <Badge variant={
+                      budget.percentSpent > 100 ? "destructive" : 
+                      budget.percentSpent > 80 ? "secondary" : 
+                      "default"
+                    }>
+                      {Math.round(budget.percentSpent)}%
+                    </Badge>
                   </div>
                 </div>
                 <Progress 
@@ -259,19 +190,26 @@ export function BudgetOverview() {
           })}
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex gap-2 pt-2 border-t">
-          <BudgetForm>
-            <Button variant="outline" size="sm" className="flex-1">
-              <Plus className="h-4 w-4 mr-2" />
-              New Budget
-            </Button>
-          </BudgetForm>
-          <Link href="/budgets" className="flex-1">
-            <Button variant="outline" size="sm" className="w-full">
-              Manage All
-            </Button>
-          </Link>
+        {/* Budget Summary */}
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center text-sm">
+            <div className="text-center">
+              <div className="text-muted-foreground">Total Budget</div>
+              <div className="font-medium">{formatCurrency(totalBudgeted)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-muted-foreground">Total Spent</div>
+              <div className="font-medium">{formatCurrency(totalSpent)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-muted-foreground">Remaining</div>
+              <div className={`font-medium ${
+                totalRemaining < 0 ? 'text-red-600' : 'text-green-600'
+              }`}>
+                {formatCurrency(totalRemaining)}
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

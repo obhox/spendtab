@@ -329,8 +329,8 @@ export default function DashboardPage() {
     <DataProvider>
       {isAccountSwitching && <LoadingOverlay />}
       <Suspense fallback={<DashboardSkeleton />}>
-        <div className="p-2 sm:p-4 md:p-6 lg:p-8 space-y-3 sm:space-y-4 md:space-y-6">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Dashboard</h1>
+        <div className="pt-0 px-2 pb-2 sm:pt-0 sm:px-4 sm:pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Dashboard</h1>
           <div className="space-y-3 sm:space-y-4 md:space-y-6">
             <MemoizedDashboardMetrics />
             

@@ -7,10 +7,8 @@ import { BankReconciliationDashboard } from '@/components/bank-reconciliation/ba
 export default function BankReconciliationPage() {
   return (
     <BankReconciliationProvider>
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Bank Reconciliation</h2>
-        </div>
+      <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Bank Reconciliation</h1>
         <BankReconciliationDashboard />
       </div>
     </BankReconciliationProvider>

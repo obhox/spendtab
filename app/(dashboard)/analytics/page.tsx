@@ -13,8 +13,8 @@ const ProfitabilityAnalytics = dynamic(() => import("@/components/analytics/prof
 export default function AnalyticsPage() {
   return (
     <DataProvider>
-      <div className="flex flex-col gap-3 sm:gap-4">
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Financial Analytics</h1>
+      <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Financial Analytics</h1>
         <Tabs defaultValue="revenue" className="space-y-3 sm:space-y-4">
           <TabsList className="w-full flex justify-start overflow-x-auto">
             <TabsTrigger value="revenue" className="flex-1 sm:flex-none text-xs sm:text-sm">Revenue</TabsTrigger>

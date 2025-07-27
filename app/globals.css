@@ -77,4 +77,44 @@
   .text-scale-xl {
     @apply text-lg sm:text-xl md:text-2xl;
   }
+
+  /* Position the line under h1 titles */
+  main h1 {
+    position: relative;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem !important;
+  }
+
+  main h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: hsl(var(--border));
+  }
+
+  /* Mobile: Line extends from left edge to right edge */
+  @media (max-width: 767px) {
+    main h1::after {
+      left: -1rem;
+      right: -1rem;
+    }
+  }
+
+  /* Tablet and Desktop: Line extends from sidebar edge to right edge */
+  @media (min-width: 768px) {
+    main h1::after {
+      left: -4.5rem; /* Extends to sidebar edge */
+      right: -2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    main h1::after {
+      left: -6rem; /* Extends to sidebar edge */
+      right: -2rem;
+    }
+  }
 }

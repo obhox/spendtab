@@ -59,10 +59,10 @@ export default function DashboardLayout({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0" style={{ backgroundColor: '#000000' }}>
-              <nav className="h-full flex flex-col text-white">
+            <SheetContent side="left" className="w-72 p-0 border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
+              <nav className="h-full flex flex-col text-black">
                 <div className="flex h-14 items-center justify-between px-4">
-                  <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white">
+                  <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
                     <DollarSign className="h-5 w-5 text-primary" />
                     <span className="text-lg">spendtab</span>
                   </Link>
@@ -71,32 +71,32 @@ export default function DashboardLayout({
                 <ScrollArea className="flex-1 px-3">
                   <div className="space-y-4 py-4">
                     <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Main</h2>
+                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Main</h2>
                       <div className="space-y-1">
                         <Link
                           href="/dashboard"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <LayoutDashboard className="mr-2 h-4 w-4" />
                           <span>Dashboard</span>
                         </Link>
                         <Link
                           href="/transactions"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <CreditCard className="mr-2 h-4 w-4" />
                           <span>Transactions</span>
                         </Link>
                         <Link
                           href="/assets-liabilities"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <TrendingUp className="mr-2 h-4 w-4" />
                           <span>Assets & Liabilities</span>
                         </Link>
                         <Link
                           href="/bank-reconciliation"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <GitCompare className="mr-2 h-4 w-4" />
                           <span>Bank Reconciliation</span>
@@ -104,18 +104,18 @@ export default function DashboardLayout({
                       </div>
                     </div>
                     <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Analytics</h2>
+                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
                       <div className="space-y-1">
                         <Link
                           href="/analytics"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <PieChart className="mr-2 h-4 w-4" />
                           <span>Analytics</span>
                         </Link>
                         <Link
                           href="/reports"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <FileText className="mr-2 h-4 w-4" />
                           <span>Reports</span>
@@ -123,7 +123,7 @@ export default function DashboardLayout({
                         {isTaxFeaturesVisible && (
                           <Link
                             href="/tax-reports"
-                            className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                            className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                           >
                             <Calculator className="mr-2 h-4 w-4" />
                             <span>Tax Reports</span>
@@ -132,18 +132,18 @@ export default function DashboardLayout({
                       </div>
                     </div>
                     <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Planning</h2>
+                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Planning</h2>
                       <div className="space-y-1">
                         <Link
                           href="/budgets"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <LineChart className="mr-2 h-4 w-4" />
                           <span>Budget</span>
                         </Link>
                         <Link
                           href="/categories"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <Tag className="mr-2 h-4 w-4" />
                           <span>Categories</span>
@@ -151,11 +151,11 @@ export default function DashboardLayout({
                       </div>
                     </div>
                     <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Account</h2>
+                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Account</h2>
                       <div className="space-y-1">
                         <Link
                           href="/profile"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <Settings className="mr-2 h-4 w-4" />
                           <span>Profile</span>
@@ -165,7 +165,7 @@ export default function DashboardLayout({
                   </div>
                 </ScrollArea>
                 <div className="mt-auto p-4 space-y-4">
-                  <Suspense fallback={<div className="text-white">Loading account selector...</div>}>
+                  <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
                     <AccountSelector />
                   </Suspense>
                   {(!subscriptionTier || subscriptionTier.toLowerCase() !== 'pro') && (
@@ -181,9 +181,9 @@ export default function DashboardLayout({
             </SheetContent>
           </Sheet>
         </div>
-        <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto" style={{ backgroundColor: '#000000' }}>
-          <div className="sticky top-0 flex h-16 items-center justify-between px-6" style={{ backgroundColor: '#000000' }}>
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-white">
+        <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
+          <div className="sticky top-0 flex h-16 items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
               <DollarSign className="h-6 w-6 text-primary" />
               <span>spendtab</span>
             </Link>
@@ -192,32 +192,32 @@ export default function DashboardLayout({
           <ScrollArea className="flex-1 px-3">
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Main</h2>
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Main</h2>
                 <div className="space-y-1">
                   <Link
                     href="/dashboard"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
                   <Link
                     href="/transactions"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <CreditCard className="mr-2 h-4 w-4" />
                     <span>Transactions</span>
                   </Link>
                   <Link
                     href="/assets-liabilities"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <TrendingUp className="mr-2 h-4 w-4" />
                     <span>Assets & Liabilities</span>
                   </Link>
                   <Link
                     href="/bank-reconciliation"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <GitCompare className="mr-2 h-4 w-4" />
                     <span>Bank Reconciliation</span>
@@ -225,18 +225,18 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Analytics</h2>
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
                 <div className="space-y-1">
                   <Link
                     href="/analytics"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <PieChart className="mr-2 h-4 w-4" />
                     <span>Analytics</span>
                   </Link>
                   <Link
                     href="/reports"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     <span>Reports</span>
@@ -244,7 +244,7 @@ export default function DashboardLayout({
                   {isTaxFeaturesVisible && (
                     <Link
                       href="/tax-reports"
-                      className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                      className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                     >
                       <Calculator className="mr-2 h-4 w-4" />
                       <span>Tax Reports</span>
@@ -253,18 +253,18 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Planning</h2>
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Planning</h2>
                 <div className="space-y-1">
                   <Link
                     href="/budgets"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <LineChart className="mr-2 h-4 w-4" />
                     <span>Budget</span>
                   </Link>
                   <Link
                     href="/categories"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <Tag className="mr-2 h-4 w-4" />
                     <span>Categories</span>
@@ -272,11 +272,11 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">Account</h2>
+                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Account</h2>
                 <div className="space-y-1">
                   <Link
                     href="/profile"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-gray-800 hover:text-white"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile</span>
@@ -286,7 +286,7 @@ export default function DashboardLayout({
             </div>
           </ScrollArea>
           <div className="mt-auto p-4 space-y-4">
-            <Suspense fallback={<div className="text-white">Loading account selector...</div>}>
+            <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
               <AccountSelector />
             </Suspense>
             {subscriptionTier === 'trial' && (

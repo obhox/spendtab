@@ -175,7 +175,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
+      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Profile</h1>
       <Tabs defaultValue="accounts" className="space-y-4">
         <TabsList>
           <TabsTrigger value="accounts">Account</TabsTrigger>
