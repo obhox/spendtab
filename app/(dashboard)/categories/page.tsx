@@ -17,15 +17,9 @@ const CategoryManager = dynamic(
 export default function CategoriesPage() {
   return (
     <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Categories</h1>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline" size="sm" className="w-full sm:w-auto">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
+      <div className="space-y-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Categories</h1>
+        <div className="flex justify-end">
           <CategoryForm>
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />

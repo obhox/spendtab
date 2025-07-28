@@ -7,7 +7,6 @@ import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, C
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { ModeToggle } from "@/components/mode-toggle"
 import { CurrencySwitcher, useTaxFeaturesVisible } from "@/components/currency-switcher"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
@@ -61,12 +60,10 @@ export default function DashboardLayout({
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0 border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
               <nav className="h-full flex flex-col text-black">
-                <div className="flex h-14 items-center justify-between px-4">
+                <div className="flex h-14 items-center px-4">
                   <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
-                    <DollarSign className="h-5 w-5 text-primary" />
                     <span className="text-lg">spendtab</span>
                   </Link>
-                  <ModeToggle />
                 </div>
                 <ScrollArea className="flex-1 px-3">
                   <div className="space-y-4 py-4">
@@ -175,12 +172,10 @@ export default function DashboardLayout({
           </Sheet>
         </div>
         <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
-          <div className="sticky top-0 flex h-16 items-center justify-between px-6" style={{ backgroundColor: '#ffffff' }}>
+          <div className="sticky top-0 flex h-16 items-center px-6" style={{ backgroundColor: '#ffffff' }}>
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
-              <DollarSign className="h-6 w-6 text-primary" />
               <span>spendtab</span>
             </Link>
-            <ModeToggle />
           </div>
           <ScrollArea className="flex-1 px-3">
             <div className="space-y-4 py-4">

@@ -86,7 +86,7 @@ export default function AssetsLiabilitiesPage() {
 
           {/* Asset Summary Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+            <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#EDEEFC' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Current Assets</CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -112,7 +112,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Fixed Assets</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -125,7 +125,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#EDEEFC' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Intangible Assets</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -220,7 +220,7 @@ export default function AssetsLiabilitiesPage() {
 
           {/* Liability Summary Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+            <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
                 <TrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -233,7 +233,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#EDEEFC' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Current Liabilities</CardTitle>
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -246,7 +246,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Long-term Liabilities</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -259,7 +259,7 @@ export default function AssetsLiabilitiesPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card style={{ backgroundColor: '#EDEEFC' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Payment Alerts</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
