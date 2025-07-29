@@ -11,6 +11,7 @@ import { CurrencySwitcher, useTaxFeaturesVisible } from "@/components/currency-s
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
+import { formatTrialEndDate } from "@/lib/trial-utils"
 import { getCookie } from "@/lib/cookie-utils"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
@@ -65,6 +66,22 @@ export default function DashboardLayout({
                     <span className="text-lg">spendtab</span>
                   </Link>
                 </div>
+                {subscriptionTier === 'trial' && (
+                  <div className="px-4 pb-4">
+                    <div className="space-y-2">
+                      {trialEndDate && (
+                        <div className="text-xs text-muted-foreground text-center">
+                          {formatTrialEndDate(trialEndDate)}
+                        </div>
+                      )}
+                      <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                        <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
+                          Upgrade to Pro
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
                 <ScrollArea className="flex-1 px-3">
                   <div className="space-y-4 py-4">
                     <div className="px-3 py-2">
@@ -158,13 +175,6 @@ export default function DashboardLayout({
                   <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
                     <AccountSelector />
                   </Suspense>
-                  {(!subscriptionTier || subscriptionTier.toLowerCase() !== 'pro') && (
-                    <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
-                      <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
-                        Upgrade to Pro
-                      </Button>
-                    </Link>
-                  )}
                   <CurrencySwitcher />
                 </div>
               </nav>
@@ -177,6 +187,22 @@ export default function DashboardLayout({
               <span>spendtab</span>
             </Link>
           </div>
+          {subscriptionTier === 'trial' && (
+            <div className="px-6 pb-4">
+              <div className="space-y-2">
+                {trialEndDate && (
+                  <div className="text-xs text-muted-foreground text-center">
+                    {formatTrialEndDate(trialEndDate)}
+                  </div>
+                )}
+                <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                  <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
+                    Upgrade to Pro
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
           <ScrollArea className="flex-1 px-3">
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">
@@ -270,20 +296,6 @@ export default function DashboardLayout({
             <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
               <AccountSelector />
             </Suspense>
-            {subscriptionTier === 'trial' && (
-              <div className="space-y-2">
-                {trialEndDate && (
-                  <div className="text-xs text-muted-foreground text-center">
-                    Trial ends: {new Date(trialEndDate).toLocaleDateString()}
-                  </div>
-                )}
-                <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
-                  <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
-                    Upgrade to Pro
-                  </Button>
-                </Link>
-              </div>
-            )}
             <CurrencySwitcher />
           </div>
         </aside>

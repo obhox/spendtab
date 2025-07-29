@@ -59,7 +59,16 @@ export default function SignUpPage() {
       <div className="w-full max-w-md space-y-6 bg-white p-8 shadow-lg rounded-lg border">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
-          <p className="text-sm text-muted-foreground">Enter your information to get started</p>
+          <p className="text-sm text-muted-foreground">Start your 21-day free trial today</p>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-sm">
+            <div className="flex items-center justify-center space-x-2 text-purple-700">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="font-medium">21 days free trial</span>
+            </div>
+            <p className="text-purple-600 mt-1">No credit card required</p>
+          </div>
         </div>
 
         {/* Temporarily disabled Google Sign-in
@@ -165,7 +174,7 @@ export default function SignUpPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? "Creating account..." : "Start Free Trial"}
           </Button>
         </form>
 
