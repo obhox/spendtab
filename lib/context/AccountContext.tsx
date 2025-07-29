@@ -18,6 +18,7 @@ type AccountContextType = {
   accounts: Account[];
   currentAccount: Account | null;
   isAccountSwitching: boolean;
+  isLoading: boolean;
   setCurrentAccount: (account: Account, showNotification?: boolean) => void;
   loadAccounts: () => Promise<void>;
   addAccount: (name: string, description?: string) => Promise<void>;
@@ -216,6 +217,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         accounts,
         currentAccount,
         isAccountSwitching,
+        isLoading,
         setCurrentAccount,
         loadAccounts: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
         addAccount,

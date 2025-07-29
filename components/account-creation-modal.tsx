@@ -12,7 +12,7 @@ export function AccountCreationModal() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
-  const { accounts, addAccount, currentAccount } = useAccounts()
+  const { accounts, addAccount, currentAccount, isLoading } = useAccounts()
   // Using centralized Supabase client to avoid multiple GoTrueClient instances
 
   useEffect(() => {
@@ -20,8 +20,9 @@ export function AccountCreationModal() {
       // Get current user session
       const { data: { session } } = await supabase.auth.getSession()
       
-      // Only show modal if user is authenticated, has no accounts, and no current account
-      if (session?.user && accounts.length === 0 && !currentAccount) {
+      // Only show modal if user is authenticated, has no accounts, no current account, and not loading
+      // This prevents the modal from flashing during initial load/refresh
+      if (session?.user && accounts.length === 0 && !currentAccount && !isLoading) {
         setOpen(true)
       } else {
         setOpen(false)
@@ -29,7 +30,7 @@ export function AccountCreationModal() {
     }
 
     checkUserAndAccounts()
-  }, [accounts.length, currentAccount, supabase.auth])
+  }, [accounts.length, currentAccount, isLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
