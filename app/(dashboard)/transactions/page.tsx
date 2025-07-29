@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -98,45 +97,39 @@ export default function TransactionsPage() {
           </div>
           
           <TabsContent value="all" className="space-y-3 sm:space-y-4">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-base sm:text-lg">All Transactions</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">View and manage all your financial transactions.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-                <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
-                  <TransactionTable type="all" searchTerm={searchTerm} />
-                </Suspense>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-base sm:text-lg font-semibold">All Transactions</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">View and manage all your financial transactions.</p>
+              </div>
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
+                <TransactionTable type="all" searchTerm={searchTerm} />
+              </Suspense>
+            </div>
           </TabsContent>
           
           <TabsContent value="income" className="space-y-3 sm:space-y-4">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-base sm:text-lg">Income</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">View and manage your income transactions.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-                <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
-                  <TransactionTable type="income" searchTerm={searchTerm} />
-                </Suspense>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-base sm:text-lg font-semibold">Income</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">View and manage your income transactions.</p>
+              </div>
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
+                <TransactionTable type="income" searchTerm={searchTerm} />
+              </Suspense>
+            </div>
           </TabsContent>
           
           <TabsContent value="expenses" className="space-y-3 sm:space-y-4">
-            <Card>
-              <CardHeader className="p-3 sm:p-4 md:p-6">
-                <CardTitle className="text-base sm:text-lg">Expenses</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">View and manage your expense transactions.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-                <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
-                  <TransactionTable type="expense" searchTerm={searchTerm} />
-                </Suspense>
-              </CardContent>
-            </Card>
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-base sm:text-lg font-semibold">Expenses</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">View and manage your expense transactions.</p>
+              </div>
+              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
+                <TransactionTable type="expense" searchTerm={searchTerm} />
+              </Suspense>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
