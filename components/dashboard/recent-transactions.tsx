@@ -65,8 +65,8 @@ export function RecentTransactions() {
     }
     
     // Format according to the type (income/expense)
-    const isIncome = type === "income" || value > 0
-    const prefix = isIncome ? "+" : ""
+    const isIncome = type === "income"
+    const prefix = isIncome ? "+" : "-"
     
     return prefix + formatCurrencyUtil(Math.abs(value), selectedCurrency.code, selectedCurrency.symbol)
   }

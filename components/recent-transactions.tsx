@@ -26,6 +26,7 @@ export function RecentTransactions() {
         date: transaction.date,
         status: "completed",
         category: transaction.category,
+        type: transaction.type,
       }))
     
     setRecentTransactions(sorted)
@@ -45,17 +46,17 @@ export function RecentTransactions() {
         recentTransactions.map((transaction) => (
           <div key={transaction.id} className="flex items-center">
             <Avatar className="h-9 w-9">
-              <AvatarFallback>{transaction.amount > 0 ? "IN" : "EX"}</AvatarFallback>
+              <AvatarFallback>{transaction.type === "income" ? "IN" : "EX"}</AvatarFallback>
             </Avatar>
             <div className="ml-4 space-y-1">
               <p className="text-sm font-medium leading-none">{transaction.name}</p>
               <p className="text-sm text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>
             </div>
             <div className="ml-auto font-medium">
-              <span className={transaction.amount > 0 ? "text-green-500" : "text-red-500"}>
-                {transaction.amount > 0 ? "+" : ""}{formatCurrencyUtil(Math.abs(transaction.amount), selectedCurrency.code, selectedCurrency.symbol)}
+              <span className={transaction.type === "income" ? "text-green-500" : "text-red-500"}>
+                {transaction.type === "income" ? "+" : "-"}{formatCurrencyUtil(Math.abs(transaction.amount), selectedCurrency.code, selectedCurrency.symbol)}
               </span>
-              <Badge variant={transaction.amount > 0 ? "outline" : "secondary"} className="ml-2">
+              <Badge variant={transaction.type === "income" ? "outline" : "secondary"} className="ml-2">
                 {transaction.category}
               </Badge>
             </div>
