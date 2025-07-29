@@ -3,7 +3,6 @@
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CategoryForm } from "@/components/categories/category-form"
 import { ArrowLeft, Plus } from "lucide-react"
 import Link from "next/link"
@@ -28,42 +27,32 @@ export default function CategoriesPage() {
           </CategoryForm>
         </div>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Category Management</CardTitle>
-          <CardDescription className="text-sm md:text-base">
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Category Management</h2>
+          <p className="text-sm md:text-base text-muted-foreground mb-4">
             Create and manage custom categories for your transactions and budgets.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
-            <CategoryManager />
-          </Suspense>
-        </CardContent>
-      </Card>
-      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">Using Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground md:text-base">
-              Categories help you organize your financial data in a way that makes sense for your business.
-              Use them to group similar transactions and track spending patterns over time.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">Customization Tips</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground md:text-base">
-              Create categories that reflect your specific business needs. Use clear, descriptive names and
-              assign colors to make them easy to identify in reports and visualizations.
-            </p>
-          </CardContent>
-        </Card>
+          </p>
+        </div>
+        <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+          <CategoryManager />
+        </Suspense>
+      </div>
+      <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+        <div className="space-y-3">
+          <h3 className="text-lg md:text-xl font-semibold">Using Categories</h3>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Categories help you organize your financial data in a way that makes sense for your business.
+            Use them to group similar transactions and track spending patterns over time.
+          </p>
+        </div>
+        <div className="space-y-3">
+          <h3 className="text-lg md:text-xl font-semibold">Customization Tips</h3>
+          <p className="text-sm text-muted-foreground md:text-base">
+            Create categories that reflect your specific business needs. Use clear, descriptive names and
+            assign colors to make them easy to identify in reports and visualizations.
+          </p>
+        </div>
       </div>
     </div>
   )

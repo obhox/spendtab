@@ -3,7 +3,6 @@
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BudgetForm } from "@/components/budgets/budget-form"
 import { Plus } from 'lucide-react'
 import { Skeleton } from "@/components/ui/skeleton"
@@ -31,17 +30,15 @@ export default function BudgetsPage() {
               </BudgetForm>
             </div>
           </div>
-          <Card className="w-full">
-            <CardHeader className="p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-base sm:text-lg">Budget Management</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">Create and manage your budgets to keep your finances on track.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
-                <BudgetList />
-              </Suspense>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold">Budget Management</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Create and manage your budgets to keep your finances on track.</p>
+            </div>
+            <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
+              <BudgetList />
+            </Suspense>
+          </div>
         </div>
       </div>
     </DataProvider>
