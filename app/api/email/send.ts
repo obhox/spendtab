@@ -1,17 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { EmailTemplate } from '@/components/email-template';
-import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error('Missing RESEND_API_KEY environment variable');
+if (!process.env.LOOPS_API_KEY) {
+  throw new Error('Missing LOOPS_API_KEY environment variable');
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const LOOPS_API_KEY = process.env.LOOPS_API_KEY;
 
 type EmailRequestBody = {
   to: string;
   firstName: string;
   subject: string;
+  templateId?: string;
+  dataVariables?: Record<string, any>;
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -20,27 +20,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { to, firstName, subject } = req.body as EmailRequestBody;
+    const { to, firstName, subject, templateId, dataVariables } = req.body as EmailRequestBody;
 
-    if (!to || !firstName || !subject) {
+    if (!to || !firstName || !templateId) {
       return res.status(400).json({
-        error: 'Missing required fields: to, firstName, or subject'
+        error: 'Missing required fields: to, firstName, or templateId'
       });
     }
 
-    const { data, error } = await resend.emails.send({
-      from: 'SpendTab <support@updates.spendtab.com>',
-      to: [to],
-      subject: subject,
-      react: EmailTemplate({ firstName }),
+    // Send email using Loops.so API
+    const loopsResponse = await fetch('https://app.loops.so/api/v1/transactional', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOOPS_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        transactionalId: templateId,
+        email: to,
+        dataVariables: {
+          firstName: firstName,
+          subject: subject,
+          ...dataVariables
+        }
+      })
     });
 
-    if (error) {
-      console.error('Resend API error:', error);
-      return res.status(400).json({ error: error.message });
+    if (!loopsResponse.ok) {
+      const errorText = await loopsResponse.text();
+      console.error('Loops.so API error:', errorText);
+      return res.status(400).json({ error: `Failed to send email: ${errorText}` });
     }
 
-    return res.status(200).json({ data });
+    const responseData = await loopsResponse.json();
+    return res.status(200).json({ data: responseData });
   } catch (error) {
     console.error('Server error:', error);
     return res.status(500).json({ error: 'Internal server error' });

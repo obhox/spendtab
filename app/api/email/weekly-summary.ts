@@ -1,12 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { WeeklySummary } from '@/react-email-starter/emails/weekly-summary';
-import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error('Missing RESEND_API_KEY environment variable');
+if (!process.env.LOOPS_API_KEY) {
+  throw new Error('Missing LOOPS_API_KEY environment variable');
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+if (!process.env.WEEKLY_SUMMARY_TEMPLATE_ID) {
+  throw new Error('Missing WEEKLY_SUMMARY_TEMPLATE_ID environment variable');
+}
+
+const LOOPS_API_KEY = process.env.LOOPS_API_KEY;
+const WEEKLY_SUMMARY_TEMPLATE_ID = process.env.WEEKLY_SUMMARY_TEMPLATE_ID;
 
 type WeeklySummaryData = {
   userId: string;
@@ -40,32 +43,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const { data: emailResponse, error } = await resend.emails.send({
-      from: 'SpendTab <support@updates.spendtab.com>',
-      to: [data.email],
-      subject: `Your Weekly Financial Summary (${data.weekStartDate} - ${data.weekEndDate})`,
-      react: WeeklySummary({
-        firstName: data.firstName,
-        fullName: data.fullName,
-        weekStartDate: data.weekStartDate,
-        weekEndDate: data.weekEndDate,
-        totalIncome: data.totalIncome,
-        totalExpenses: data.totalExpenses,
-        netCashFlow: data.netCashFlow,
-        topCategories: data.topCategories,
-        transactionCount: data.transactionCount
-      }) as React.ReactElement,
+    // Send email using Loops.so API
+    const loopsResponse = await fetch('https://app.loops.so/api/v1/transactional', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOOPS_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+         transactionalId: WEEKLY_SUMMARY_TEMPLATE_ID,
+         email: data.email,
+        dataVariables: {
+          firstName: data.firstName || 'there',
+          fullName: data.fullName || data.email,
+          weekStartDate: data.weekStartDate,
+          weekEndDate: data.weekEndDate,
+          totalIncome: data.totalIncome.toFixed(2),
+          totalExpenses: data.totalExpenses.toFixed(2),
+          netCashFlow: data.netCashFlow.toFixed(2),
+          netCashFlowFormatted: data.netCashFlow >= 0 
+            ? `+$${data.netCashFlow.toFixed(2)}` 
+            : `-$${Math.abs(data.netCashFlow).toFixed(2)}`,
+          transactionCount: data.transactionCount,
+          topCategory1: data.topCategories[0]?.name || '',
+          topCategory1Amount: data.topCategories[0]?.amount.toFixed(2) || '0.00',
+          topCategory1Percentage: data.topCategories[0]?.percentage || 0,
+          topCategory2: data.topCategories[1]?.name || '',
+          topCategory2Amount: data.topCategories[1]?.amount.toFixed(2) || '0.00',
+          topCategory2Percentage: data.topCategories[1]?.percentage || 0,
+          topCategory3: data.topCategories[2]?.name || '',
+          topCategory3Amount: data.topCategories[2]?.amount.toFixed(2) || '0.00',
+          topCategory3Percentage: data.topCategories[2]?.percentage || 0,
+        }
+      })
     });
 
-    if (error) {
-      console.error('Resend API error:', error);
-      return res.status(400).json({ error: error.message });
+    if (!loopsResponse.ok) {
+      const errorText = await loopsResponse.text();
+      console.error('Loops.so API error:', errorText);
+      return res.status(400).json({ error: `Failed to send email: ${errorText}` });
     }
 
-    if (!emailResponse) {
-      console.error('No data returned from Resend API');
-      return res.status(500).json({ error: 'Failed to send email' });
-    }
+    const responseData = await loopsResponse.json();
+    console.log('Email sent successfully via Loops.so:', responseData);
 
     return res.status(200).json({ message: 'Weekly summary email sent successfully' });
   } catch (error) {

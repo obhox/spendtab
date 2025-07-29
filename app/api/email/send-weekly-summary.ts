@@ -57,11 +57,10 @@ async function getWeeklyData(userId: string, startDate: Date, endDate: Date) {
 
 export async function sendWeeklySummaries() {
   try {
-    // Get all active users
+    // Get all active users (weekly summaries are compulsory for everyone)
     const { data: users, error: userError } = await supabase
       .from('users')
-      .select('id, email, first_name, full_name')
-      .eq('weekly_summary_enabled', true);
+      .select('id, email, first_name, full_name');
 
     if (userError) {
       throw new Error(`Error fetching users: ${userError.message}`);
@@ -77,7 +76,8 @@ export async function sendWeeklySummaries() {
         if (!weeklyData) continue;
 
         // Send email using the weekly-summary endpoint
-        const response = await fetch('/api/email/weekly-summary', {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/email/weekly-summary`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
