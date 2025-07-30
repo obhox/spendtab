@@ -195,7 +195,7 @@ export default function DashboardLayout({
                     {formatTrialEndDate(trialEndDate)}
                   </div>
                 )}
-                <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                <Link href="https://buy.polar.sh/polar_cl_X1FqBaICsJNrqs2KS6VIYBKzMgFtJuunckVUu24NsE3" className="block">
                   <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
                     Upgrade to Pro
                   </Button>
