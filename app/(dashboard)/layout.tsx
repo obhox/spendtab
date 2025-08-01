@@ -7,7 +7,7 @@ import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, C
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { CurrencySwitcher, useTaxFeaturesVisible } from "@/components/currency-switcher"
+import { CurrencySwitcher, useTaxFeaturesVisible, useSelectedCurrency } from "@/components/currency-switcher"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
@@ -37,8 +37,19 @@ export default function DashboardLayout({
 }) {
   const { currentAccount } = useAccounts();
   const isTaxFeaturesVisible = useTaxFeaturesVisible();
+  const selectedCurrency = useSelectedCurrency();
  const [subscriptionTier, setSubscriptionTier] = useState('trial');
   const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
+  
+  // Determine upgrade URL based on currency
+  const upgradeUrl = selectedCurrency.code === 'NGN' 
+    ? 'https://paystack.shop/pay/spendtab-pro'
+    : 'https://buy.polar.sh/polar_cl_X1FqBaICsJNrqs2KS6VIYBKzMgFtJuunckVUu24NsE3';
+  
+  const mobileUpgradeUrl = selectedCurrency.code === 'NGN'
+    ? 'https://paystack.shop/pay/spendtab-pro'
+    : 'https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno';
+  
   useEffect(() => {
     const userSubscriptionTier = getCookie('userSubscriptionTier') || 'trial';
     const userTrialEndDate = getCookie('userTrialEndDate');
@@ -74,7 +85,7 @@ export default function DashboardLayout({
                           {formatTrialEndDate(trialEndDate)}
                         </div>
                       )}
-                      <Link href="https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno" className="block">
+                      <Link href={mobileUpgradeUrl} className="block">
                         <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
                           Upgrade to Pro
                         </Button>
@@ -195,7 +206,7 @@ export default function DashboardLayout({
                     {formatTrialEndDate(trialEndDate)}
                   </div>
                 )}
-                <Link href="https://buy.polar.sh/polar_cl_X1FqBaICsJNrqs2KS6VIYBKzMgFtJuunckVUu24NsE3" className="block">
+                <Link href={upgradeUrl} className="block">
                   <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
                     Upgrade to Pro
                   </Button>
