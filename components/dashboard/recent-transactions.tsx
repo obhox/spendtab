@@ -75,8 +75,19 @@ export function RecentTransactions() {
   if (isLoading) {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="py-2 text-sm text-center">Loading transactions...</div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-2 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     )
@@ -95,15 +106,19 @@ export function RecentTransactions() {
   if (!recentTransactions || recentTransactions.length === 0) {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">No transactions yet</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Add your income and expense transactions to track your financial activity
+          <div className="text-center py-6">
+            <Plus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No transactions yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Add your income and expense transactions to track your financial activity.
             </p>
             <Link href="/transactions">
-              <Button size="sm" variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
                 Add First Transaction
               </Button>
             </Link>
@@ -115,44 +130,46 @@ export function RecentTransactions() {
 
   return (
     <Card style={{ backgroundColor: '#F9F9FA' }}>
-      <CardHeader className="p-3 sm:p-4 md:p-6">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
+          <div>
+            <CardTitle>Recent Transactions</CardTitle>
+          </div>
           <Link href="/transactions">
-            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+            <Button variant="outline" size="sm">
               View All
             </Button>
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-        <div className="space-y-3 sm:space-y-4">
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
           {recentTransactions.map((transaction) => {
             const isIncome = transaction.type === "income"
             
             return (
               <div
                 key={transaction.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4 p-2 sm:p-3 rounded-lg hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs sm:text-sm font-medium text-primary">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary">
                         {(transaction.description || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm sm:text-base font-medium text-foreground truncate">
+                    <p className="font-medium text-foreground truncate">
                       {transaction.description || 'Untitled Transaction'}
                     </p>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 text-xs sm:text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                       <span>{formatDate(transaction.date)}</span>
                       {transaction.category && (
                         <>
-                          <span className="hidden sm:inline">•</span>
-                          <Badge variant="secondary" className="text-xs mt-1 sm:mt-0 w-fit">
+                          <span>•</span>
+                          <Badge variant="secondary" className="text-xs">
                             {transaction.category}
                           </Badge>
                         </>
@@ -160,9 +177,9 @@ export function RecentTransactions() {
                     </div>
                   </div>
                 </div>
-                <div className="flex-shrink-0 text-right sm:text-left">
+                <div className="flex-shrink-0 text-right ml-3">
                   <span
-                    className={`text-sm sm:text-base font-semibold ${
+                    className={`font-semibold ${
                       transaction.type === 'income'
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-red-600 dark:text-red-400'
