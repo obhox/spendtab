@@ -136,13 +136,13 @@ export function AssetTable({ searchTerm, filterType }: AssetTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Asset Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">Current Value</TableHead>
-              <TableHead className="text-right">Purchase Value</TableHead>
-              <TableHead className="text-right">Gain/Loss</TableHead>
-              <TableHead>Purchase Date</TableHead>
+              <TableHead className="min-w-[150px]">Asset Name</TableHead>
+              <TableHead className="min-w-[120px]">Category</TableHead>
+              <TableHead className="min-w-[100px] hidden sm:table-cell">Type</TableHead>
+              <TableHead className="text-right min-w-[120px]">Current Value</TableHead>
+              <TableHead className="text-right min-w-[120px] hidden md:table-cell">Purchase Value</TableHead>
+              <TableHead className="text-right min-w-[120px] hidden lg:table-cell">Gain/Loss</TableHead>
+              <TableHead className="min-w-[120px] hidden lg:table-cell">Purchase Date</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -152,7 +152,7 @@ export function AssetTable({ searchTerm, filterType }: AssetTableProps) {
               
               return (
                 <TableRow key={asset.id}>
-                  <TableCell>
+                  <TableCell className="min-w-[150px]">
                     <div>
                       <div className="font-medium">{asset.name}</div>
                       {asset.description && (
@@ -160,21 +160,33 @@ export function AssetTable({ searchTerm, filterType }: AssetTableProps) {
                           {asset.description}
                         </div>
                       )}
+                      {/* Show type on mobile */}
+                      <div className="sm:hidden mt-1">
+                        <Badge className={getAssetTypeColor(asset.asset_type)}>
+                          {getAssetTypeLabel(asset.asset_type)}
+                        </Badge>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>{asset.category}</TableCell>
-                  <TableCell>
+                  <TableCell className="min-w-[120px]">{asset.category}</TableCell>
+                  <TableCell className="min-w-[100px] hidden sm:table-cell">
                     <Badge className={getAssetTypeColor(asset.asset_type)}>
                       {getAssetTypeLabel(asset.asset_type)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(asset.current_value)}
+                  <TableCell className="text-right font-medium min-w-[120px]">
+                    <div>
+                      {formatCurrency(asset.current_value)}
+                      {/* Show purchase value on mobile */}
+                      <div className="md:hidden text-xs text-muted-foreground mt-1">
+                        Purchase: {asset.purchase_value ? formatCurrency(asset.purchase_value) : '-'}
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right min-w-[120px] hidden md:table-cell">
                     {asset.purchase_value ? formatCurrency(asset.purchase_value) : '-'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right min-w-[120px] hidden lg:table-cell">
                     {gainLoss ? (
                       <div className={`flex items-center justify-end ${gainLoss.isGain ? 'text-green-600' : 'text-red-600'}`}>
                         {gainLoss.isGain ? (
@@ -193,7 +205,7 @@ export function AssetTable({ searchTerm, filterType }: AssetTableProps) {
                       '-'
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="min-w-[120px] hidden lg:table-cell">
                     {asset.purchase_date ? format(new Date(asset.purchase_date), 'MMM d, yyyy') : '-'}
                   </TableCell>
                   <TableCell>

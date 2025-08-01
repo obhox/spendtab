@@ -47,6 +47,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { US_TAX_CATEGORIES, getTaxCategoriesByType, isTaxDeductibleCategory } from "@/lib/us-tax-categories"
 import { useTaxFeaturesVisible } from "@/components/currency-switcher"
+import { HexColorPicker } from "react-colorful"
 
 // Schema for form validation with tax optimization fields
 const transactionSchema = z.object({
@@ -67,8 +68,19 @@ const transactionSchema = z.object({
   mileage: z.coerce.number().optional()
 });
 
+// Schema for category creation
+const categoryFormSchema = z.object({
+  name: z.string().min(2, { message: "Category name must be at least 2 characters." }),
+  type: z.enum(["income", "expense"]),
+  color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, { message: "Color must be a valid hex color (e.g. #FF0000)" }).optional(),
+  icon: z.string().optional()
+})
+
 // Type for form data
 type TransactionFormValues = z.infer<typeof transactionSchema>;
+
+// Type for category form data
+type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
 // Type for existing transaction
 interface Transaction {
@@ -98,7 +110,8 @@ interface TransactionFormProps {
 
 export function TransactionForm({ children, transaction, onSuccess }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
-  const { categories, incomeCategories, expenseCategories } = useCategories();
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const { categories, incomeCategories, expenseCategories, addCategory } = useCategories();
   const { addTransaction, updateTransaction } = useTransactionQuery();
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
@@ -164,6 +177,16 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     defaultValues: getDefaultValues()
   });
 
+  // Initialize category form
+  const categoryForm = useForm<CategoryFormValues>({
+    resolver: zodResolver(categoryFormSchema),
+    defaultValues: {
+      name: "",
+      type: "expense",
+      color: "#6366F1"
+    }
+  });
+
   // Reset form when dialog opens/closes or transaction/account changes
   useEffect(() => {
     if (open) {
@@ -177,9 +200,20 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       }
     };
   }, [open, transaction, currentAccount, form]);
-  
+
   // Get the current transaction type and create filtered categories list
   const transactionType = form.watch("type");
+
+  // Reset category form when category dialog opens
+  useEffect(() => {
+    if (categoryDialogOpen) {
+      categoryForm.reset({
+        name: "",
+        type: transactionType,
+        color: "#6366F1"
+      });
+    }
+  }, [categoryDialogOpen, transactionType, categoryForm]);
   const taxDeductible = form.watch("tax_deductible");
   const filteredCategories = transactionType === "income" 
     ? incomeCategories 
@@ -199,6 +233,40 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
     }
     return [];
   }, [transactionType, taxDeductible]);
+
+  // Handle category form submission
+  const onCategorySubmit = async (data: CategoryFormValues) => {
+    try {
+      await addCategory({
+        name: data.name,
+        type: data.type,
+        color: data.color,
+        icon: data.icon
+      });
+      
+      toast("Category created", {
+        description: "Your new category has been created successfully."
+      });
+      
+      // Set the newly created category as selected in the transaction form
+      form.setValue("category", data.name);
+      
+      // Close the category dialog
+      setCategoryDialogOpen(false);
+      
+      // Reset category form
+      categoryForm.reset({
+        name: "",
+        type: transactionType,
+        color: "#6366F1"
+      });
+    } catch (error) {
+      console.error('Error saving category:', error);
+      toast("Error", {
+        description: "There was a problem saving your category."
+      });
+    }
+  };
 
   // Handle form submission
   async function onSubmit(data: TransactionFormValues) {
@@ -279,436 +347,532 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{transaction ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
-          <DialogDescription>
-            {transaction 
-              ? "Update the details of your transaction." 
-              : "Enter the details of your new transaction."}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select 
-                    onValueChange={handleTypeChange}
-                    defaultValue={field.value}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select transaction type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="income">Income</SelectItem>
-                      <SelectItem value="expense">Expense</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="E.g., Client payment, Office supplies" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="0.00" 
-                      {...field} 
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === "" ? undefined : parseFloat(value));
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{transaction ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
+            <DialogDescription>
+              {transaction 
+                ? "Update the details of your transaction." 
+                : "Enter the details of your new transaction."}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select 
+                      onValueChange={handleTypeChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
                       <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <div className="flex space-x-2">
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select a category" />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select transaction type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {hasCategoriesForType ? (
-                          filteredCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.name}>
-                              <div className="flex items-center">
-                                <div 
-                                  className="w-3 h-3 rounded-full mr-2" 
-                                  style={{ backgroundColor: category.color || '#888888' }} 
-                                />
-                                {category.name}
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="px-2 py-1 text-sm text-muted-foreground">
-                            No categories available
-                          </div>
-                        )}
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Link href="/categories" passHref>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g., Client payment, Office supplies" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        {...field} 
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === "" ? undefined : parseFloat(value));
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <div className="flex space-x-2">
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {hasCategoriesForType ? (
+                            filteredCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.name}>
+                                <div className="flex items-center">
+                                  <div 
+                                    className="w-3 h-3 rounded-full mr-2" 
+                                    style={{ backgroundColor: category.color || '#888888' }} 
+                                  />
+                                  {category.name}
+                                </div>
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-2 py-1 text-sm text-muted-foreground">
+                              No categories available
+                            </div>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="shrink-0"
-                        title="Manage Categories"
+                        title="Add New Category"
+                        onClick={() => setCategoryDialogOpen(true)}
                       >
                         <PlusCircle className="h-4 w-4" />
                       </Button>
-                    </Link>
-                  </div>
-                  {!hasCategoriesForType && (
-                    <div className="mt-2 p-2 text-sm bg-muted/50 rounded-md flex items-start gap-2">
-                      <HelpCircle className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <span className="text-muted-foreground">
-                        Please add categories for {transactionType} transactions on the 
-                        <Link href="/categories" className="text-primary font-medium ml-1">
-                          categories page
-                        </Link>.
-                      </span>
                     </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {transactionType === "expense" && (
-              <FormField
-                control={form.control}
-                name="budget_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budget</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "none" ? null : value)} 
-                      value={field.value || "none"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a budget (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">No Budget</SelectItem>
-                        {budgets.map((budget) => (
-                          <SelectItem key={budget.id} value={budget.id}>
-                            {budget.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Associate this expense with a budget for tracking.
-                    </FormDescription>
+                    {!hasCategoriesForType && (
+                      <div className="mt-2 p-2 text-sm bg-muted/50 rounded-md flex items-start gap-2">
+                        <HelpCircle className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">
+                          Please add categories for {transactionType} transactions by clicking the plus button above.
+                        </span>
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-            
-            <FormField
-              control={form.control}
-              name="payment_source"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Source</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment source" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="credit_card">Credit Card</SelectItem>
-                      <SelectItem value="debit_card">Debit Card</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="stripe">Stripe</SelectItem>
-                      <SelectItem value="paypal">Paypal</SelectItem>
-                      <SelectItem value="mobile_payment">Mobile Payment</SelectItem>
-                      <SelectItem value="check">Check</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Tax Optimization Section */}
-            {isTaxFeaturesVisible && (
-              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                <div className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="text-sm font-medium">Tax Information (US)</h3>
-                </div>
-                
+              
+              {transactionType === "expense" && (
                 <FormField
                   control={form.control}
-                  name="tax_deductible"
+                  name="budget_id"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Tax Deductible
-                        </FormLabel>
-                        <FormDescription>
-                          Check if this transaction is tax deductible for US tax purposes
-                        </FormDescription>
-                      </div>
+                    <FormItem>
+                      <FormLabel>Budget</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === "none" ? null : value)} 
+                        value={field.value || "none"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a budget (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No Budget</SelectItem>
+                          {budgets.map((budget) => (
+                            <SelectItem key={budget.id} value={budget.id}>
+                              {budget.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Associate this expense with a budget for tracking.
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+              )}
+              
+              <FormField
+                control={form.control}
+                name="payment_source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Source</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment source" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="credit_card">Credit Card</SelectItem>
+                        <SelectItem value="debit_card">Debit Card</SelectItem>
+                        <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="stripe">Stripe</SelectItem>
+                        <SelectItem value="paypal">Paypal</SelectItem>
+                        <SelectItem value="mobile_payment">Mobile Payment</SelectItem>
+                        <SelectItem value="check">Check</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                {taxDeductible && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="tax_category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tax Category</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select tax category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableTaxCategories.map((taxCat) => (
-                                <SelectItem key={taxCat.name} value={taxCat.name}>
-                                  <div className="flex flex-col">
-                                    <span>{taxCat.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {taxCat.form} - {taxCat.description}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+              {/* Tax Optimization Section */}
+              {isTaxFeaturesVisible && (
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="text-sm font-medium">Tax Information (US)</h3>
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="tax_deductible"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Tax Deductible
+                          </FormLabel>
                           <FormDescription>
-                            Select the appropriate IRS tax category for this transaction
+                            Check if this transaction is tax deductible for US tax purposes
                           </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="business_purpose"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Business Purpose</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="e.g., Client meeting, office supplies for project X" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Describe the business purpose for tax documentation
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-1 gap-4">
+                  {taxDeductible && (
+                    <>
                       <FormField
                         control={form.control}
-                        name="receipt_url"
+                        name="tax_category"
                         render={({ field }) => (
                           <FormItem>
-                            <FormControl>
-                              <ReceiptUpload
-                                value={field.value}
-                                onChange={field.onChange}
-                                transactionId={transaction?.id}
-                              />
-                            </FormControl>
+                            <FormLabel>Tax Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select tax category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {availableTaxCategories.map((taxCat) => (
+                                  <SelectItem key={taxCat.name} value={taxCat.name}>
+                                    <div className="flex flex-col">
+                                      <span>{taxCat.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {taxCat.form} - {taxCat.description}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormDescription>
-                              Upload receipt image or enter URL to supporting documentation
+                              Select the appropriate IRS tax category for this transaction
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      {form.watch("tax_category") === "Car and Truck Expenses" && (
+                      <FormField
+                        control={form.control}
+                        name="business_purpose"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Business Purpose</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g., Client meeting, office supplies for project X" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Describe the business purpose for tax documentation
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-1 gap-4">
                         <FormField
                           control={form.control}
-                          name="mileage"
+                          name="receipt_url"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Mileage</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="number" 
-                                  step="0.1" 
-                                  placeholder="0.0" 
-                                  {...field}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    field.onChange(value === "" ? undefined : parseFloat(value));
-                                  }}
+                                <ReceiptUpload
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  transactionId={transaction?.id}
                                 />
                               </FormControl>
                               <FormDescription>
-                                Business miles driven (for vehicle expenses)
+                                Upload receipt image or enter URL to supporting documentation
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
 
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Additional details about this transaction" 
-                      className="resize-none"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                        {form.watch("tax_category") === "Car and Truck Expenses" && (
+                          <FormField
+                            control={form.control}
+                            name="mileage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Mileage</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    step="0.1" 
+                                    placeholder="0.0" 
+                                    {...field}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      field.onChange(value === "" ? undefined : parseFloat(value));
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Business miles driven (for vehicle expenses)
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="account_id"
-              render={({ field }) => (
-                <FormItem className="hidden">
-                  <FormControl>
-                    <Input 
-                      type="hidden"
-                      {...field} 
-                      value={field.value || currentAccountId}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-              <Button 
-                type="submit" 
-                disabled={!hasCategoriesForType || !currentAccountId}
-              >
-                {transaction ? "Update Transaction" : "Add Transaction"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Additional details about this transaction" 
+                        className="resize-none"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="account_id"
+                render={({ field }) => (
+                  <FormItem className="hidden">
+                    <FormControl>
+                      <Input 
+                        type="hidden"
+                        {...field} 
+                        value={field.value || currentAccountId}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={!hasCategoriesForType || !currentAccountId}
+                >
+                  {transaction ? "Update Transaction" : "Add Transaction"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Creation Dialog */}
+      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-[425px] p-4 md:p-6">
+          <DialogHeader>
+            <DialogTitle>Add Category</DialogTitle>
+            <DialogDescription>
+              Create a new custom transaction category.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...categoryForm}>
+            <form onSubmit={categoryForm.handleSubmit(onCategorySubmit)} className="space-y-6">
+              <FormField
+                control={categoryForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Category name" className="w-full h-11" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={categoryForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="expense">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={categoryForm.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Color</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <div className="flex h-12 sm:h-11 w-full">
+                            <div 
+                              className="w-12 sm:w-11 h-12 sm:h-11 rounded-l-md border border-r-0"
+                              style={{ backgroundColor: field.value || '#6366F1' }} 
+                            />
+                            <Input 
+                              className="flex-1 rounded-l-none h-12 sm:h-11"
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-4" align="start">
+                        <HexColorPicker 
+                          color={field.value || '#6366F1'} 
+                          onChange={field.onChange}
+                          className="w-full"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="submit" className="w-full sm:w-auto h-11">
+                  Add Category
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

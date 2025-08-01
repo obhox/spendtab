@@ -177,21 +177,22 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Bank Reconciliation</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Reconcile your bank statements with recorded transactions
           </p>
         </div>
-        <BankStatementImport onImportComplete={() => {
-          queryClient.invalidateQueries({ queryKey: ['bankStatements', currentAccount?.id] })
-        }} />
+        <div className="flex-shrink-0">
+          <BankStatementImport onImportComplete={() => {
+            queryClient.invalidateQueries({ queryKey: ['bankStatements', currentAccount?.id] })
+          }} />
         </div>
+      </div>
 
       {/* Summary Cards */}
       {reconciliationSummary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Bank Balance</CardTitle>
@@ -243,7 +244,7 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
         </div>
       )}
 
-      <Tabs defaultValue="statements" className="space-y-4">
+      <Tabs defaultValue="statements" className="space-y-6 sm:space-y-8">
         <TabsList>
           <TabsTrigger value="statements">Bank Statements</TabsTrigger>
           <TabsTrigger value="reconciliation" disabled={!selectedStatement}>
@@ -251,7 +252,7 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="statements" className="space-y-4">
+        <TabsContent value="statements" className="space-y-4 mt-6 sm:mt-0">
           <Card>
             <CardHeader>
               <CardTitle>Bank Statements</CardTitle>
@@ -274,83 +275,89 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
                   />
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Statement Date</TableHead>
-                      <TableHead>Period</TableHead>
-                      <TableHead>Opening Balance</TableHead>
-                      <TableHead>Closing Balance</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {bankStatements.map((statement) => (
-                      <TableRow 
-                        key={statement.id}
-                        className={selectedStatement?.id === statement.id ? 'bg-muted' : ''}
-                      >
-                        <TableCell>
-                          {format(parseISO(statement.statement_date), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          {format(parseISO(statement.statement_period_start), 'MMM d')} - {format(parseISO(statement.statement_period_end), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell>{formatCurrency(statement.opening_balance)}</TableCell>
-                        <TableCell>{formatCurrency(statement.closing_balance)}</TableCell>
-                        <TableCell>{getStatusBadge(statement.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedStatement(statement)}
-                            >
-                              {selectedStatement?.id === statement.id ? 'Selected' : 'Select'}
-                            </Button>
-                            {statement.file_url && (
-                              <Button variant="outline" size="sm">
-                                <Download className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[120px]">Statement Date</TableHead>
+                        <TableHead className="min-w-[180px] hidden sm:table-cell">Period</TableHead>
+                        <TableHead className="min-w-[120px]">Opening Balance</TableHead>
+                        <TableHead className="min-w-[120px]">Closing Balance</TableHead>
+                        <TableHead className="min-w-[80px]">Status</TableHead>
+                        <TableHead className="min-w-[120px]">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {bankStatements.map((statement) => (
+                        <TableRow 
+                          key={statement.id}
+                          className={selectedStatement?.id === statement.id ? 'bg-muted' : ''}
+                        >
+                          <TableCell className="font-medium">
+                            {format(parseISO(statement.statement_date), 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            {format(parseISO(statement.statement_period_start), 'MMM d')} - {format(parseISO(statement.statement_period_end), 'MMM d, yyyy')}
+                          </TableCell>
+                          <TableCell>{formatCurrency(statement.opening_balance)}</TableCell>
+                          <TableCell>{formatCurrency(statement.closing_balance)}</TableCell>
+                          <TableCell>{getStatusBadge(statement.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedStatement(statement)}
+                                className="w-full sm:w-auto"
+                              >
+                                {selectedStatement?.id === statement.id ? 'Selected' : 'Select'}
+                              </Button>
+                              {statement.file_url && (
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="reconciliation" className="space-y-4">
+        <TabsContent value="reconciliation" className="space-y-4 mt-6 sm:mt-0">
           {selectedStatement && (
             <>
               <Card>
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                     <div>
-                      <CardTitle>Reconciliation for {format(parseISO(selectedStatement.statement_date), 'MMMM yyyy')}</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="text-lg sm:text-xl">Reconciliation for {format(parseISO(selectedStatement.statement_date), 'MMMM yyyy')}</CardTitle>
+                      <CardDescription className="text-sm">
                         Match bank transactions with your recorded transactions
                       </CardDescription>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" onClick={handleAutoMatch}>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button variant="outline" onClick={handleAutoMatch} className="w-full sm:w-auto">
                         <RefreshCw className="w-4 h-4 mr-2" />
-                        Auto Match
+                        <span className="hidden sm:inline">Auto Match</span>
+                        <span className="sm:hidden">Auto</span>
                       </Button>
                       {reconciliationSummary?.unmatched_transactions === 0 ? (
-                        <Button onClick={() => completeReconciliation(selectedStatement.id)}>
-                          Complete Reconciliation
+                        <Button onClick={() => completeReconciliation(selectedStatement.id)} className="w-full sm:w-auto">
+                          <span className="hidden sm:inline">Complete Reconciliation</span>
+                          <span className="sm:hidden">Complete</span>
                         </Button>
                       ) : (
                         <AlertDialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
                           <AlertDialogTrigger asChild>
-                            <Button>
-                              Complete Reconciliation
+                            <Button className="w-full sm:w-auto">
+                              <span className="hidden sm:inline">Complete Reconciliation</span>
+                              <span className="sm:hidden">Complete</span>
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -392,69 +399,75 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
                   {isLoadingTransactions ? (
                     <div className="text-center py-4">Loading transactions...</div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {bankTransactions.map((bankTx) => (
-                          <TableRow key={bankTx.id}>
-                            <TableCell>
-                              {format(parseISO(bankTx.transaction_date), 'MMM d, yyyy')}
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate">
-                              {bankTx.description}
-                            </TableCell>
-                            <TableCell>
-                              <span className={bankTx.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'}>
-                                {bankTx.transaction_type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(bankTx.amount))}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={bankTx.transaction_type === 'credit' ? 'default' : 'secondary'}>
-                                {bankTx.transaction_type}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {getMatchStatusBadge(bankTx.match_status, bankTx.match_confidence)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                {bankTx.match_status === 'unmatched' ? (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedBankTransaction(bankTx)
-                                      setShowMatchingDialog(true)
-                                    }}
-                                  >
-                                    <Link className="w-4 h-4 mr-1" />
-                                    Match
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleUnmatch(bankTx.id)}
-                                  >
-                                    <Unlink className="w-4 h-4 mr-1" />
-                                    Unmatch
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[100px]">Date</TableHead>
+                            <TableHead className="min-w-[200px]">Description</TableHead>
+                            <TableHead className="min-w-[100px]">Amount</TableHead>
+                            <TableHead className="min-w-[80px] hidden sm:table-cell">Type</TableHead>
+                            <TableHead className="min-w-[100px]">Status</TableHead>
+                            <TableHead className="min-w-[120px]">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {bankTransactions.map((bankTx) => (
+                            <TableRow key={bankTx.id}>
+                              <TableCell className="font-medium">
+                                {format(parseISO(bankTx.transaction_date), 'MMM d, yyyy')}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate">
+                                {bankTx.description}
+                              </TableCell>
+                              <TableCell>
+                                <span className={bankTx.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'}>
+                                  {bankTx.transaction_type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(bankTx.amount))}
+                                </span>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                <Badge variant={bankTx.transaction_type === 'credit' ? 'default' : 'secondary'}>
+                                  {bankTx.transaction_type}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {getMatchStatusBadge(bankTx.match_status, bankTx.match_confidence)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  {bankTx.match_status === 'unmatched' ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedBankTransaction(bankTx)
+                                        setShowMatchingDialog(true)
+                                      }}
+                                      className="w-full sm:w-auto"
+                                    >
+                                      <Link className="w-4 h-4 mr-1" />
+                                      <span className="hidden sm:inline">Match</span>
+                                      <span className="sm:hidden">Match</span>
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleUnmatch(bankTx.id)}
+                                      className="w-full sm:w-auto"
+                                    >
+                                      <Unlink className="w-4 h-4 mr-1" />
+                                      <span className="hidden sm:inline">Unmatch</span>
+                                      <span className="sm:hidden">Unmatch</span>
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -465,10 +478,10 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
 
       {/* Manual Matching Dialog */}
       <Dialog open={showMatchingDialog} onOpenChange={setShowMatchingDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Match Bank Transaction</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Match Bank Transaction</DialogTitle>
+            <DialogDescription className="text-sm">
               Select a transaction from your records to match with this bank transaction
             </DialogDescription>
           </DialogHeader>
@@ -480,7 +493,7 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
                   <CardTitle className="text-sm">Bank Transaction</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                     <div>
                       <Label>Date</Label>
                       <p>{format(parseISO(selectedBankTransaction.transaction_date), 'MMM d, yyyy')}</p>
@@ -505,48 +518,51 @@ export function BankReconciliationDashboard({ className }: BankReconciliationDas
                 </CardHeader>
                 <CardContent>
                   <div className="max-h-60 overflow-y-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions
-                          .filter(tx => {
-                            // Filter transactions that are close in amount and date
-                            const amountMatch = Math.abs(Math.abs(tx.amount) - Math.abs(selectedBankTransaction.amount)) < 0.01
-                            const dateMatch = Math.abs(new Date(tx.date).getTime() - new Date(selectedBankTransaction.transaction_date).getTime()) < 7 * 24 * 60 * 60 * 1000 // Within 7 days
-                            return amountMatch || dateMatch
-                          })
-                          .slice(0, 10) // Limit to 10 suggestions
-                          .map((tx) => (
-                            <TableRow key={tx.id}>
-                              <TableCell>{format(new Date(tx.date), 'MMM d, yyyy')}</TableCell>
-                              <TableCell className="max-w-[200px] truncate">{tx.description}</TableCell>
-                              <TableCell>
-                                <span className={tx.type === 'income' ? 'text-green-600' : 'text-red-600'}>
-                                  {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                                </span>
-                              </TableCell>
-                              <TableCell>{tx.category}</TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleManualMatch(tx.id)}
-                                >
-                                  Match
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="min-w-[100px]">Date</TableHead>
+                            <TableHead className="min-w-[150px]">Description</TableHead>
+                            <TableHead className="min-w-[100px]">Amount</TableHead>
+                            <TableHead className="min-w-[100px] hidden sm:table-cell">Category</TableHead>
+                            <TableHead className="min-w-[80px]">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {transactions
+                            .filter(tx => {
+                              // Filter transactions that are close in amount and date
+                              const amountMatch = Math.abs(Math.abs(tx.amount) - Math.abs(selectedBankTransaction.amount)) < 0.01
+                              const dateMatch = Math.abs(new Date(tx.date).getTime() - new Date(selectedBankTransaction.transaction_date).getTime()) < 7 * 24 * 60 * 60 * 1000 // Within 7 days
+                              return amountMatch || dateMatch
+                            })
+                            .slice(0, 10) // Limit to 10 suggestions
+                            .map((tx) => (
+                              <TableRow key={tx.id}>
+                                <TableCell className="font-medium">{format(new Date(tx.date), 'MMM d, yyyy')}</TableCell>
+                                <TableCell className="max-w-[150px] truncate">{tx.description}</TableCell>
+                                <TableCell>
+                                  <span className={tx.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+                                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell">{tx.category}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleManualMatch(tx.id)}
+                                    className="w-full sm:w-auto"
+                                  >
+                                    Match
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

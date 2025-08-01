@@ -137,13 +137,13 @@ export function LiabilityTable({ searchTerm, filterType }: LiabilityTableProps) 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Liability Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">Current Balance</TableHead>
-              <TableHead className="text-right">Interest Rate</TableHead>
-              <TableHead className="text-right">Min. Payment</TableHead>
-              <TableHead>Due Date</TableHead>
+              <TableHead className="min-w-[150px]">Liability Name</TableHead>
+              <TableHead className="min-w-[120px]">Category</TableHead>
+              <TableHead className="min-w-[100px] hidden sm:table-cell">Type</TableHead>
+              <TableHead className="text-right min-w-[120px]">Current Balance</TableHead>
+              <TableHead className="text-right min-w-[100px] hidden md:table-cell">Interest Rate</TableHead>
+              <TableHead className="text-right min-w-[120px] hidden lg:table-cell">Min. Payment</TableHead>
+              <TableHead className="min-w-[120px] hidden lg:table-cell">Due Date</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -154,7 +154,7 @@ export function LiabilityTable({ searchTerm, filterType }: LiabilityTableProps) 
               
               return (
                 <TableRow key={liability.id}>
-                  <TableCell>
+                  <TableCell className="min-w-[150px]">
                     <div>
                       <div className="font-medium flex items-center">
                         {liability.name}
@@ -170,24 +170,47 @@ export function LiabilityTable({ searchTerm, filterType }: LiabilityTableProps) 
                           {liability.description}
                         </div>
                       )}
+                      {/* Show type on mobile */}
+                      <div className="sm:hidden mt-1">
+                        <Badge className={getLiabilityTypeColor(liability.liability_type)}>
+                          {getLiabilityTypeLabel(liability.liability_type)}
+                        </Badge>
+                      </div>
+                      {/* Show due date on mobile */}
+                      <div className="lg:hidden mt-1">
+                        {liability.due_date && (
+                          <div className={`text-xs ${overdue ? 'text-red-600' : dueSoon ? 'text-orange-600' : 'text-muted-foreground'}`}>
+                            Due: {format(new Date(liability.due_date), 'MMM d, yyyy')}
+                            {overdue && <span className="ml-1">(Overdue)</span>}
+                            {dueSoon && !overdue && <span className="ml-1">(Due soon)</span>}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>{liability.category}</TableCell>
-                  <TableCell>
+                  <TableCell className="min-w-[120px]">{liability.category}</TableCell>
+                  <TableCell className="min-w-[100px] hidden sm:table-cell">
                     <Badge className={getLiabilityTypeColor(liability.liability_type)}>
                       {getLiabilityTypeLabel(liability.liability_type)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(liability.current_balance)}
+                  <TableCell className="text-right font-medium min-w-[120px]">
+                    <div>
+                      {formatCurrency(liability.current_balance)}
+                      {/* Show interest rate and min payment on mobile */}
+                      <div className="md:hidden text-xs text-muted-foreground mt-1">
+                        {liability.interest_rate && <div>Rate: {liability.interest_rate.toFixed(2)}%</div>}
+                        {liability.minimum_payment && <div>Min: {formatCurrency(liability.minimum_payment)}</div>}
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right min-w-[100px] hidden md:table-cell">
                     {liability.interest_rate ? `${liability.interest_rate.toFixed(2)}%` : '-'}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right min-w-[120px] hidden lg:table-cell">
                     {liability.minimum_payment ? formatCurrency(liability.minimum_payment) : '-'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="min-w-[120px] hidden lg:table-cell">
                     {liability.due_date ? (
                       <div className={`${overdue ? 'text-red-600' : dueSoon ? 'text-orange-600' : ''}`}>
                         {format(new Date(liability.due_date), 'MMM d, yyyy')}

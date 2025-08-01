@@ -50,11 +50,12 @@ export default function AssetsLiabilitiesPage() {
 
   return (
     <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Assets & Liabilities</h1>
-
-      {/* Search */}
-      <div className="flex items-center justify-end space-x-2">
-        <div className="relative max-w-sm">
+      {/* Header with responsive layout */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Assets & Liabilities</h1>
+        
+        {/* Search - moved to header for better mobile layout */}
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search assets and liabilities..."
@@ -65,27 +66,27 @@ export default function AssetsLiabilitiesPage() {
         </div>
       </div>
 
-      {/* Main Tabs */}
+      {/* Main Tabs with responsive layout */}
       <Tabs defaultValue="assets" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="assets">Assets</TabsTrigger>
-          <TabsTrigger value="liabilities">Liabilities</TabsTrigger>
+          <TabsTrigger value="assets" className="text-sm sm:text-base">Assets</TabsTrigger>
+          <TabsTrigger value="liabilities" className="text-sm sm:text-base">Liabilities</TabsTrigger>
         </TabsList>
 
         {/* Assets Tab */}
         <TabsContent value="assets" className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h3 className="text-xl font-semibold">Assets</h3>
             <AssetForm>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Asset
               </Button>
             </AssetForm>
           </div>
 
-          {/* Asset Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Asset Summary Cards - improved mobile grid */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -141,11 +142,11 @@ export default function AssetsLiabilitiesPage() {
 
           {/* Asset Sub-tabs */}
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all">All Assets</TabsTrigger>
-              <TabsTrigger value="current">Current Assets</TabsTrigger>
-              <TabsTrigger value="fixed">Fixed Assets</TabsTrigger>
-              <TabsTrigger value="intangible">Intangible Assets</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">All Assets</TabsTrigger>
+              <TabsTrigger value="current" className="text-xs sm:text-sm">Current</TabsTrigger>
+              <TabsTrigger value="fixed" className="text-xs sm:text-sm">Fixed</TabsTrigger>
+              <TabsTrigger value="intangible" className="text-xs sm:text-sm">Intangible</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
@@ -156,8 +157,10 @@ export default function AssetsLiabilitiesPage() {
                     Manage all your assets in one place
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <AssetTable searchTerm={searchTerm} />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <AssetTable searchTerm={searchTerm} />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -170,8 +173,10 @@ export default function AssetsLiabilitiesPage() {
                     Assets that can be converted to cash within one year
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <AssetTable searchTerm={searchTerm} filterType="current" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <AssetTable searchTerm={searchTerm} filterType="current" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -184,8 +189,10 @@ export default function AssetsLiabilitiesPage() {
                     Long-term tangible assets used in operations
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <AssetTable searchTerm={searchTerm} filterType="fixed" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <AssetTable searchTerm={searchTerm} filterType="fixed" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -198,8 +205,10 @@ export default function AssetsLiabilitiesPage() {
                     Non-physical assets with value
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <AssetTable searchTerm={searchTerm} filterType="intangible" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <AssetTable searchTerm={searchTerm} filterType="intangible" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -208,18 +217,18 @@ export default function AssetsLiabilitiesPage() {
 
         {/* Liabilities Tab */}
         <TabsContent value="liabilities" className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h3 className="text-xl font-semibold">Liabilities</h3>
             <LiabilityForm>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Liability
               </Button>
             </LiabilityForm>
           </div>
 
-          {/* Liability Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {/* Liability Summary Cards - improved mobile grid */}
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Card style={{ backgroundColor: '#E6F1FD' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Liabilities</CardTitle>
@@ -288,11 +297,11 @@ export default function AssetsLiabilitiesPage() {
 
           {/* Liability Sub-tabs */}
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all">All Liabilities</TabsTrigger>
-              <TabsTrigger value="current">Current Liabilities</TabsTrigger>
-              <TabsTrigger value="long-term">Long-term Liabilities</TabsTrigger>
-              <TabsTrigger value="alerts">Payment Alerts</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+              <TabsTrigger value="current" className="text-xs sm:text-sm">Current</TabsTrigger>
+              <TabsTrigger value="long-term" className="text-xs sm:text-sm">Long-term</TabsTrigger>
+              <TabsTrigger value="alerts" className="text-xs sm:text-sm">Alerts</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-4">
@@ -303,8 +312,10 @@ export default function AssetsLiabilitiesPage() {
                     Manage all your liabilities in one place
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <LiabilityTable searchTerm={searchTerm} />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <LiabilityTable searchTerm={searchTerm} />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -317,8 +328,10 @@ export default function AssetsLiabilitiesPage() {
                     Debts and obligations due within one year
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <LiabilityTable searchTerm={searchTerm} filterType="current" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <LiabilityTable searchTerm={searchTerm} filterType="current" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -331,8 +344,10 @@ export default function AssetsLiabilitiesPage() {
                     Debts and obligations due after one year
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <LiabilityTable searchTerm={searchTerm} filterType="long_term" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <LiabilityTable searchTerm={searchTerm} filterType="long_term" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -345,8 +360,10 @@ export default function AssetsLiabilitiesPage() {
                     Overdue and upcoming payment obligations
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <LiabilityTable searchTerm={searchTerm} filterType="alerts" />
+                <CardContent className="p-0 sm:p-6">
+                  <div className="overflow-x-auto">
+                    <LiabilityTable searchTerm={searchTerm} filterType="alerts" />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
