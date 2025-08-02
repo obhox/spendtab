@@ -79,15 +79,7 @@ export function RecentTransactions() {
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-2 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+          <div className="py-6 sm:py-8 text-center text-sm text-muted-foreground">Loading transactions...</div>
         </CardContent>
       </Card>
     )
@@ -110,14 +102,14 @@ export function RecentTransactions() {
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6">
-            <Plus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No transactions yet</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="text-center py-6 sm:py-8">
+            <Plus className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold mb-2">No transactions yet</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 px-2">
               Add your income and expense transactions to track your financial activity.
             </p>
             <Link href="/transactions">
-              <Button>
+              <Button size="sm" className="text-sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Transaction
               </Button>
@@ -130,59 +122,50 @@ export function RecentTransactions() {
 
   return (
     <Card style={{ backgroundColor: '#F9F9FA' }}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Recent Transactions</CardTitle>
+      <CardHeader className="pb-3 sm:pb-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-lg sm:text-xl truncate">Recent Transactions</CardTitle>
           </div>
           <Link href="/transactions">
-            <Button variant="outline" size="sm">
-              View All
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 flex-shrink-0">
+              <span className="hidden sm:inline">View All</span>
+              <span className="sm:hidden">All</span>
             </Button>
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
+      <CardContent className="pt-0 px-3 sm:px-6 pb-4 sm:pb-6">
+        <div className="space-y-3 sm:space-y-4">
           {recentTransactions.map((transaction) => {
             const isIncome = transaction.type === "income"
             
             return (
               <div
                 key={transaction.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 transition-colors"
+                className="flex items-start sm:items-center gap-3 sm:gap-4"
               >
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary">
-                        {(transaction.description || 'U').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-foreground truncate">
-                      {transaction.description || 'Untitled Transaction'}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm sm:text-base truncate">
+                    {transaction.description || 'Untitled Transaction'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      {formatDate(transaction.date)}
                     </p>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <span>{formatDate(transaction.date)}</span>
-                      {transaction.category && (
-                        <>
-                          <span>•</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {transaction.category}
-                          </Badge>
-                        </>
-                      )}
-                    </div>
+                    {transaction.category && (
+                      <Badge variant="outline" className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 flex-shrink-0">
+                        <span className="truncate max-w-[80px] sm:max-w-none">{transaction.category}</span>
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <div className="flex-shrink-0 text-right ml-3">
+                <div className="flex-shrink-0 text-right">
                   <span
-                    className={`font-semibold ${
+                    className={`font-medium text-sm sm:text-base ${
                       transaction.type === 'income'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
+                        ? 'text-green-500'
+                        : 'text-red-500'
                     }`}
                   >
                     {formatCurrency(transaction.amount, transaction.type)}
