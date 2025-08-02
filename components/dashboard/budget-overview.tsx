@@ -30,21 +30,13 @@ export function BudgetOverview() {
   if (isLoading) {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
-        <CardHeader>
-          <CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">
             Budget Overview
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-2 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
+        <CardContent className="pt-0 px-3 sm:px-6 pb-4 sm:pb-6">
+          <div className="py-6 sm:py-8 text-center text-sm text-muted-foreground">Loading budgets...</div>
         </CardContent>
       </Card>
     )
@@ -53,21 +45,21 @@ export function BudgetOverview() {
   if (!budgets || budgets.length === 0) {
     return (
       <Card style={{ backgroundColor: '#F9F9FA' }}>
-        <CardHeader>
-          <CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">
             Budget Overview
           </CardTitle>
-          <CardDescription>Track your spending against your budgets</CardDescription>
+          <CardDescription className="text-sm sm:text-base">Track your spending against your budgets</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No budgets yet</h3>
-            <p className="text-muted-foreground mb-4">
+        <CardContent className="pt-0 px-3 sm:px-6 pb-4 sm:pb-6">
+          <div className="text-center py-6 sm:py-8">
+            <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-semibold mb-2">No budgets yet</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 px-2">
               Create your first budget to start tracking your expenses.
             </p>
             <BudgetForm>
-              <Button>
+              <Button size="sm" className="text-sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Budget
               </Button>
@@ -102,42 +94,43 @@ export function BudgetOverview() {
 
   return (
     <Card style={{ backgroundColor: '#F9F9FA' }}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>
+      <CardHeader className="pb-3 sm:pb-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-lg sm:text-xl truncate">
               Budget Overview
             </CardTitle>
           </div>
           <Link href="/budgets">
-            <Button variant="outline" size="sm">
-              View All
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9 flex-shrink-0">
+              <span className="hidden sm:inline">View All</span>
+              <span className="sm:hidden">All</span>
             </Button>
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="pt-0 px-3 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6">
         {/* Overall Progress */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Overall Progress</span>
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-sm sm:text-base font-medium truncate">Overall Progress</span>
             <Badge variant={
               overallProgress > 100 ? "destructive" : 
               overallProgress > 80 ? "secondary" : 
               "default"
-            }>
+            } className="text-xs sm:text-sm px-1.5 sm:px-2 py-0.5 sm:py-1 flex-shrink-0">
               {Math.round(overallProgress)}%
             </Badge>
           </div>
           <Progress 
             value={Math.min(overallProgress, 100)} 
-            className={`h-2 ${overallProgress > 100 ? 'bg-red-100' : overallProgress > 80 ? 'bg-amber-100' : ''}`}
+            className={`h-2 sm:h-3 ${overallProgress > 100 ? 'bg-red-100' : overallProgress > 80 ? 'bg-amber-100' : ''}`}
           />
         </div>
 
         {/* Individual Budget Progress */}
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Top Spending Budgets</h4>
+        <div className="space-y-3 sm:space-y-4">
+          <h4 className="text-sm sm:text-base font-medium text-muted-foreground">Top Spending Budgets</h4>
           {sortedBudgets.map((budget) => {
             const remaining = budget.amount - budget.spent
             const isOverBudget = budget.percentSpent > 100
@@ -158,29 +151,29 @@ export function BudgetOverview() {
 
             return (
               <div key={budget.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start sm:items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{budget.name}</span>
+                      <span className="font-medium text-sm sm:text-base truncate">{budget.name}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {formatDateRange()}
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground mt-0.5">
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{formatDateRange()}</span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <Badge variant={
                       budget.percentSpent > 100 ? "destructive" : 
                       budget.percentSpent > 80 ? "secondary" : 
                       "default"
-                    }>
+                    } className="text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
                       {Math.round(budget.percentSpent)}%
                     </Badge>
                   </div>
                 </div>
                 <Progress 
                   value={Math.min(budget.percentSpent, 100)} 
-                  className={`h-1.5 ${
+                  className={`h-1.5 sm:h-2 ${
                     isOverBudget ? 'bg-red-100' : 
                     isNearLimit ? 'bg-amber-100' : ''
                   }`}
@@ -191,19 +184,19 @@ export function BudgetOverview() {
         </div>
 
         {/* Budget Summary */}
-        <div className="border-t pt-4">
-          <div className="flex justify-between items-center text-sm">
+        <div className="border-t pt-3 sm:pt-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
             <div className="text-center">
-              <div className="text-muted-foreground">Total Budget</div>
-              <div className="font-medium">{formatCurrency(totalBudgeted)}</div>
+              <div className="text-muted-foreground mb-1">Total Budget</div>
+              <div className="font-medium text-sm sm:text-base truncate">{formatCurrency(totalBudgeted)}</div>
             </div>
             <div className="text-center">
-              <div className="text-muted-foreground">Total Spent</div>
-              <div className="font-medium">{formatCurrency(totalSpent)}</div>
+              <div className="text-muted-foreground mb-1">Total Spent</div>
+              <div className="font-medium text-sm sm:text-base truncate">{formatCurrency(totalSpent)}</div>
             </div>
             <div className="text-center">
-              <div className="text-muted-foreground">Remaining</div>
-              <div className={`font-medium ${
+              <div className="text-muted-foreground mb-1">Remaining</div>
+              <div className={`font-medium text-sm sm:text-base truncate ${
                 totalRemaining < 0 ? 'text-red-600' : 'text-green-600'
               }`}>
                 {formatCurrency(totalRemaining)}
