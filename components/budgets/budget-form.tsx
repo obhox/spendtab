@@ -249,10 +249,10 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-[500px] p-4 md:p-6">
-        <DialogHeader>
-          <DialogTitle>{budget ? "Edit Budget" : "Create Budget"}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto p-3 sm:p-4 md:p-6">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg sm:text-xl">{budget ? "Edit Budget" : "Create Budget"}</DialogTitle>
+          <DialogDescription className="text-sm">
             {budget 
               ? "Update your budget details below." 
               : "Set up a new budget to track your expenses."}
@@ -260,15 +260,19 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Budget Name</FormLabel>
+                  <FormLabel className="text-sm font-medium">Budget Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Monthly Groceries, Marketing Budget" className="w-full" {...field} />
+                    <Input 
+                      placeholder="e.g., Monthly Groceries, Marketing Budget" 
+                      className="w-full text-sm sm:text-base" 
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -280,17 +284,17 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Budget Amount</FormLabel>
+                  <FormLabel className="text-sm font-medium">Budget Amount</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
                       step="0.01" 
                       placeholder="0.00" 
-                      className="w-full" 
+                      className="w-full text-sm sm:text-base" 
                       {...field} 
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-xs sm:text-sm">
                     Enter the total amount you want to allocate for this budget.
                   </FormDescription>
                   <FormMessage />
@@ -303,36 +307,37 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               name="categoryIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categories (Optional)</FormLabel>
+                  <FormLabel className="text-sm font-medium">Categories (Optional)</FormLabel>
                   <FormControl>
                     <div className="space-y-2">
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         Select categories for this budget (optional):
                       </div>
-                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
+                      <div className="max-h-32 sm:max-h-40 overflow-y-auto border rounded-md p-2 sm:p-3 space-y-2">
                         {expenseCategories.map((category) => (
-                          <div key={category.id} className="flex items-center space-x-2">
+                          <div key={category.id} className="flex items-center space-x-2 sm:space-x-3">
                             <Checkbox
                               id={`category-${category.id}`}
                               checked={selectedCategories.includes(category.id.toString())}
                               onCheckedChange={(checked) => handleCategoryToggle(category.id.toString(), Boolean(checked))}
+                              className="h-4 w-4"
                             />
                             <label 
                               htmlFor={`category-${category.id}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center space-x-2"
+                              className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center space-x-2 flex-1 min-w-0"
                             >
                               {category.color && (
                                 <div 
-                                  className="w-3 h-3 rounded-full" 
+                                  className="w-3 h-3 rounded-full flex-shrink-0" 
                                   style={{ backgroundColor: category.color }}
                                 />
                               )}
-                              <span>{category.name}</span>
+                              <span className="truncate">{category.name}</span>
                             </label>
                           </div>
                         ))}
                         {expenseCategories.length === 0 && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs sm:text-sm text-muted-foreground p-2">
                             No expense categories available. <Link href="/categories" className="underline">Create categories</Link> first.
                           </div>
                         )}
@@ -344,7 +349,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                       )}
                     </div>
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-xs sm:text-sm">
                     Link this budget to specific expense categories for automatic tracking.
                   </FormDescription>
                   <FormMessage />
@@ -356,19 +361,20 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               control={form.control}
               name="isRecurring"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      className="h-4 w-4 mt-0.5"
                     />
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="flex items-center gap-2">
-                      <Repeat className="h-4 w-4" />
-                      Make this budget recurring
+                  <div className="space-y-1 leading-none flex-1 min-w-0">
+                    <FormLabel className="flex items-center gap-2 text-sm font-medium">
+                      <Repeat className="h-4 w-4 flex-shrink-0" />
+                      <span>Make this budget recurring</span>
                     </FormLabel>
-                    <FormDescription>
+                    <FormDescription className="text-xs sm:text-sm">
                       Automatically create new budget periods when this one ends.
                     </FormDescription>
                   </div>
@@ -382,10 +388,10 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 name="recurringType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Recurring Frequency</FormLabel>
+                    <FormLabel className="text-sm font-medium">Recurring Frequency</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm sm:text-base">
                           <SelectValue placeholder="Select how often to repeat" />
                         </SelectTrigger>
                       </FormControl>
@@ -396,7 +402,7 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                         <SelectItem value="yearly">Yearly</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormDescription>
+                    <FormDescription className="text-xs sm:text-sm">
                       Choose how often you want this budget to automatically renew.
                     </FormDescription>
                     <FormMessage />
@@ -405,29 +411,29 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               />
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <FormField
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel className="text-sm font-medium">Start Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
+                              "w-full pl-3 text-left font-normal text-sm sm:text-base h-9 sm:h-10",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              <span className="truncate">{format(field.value, "MMM d, yyyy")}</span>
                             ) : (
                               <span>Pick start date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50 flex-shrink-0" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -450,23 +456,23 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
                 name="endDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel className="text-sm font-medium">End Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-full pl-3 text-left font-normal",
+                              "w-full pl-3 text-left font-normal text-sm sm:text-base h-9 sm:h-10",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              <span className="truncate">{format(field.value, "MMM d, yyyy")}</span>
                             ) : (
                               <span>Pick end date</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50 flex-shrink-0" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -485,18 +491,18 @@ export function BudgetForm({ children, budget, onSave }: BudgetFormProps) {
               />
             </div>
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setIsOpen(false)}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm sm:text-base h-9 sm:h-10"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm sm:text-base h-9 sm:h-10"
               >
                 {budget ? "Update Budget" : "Create Budget"}
               </Button>
