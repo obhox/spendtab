@@ -11,8 +11,9 @@ import { CurrencySwitcher, useTaxFeaturesVisible, useSelectedCurrency } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
-import { formatTrialEndDate } from "@/lib/trial-utils"
+import { formatTrialEndDate, checkTrialStatus, shouldShowTrialExpirationPopup } from "@/lib/trial-utils"
 import { getCookie } from "@/lib/cookie-utils"
+import { supabase } from "@/lib/supabase"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -23,6 +24,11 @@ const AccountSelector = dynamic(
 
 const AccountCreationModal = dynamic(
   () => import("@/components/account-creation-modal").then((mod) => mod.AccountCreationModal),
+  { ssr: false }
+)
+
+const TrialExpirationPopup = dynamic(
+  () => import("@/components/trial-expiration-popup").then((mod) => mod.TrialExpirationPopup),
   { ssr: false }
 )
 
@@ -40,6 +46,7 @@ export default function DashboardLayout({
   const selectedCurrency = useSelectedCurrency();
  const [subscriptionTier, setSubscriptionTier] = useState('trial');
   const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
+  const [showTrialExpirationPopup, setShowTrialExpirationPopup] = useState(false);
   
   // Determine upgrade URL based on currency
   const upgradeUrl = selectedCurrency.code === 'NGN' 
@@ -55,13 +62,34 @@ export default function DashboardLayout({
     const userTrialEndDate = getCookie('userTrialEndDate');
     setSubscriptionTier(userSubscriptionTier);
     setTrialEndDate(userTrialEndDate);
-  }, []);
+    
+    // Check trial status and show popup if needed
+    const checkAndShowTrialPopup = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const trialStatus = await checkTrialStatus(session.user.id);
+          if (shouldShowTrialExpirationPopup(trialStatus.isTrialExpired)) {
+            setShowTrialExpirationPopup(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking trial status:', error);
+      }
+    };
+    
+    checkAndShowTrialPopup();
+   }, []);
 
   return (
     <DataProvider>
       <AssetProvider>
         <LiabilityProvider>
           <AccountCreationModal />
+          <TrialExpirationPopup 
+            isOpen={showTrialExpirationPopup}
+            onClose={() => setShowTrialExpirationPopup(false)}
+          />
           <div className="flex min-h-screen">
         <div className="lg:hidden fixed right-3 top-3 z-50">
           <Sheet>

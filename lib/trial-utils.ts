@@ -47,3 +47,22 @@ export function formatTrialEndDate(trialEndDate: string | null): string {
     return `${daysRemaining} days remaining`
   }
 }
+
+export function shouldShowTrialExpirationPopup(isTrialExpired: boolean): boolean {
+  if (!isTrialExpired) return false
+  
+  // Check if user clicked "Remind Me Later" recently
+  const remindLaterTimestamp = localStorage.getItem('trialExpirationRemindLater')
+  if (remindLaterTimestamp) {
+    const remindLaterTime = parseInt(remindLaterTimestamp)
+    const now = Date.now()
+    const twentyFourHours = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    
+    // If less than 24 hours have passed since "Remind Me Later", don't show popup
+    if (now - remindLaterTime < twentyFourHours) {
+      return false
+    }
+  }
+  
+  return true
+}
