@@ -199,8 +199,7 @@ export async function signInWithGoogle() {
         // Don't throw error as sign-in was successful
       }
       
-      // Redirect to dashboard after successful authentication
-      window.location.href = '/dashboard'
+      // Return session data to let the component handle the redirect
       return { session: existingSession }
     }
 

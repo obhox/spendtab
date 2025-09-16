@@ -41,9 +41,14 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const result = await signInWithGoogle()
-      // If we get a session immediately (user already authenticated), 
-      // the signInWithGoogle function will handle the redirect
-      if (!('session' in result) || !result.session) {
+      // If we get a session immediately (user already authenticated), redirect to dashboard
+      if ('session' in result && result.session) {
+        toast("Successfully signed in with Google", {
+          description: "Welcome to SpendTab!",
+        })
+        router.push('/dashboard')
+      } else {
+        // OAuth redirect initiated
         toast("Redirecting to Google", {
           description: "Please complete the authentication process",
         })
@@ -55,7 +60,6 @@ export default function LoginPage() {
       })
       setLoading(false)
     }
-    // Don't set loading to false here if redirecting, as the page will change
   }
 
   return (
