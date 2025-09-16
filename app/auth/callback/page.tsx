@@ -13,8 +13,8 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the session from the URL hash
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Handle OAuth callback by exchanging code for session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
         
         if (error) {
           console.error('Auth callback error:', error)
@@ -25,9 +25,9 @@ export default function AuthCallback() {
           return
         }
 
-        if (session?.user) {
+        if (data?.session?.user) {
           // Ensure user has a default account
-          await ensureUserHasAccount(session.user)
+          await ensureUserHasAccount(data.session.user)
           
           // Send welcome email for new users
           try {
@@ -37,9 +37,54 @@ export default function AuthCallback() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                to: session.user.email,
-                firstName: session.user.user_metadata?.given_name || '',
-                fullName: session.user.user_metadata?.name
+                to: data.session.user.email,
+                firstName: data.session.user.user_metadata?.given_name || '',
+                fullName: data.session.user.user_metadata?.name
+              })
+            })
+          } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError)
+            // Don't throw error as sign-in was successful
+          }
+          
+          toast('Successfully signed in with Google', {
+            description: 'Welcome to SpendTab!'
+          })
+          
+          // Redirect to dashboard
+          router.push('/dashboard')
+        } else {
+          // No session found, redirect to login
+          toast('Authentication incomplete', {
+            description: 'Please try signing in again'
+          })
+          router.push('/login')
+        }
+        
+        if (error) {
+          console.error('Auth callback error:', error)
+          toast('Authentication failed', {
+            description: error.message || 'Failed to complete authentication'
+          })
+          router.push('/login')
+          return
+        }
+
+        if (data?.session?.user) {
+          // Ensure user has a default account
+          await ensureUserHasAccount(data.session.user)
+          
+          // Send welcome email for new users
+          try {
+            await fetch('/api/email/welcome', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: data.session.user.email,
+                firstName: data.session.user.user_metadata?.given_name || '',
+                fullName: data.session.user.user_metadata?.name
               })
             })
           } catch (emailError) {
