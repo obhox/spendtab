@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
     if (!session && 
       !request.nextUrl.pathname.startsWith('/_next') &&
       !request.nextUrl.pathname.startsWith('/api') &&
+      !request.nextUrl.pathname.startsWith('/ingest') &&
       request.nextUrl.pathname !== '/login' &&
       request.nextUrl.pathname !== '/signup' &&
       request.nextUrl.pathname !== '/' &&
