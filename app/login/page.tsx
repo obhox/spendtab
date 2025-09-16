@@ -40,18 +40,22 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
-      await signInWithGoogle()
-      toast("Google sign-in initiated", {
-        description: "Please complete the authentication process",
-      })
+      const result = await signInWithGoogle()
+      // If we get a session immediately (user already authenticated), 
+      // the signInWithGoogle function will handle the redirect
+      if (!('session' in result) || !result.session) {
+        toast("Redirecting to Google", {
+          description: "Please complete the authentication process",
+        })
+      }
     } catch (error: any) {
       console.error("Google sign-in error:", error)
       toast("Google sign-in failed", {
         description: error?.message || "Failed to sign in with Google",
       })
-    } finally {
       setLoading(false)
     }
+    // Don't set loading to false here if redirecting, as the page will change
   }
 
   return (

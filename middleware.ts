@@ -5,13 +5,6 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 export async function middleware(request: NextRequest) {
   // Create a Supabase client configured for use with middleware
   const response = NextResponse.next()
-  
-  // AUTHENTICATION CHECKS DISABLED
-  // This allows access to all routes without authentication
-  // Remove this code and restore the original implementation when you want to re-enable authentication
-  return response;
-  
-  /* Original authentication code (commented out)
   const supabase = createMiddlewareClient({ req: request, res: response })
   
   try {
@@ -23,6 +16,11 @@ export async function middleware(request: NextRequest) {
 
     if (error) throw error
 
+    // Allow auth callback route without authentication
+    if (request.nextUrl.pathname === '/auth/callback') {
+      return response
+    }
+
     // Check if user is trying to access auth pages while logged in
     if (session) {
       if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') {
@@ -30,6 +28,7 @@ export async function middleware(request: NextRequest) {
       }
       return response
     }
+    
     // If no session and trying to access protected routes, redirect to login
     if (!session && 
       !request.nextUrl.pathname.startsWith('/_next') &&
@@ -51,7 +50,6 @@ export async function middleware(request: NextRequest) {
     await supabase.auth.signOut()
     return NextResponse.redirect(new URL('/login', request.url))
   }
-  */
 }
 
 export const config = {

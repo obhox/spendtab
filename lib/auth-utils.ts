@@ -199,6 +199,8 @@ export async function signInWithGoogle() {
         // Don't throw error as sign-in was successful
       }
       
+      // Redirect to dashboard after successful authentication
+      window.location.href = '/dashboard'
       return { session: existingSession }
     }
 
@@ -206,7 +208,7 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
