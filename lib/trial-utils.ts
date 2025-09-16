@@ -48,7 +48,10 @@ export function formatTrialEndDate(trialEndDate: string | null): string {
   }
 }
 
-export function shouldShowTrialExpirationPopup(isTrialExpired: boolean): boolean {
+export function shouldShowTrialExpirationPopup(isTrialExpired: boolean, subscriptionTier?: string): boolean {
+  // Don't show popup for pro users
+  if (subscriptionTier === 'pro') return false
+  
   if (!isTrialExpired) return false
   
   // Check if user clicked "Remind Me Later" recently

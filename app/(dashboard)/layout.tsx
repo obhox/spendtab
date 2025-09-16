@@ -69,7 +69,7 @@ export default function DashboardLayout({
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user?.id) {
           const trialStatus = await checkTrialStatus(session.user.id);
-          if (shouldShowTrialExpirationPopup(trialStatus.isTrialExpired)) {
+          if (shouldShowTrialExpirationPopup(trialStatus.isTrialExpired, userSubscriptionTier)) {
             setShowTrialExpirationPopup(true);
           }
         }
