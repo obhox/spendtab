@@ -435,6 +435,78 @@ export interface Database {
         }
         Relationships: []
       }
+      invoice_settings: {
+        Row: {
+          id: string
+          user_id: string
+          business_name: string | null
+          business_email: string | null
+          business_phone: string | null
+          business_address: string | null
+          business_city: string | null
+          business_state: string | null
+          business_postal_code: string | null
+          business_country: string
+          business_tax_id: string | null
+          business_website: string | null
+          logo_url: string | null
+          default_payment_terms: string
+          default_notes: string | null
+          invoice_prefix: string
+          bank_name: string | null
+          account_name: string | null
+          account_number: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          business_name?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          business_address?: string | null
+          business_city?: string | null
+          business_state?: string | null
+          business_postal_code?: string | null
+          business_country?: string
+          business_tax_id?: string | null
+          business_website?: string | null
+          logo_url?: string | null
+          default_payment_terms?: string
+          default_notes?: string | null
+          invoice_prefix?: string
+          bank_name?: string | null
+          account_name?: string | null
+          account_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          business_name?: string | null
+          business_email?: string | null
+          business_phone?: string | null
+          business_address?: string | null
+          business_city?: string | null
+          business_state?: string | null
+          business_postal_code?: string | null
+          business_country?: string
+          business_tax_id?: string | null
+          business_website?: string | null
+          logo_url?: string | null
+          default_payment_terms?: string
+          default_notes?: string | null
+          invoice_prefix?: string
+          bank_name?: string | null
+          account_name?: string | null
+          account_number?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: {

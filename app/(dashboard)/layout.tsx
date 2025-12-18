@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown, GitCompare, Receipt, Building2 } from "lucide-react"
+import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown, GitCompare, Receipt, Building2, Sliders } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -220,6 +220,13 @@ export default function DashboardLayout({
                           <Settings className="mr-2 h-4 w-4" />
                           <span>Profile</span>
                         </Link>
+                        <Link
+                          href="/invoice-settings"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                        >
+                          <Sliders className="mr-2 h-4 w-4" />
+                          <span>Invoice Settings</span>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -354,6 +361,13 @@ export default function DashboardLayout({
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile</span>
+                  </Link>
+                  <Link
+                    href="/invoice-settings"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                  >
+                    <Sliders className="mr-2 h-4 w-4" />
+                    <span>Invoice Settings</span>
                   </Link>
                 </div>
               </div>

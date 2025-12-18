@@ -75,6 +75,8 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
 
   const handleDownloadPDF = async () => {
     try {
+      console.log('Starting PDF download for invoice:', invoice.id);
+
       // Fetch invoice with all details
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
@@ -82,35 +84,64 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
         .eq('id', invoice.id)
         .single();
 
-      if (invoiceError) throw invoiceError;
+      if (invoiceError) {
+        console.error('Invoice fetch error:', invoiceError);
+        throw new Error(`Failed to fetch invoice: ${invoiceError.message}`);
+      }
+
+      console.log('Invoice data fetched:', invoiceData);
 
       // Fetch user profile
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
+      console.log('Fetching profile...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw new Error(`Failed to fetch profile: ${profileError.message}`);
+      }
+
+      console.log('Profile data:', profileData);
+
+      // Fetch business settings
+      console.log('Fetching business settings...');
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('invoice_settings')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        console.warn('Settings fetch error:', settingsError);
+      }
+
+      console.log('Settings data:', settingsData);
 
       const pdfData: InvoicePDFData = {
         ...invoiceData,
         userProfile: {
           first_name: profileData.first_name,
           last_name: profileData.last_name,
-          company_name: profileData.company_name
-        }
+          company_name: settingsData?.business_name || profileData.company_name
+        },
+        businessSettings: settingsData || null
       };
+
+      console.log('Generating PDF with data:', pdfData);
 
       // Generate and download PDF
       downloadInvoicePDF(pdfData, selectedCurrency.code);
       toast.success('Invoice PDF downloaded');
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      toast.error('Failed to download PDF');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to download PDF: ${errorMessage}`);
     }
   };
 

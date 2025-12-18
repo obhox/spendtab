@@ -43,10 +43,28 @@ interface UserProfile {
   email?: string | null;
 }
 
+interface BusinessSettings {
+  business_name?: string | null;
+  business_email?: string | null;
+  business_phone?: string | null;
+  business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_postal_code?: string | null;
+  business_country?: string | null;
+  business_tax_id?: string | null;
+  business_website?: string | null;
+  logo_url?: string | null;
+  bank_name?: string | null;
+  account_name?: string | null;
+  account_number?: string | null;
+}
+
 export interface InvoicePDFData extends Invoice {
   client: Client;
   items: InvoiceItem[];
   userProfile: UserProfile;
+  businessSettings?: BusinessSettings | null;
 }
 
 /**
@@ -138,23 +156,49 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
   doc.setTextColor(darkRgb[0], darkRgb[1], darkRgb[2]);
   doc.text('FROM:', margin, yPos);
 
+  const fromStartY = yPos;
   yPos += 6;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
-  const companyName = invoiceData.userProfile.company_name ||
+
+  // Use business settings if available, otherwise fall back to user profile
+  const companyName = invoiceData.businessSettings?.business_name ||
+                     invoiceData.userProfile.company_name ||
                      `${invoiceData.userProfile.first_name || ''} ${invoiceData.userProfile.last_name || ''}`.trim() ||
                      'Your Company';
   doc.text(companyName, margin, yPos);
 
-  if (invoiceData.userProfile.email) {
+  const businessEmail = invoiceData.businessSettings?.business_email || invoiceData.userProfile.email;
+  if (businessEmail) {
     yPos += 5;
     doc.setFontSize(10);
     doc.setTextColor(grayRgb[0], grayRgb[1], grayRgb[2]);
-    doc.text(invoiceData.userProfile.email, margin, yPos);
+    doc.text(businessEmail, margin, yPos);
+  }
+
+  if (invoiceData.businessSettings?.business_phone) {
+    yPos += 5;
+    doc.text(invoiceData.businessSettings.business_phone, margin, yPos);
+  }
+
+  if (invoiceData.businessSettings?.business_address) {
+    yPos += 5;
+    doc.text(invoiceData.businessSettings.business_address, margin, yPos);
+  }
+
+  if (invoiceData.businessSettings?.business_city && invoiceData.businessSettings?.business_state) {
+    yPos += 5;
+    const cityLine = `${invoiceData.businessSettings.business_city}, ${invoiceData.businessSettings.business_state} ${invoiceData.businessSettings.business_postal_code || ''}`.trim();
+    doc.text(cityLine, margin, yPos);
+  }
+
+  if (invoiceData.businessSettings?.business_website) {
+    yPos += 5;
+    doc.text(invoiceData.businessSettings.business_website, margin, yPos);
   }
 
   // TO (Client) - Same starting line as FROM
-  let toYPos = yPos - (invoiceData.userProfile.email ? 11 : 6);
+  let toYPos = fromStartY;
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkRgb[0], darkRgb[1], darkRgb[2]);
   doc.setFontSize(10);
@@ -328,6 +372,41 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
     }
   }
 
+  // ========== BANK DETAILS ==========
+  if (invoiceData.businessSettings?.bank_name || invoiceData.businessSettings?.account_number) {
+    yPos += 10;
+
+    // Check if we need a new page
+    if (yPos > pageHeight - 50) {
+      doc.addPage();
+      yPos = margin;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(darkRgb[0], darkRgb[1], darkRgb[2]);
+    doc.text('Bank Details for Payment:', margin, yPos);
+
+    yPos += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(grayRgb[0], grayRgb[1], grayRgb[2]);
+
+    if (invoiceData.businessSettings.bank_name) {
+      doc.text(`Bank: ${invoiceData.businessSettings.bank_name}`, margin, yPos);
+      yPos += 5;
+    }
+
+    if (invoiceData.businessSettings.account_name) {
+      doc.text(`Account Name: ${invoiceData.businessSettings.account_name}`, margin, yPos);
+      yPos += 5;
+    }
+
+    if (invoiceData.businessSettings.account_number) {
+      doc.text(`Account Number: ${invoiceData.businessSettings.account_number}`, margin, yPos);
+    }
+  }
+
   // ========== FOOTER ==========
   doc.setFontSize(8);
   doc.setTextColor(grayRgb[0], grayRgb[1], grayRgb[2]);
@@ -345,8 +424,16 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
  * Download invoice PDF
  */
 export const downloadInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: string = 'USD') => {
-  const doc = generateInvoicePDF(invoiceData, currencyCode);
-  doc.save(`Invoice-${invoiceData.invoice_number}.pdf`);
+  try {
+    console.log('Generating PDF document...');
+    const doc = generateInvoicePDF(invoiceData, currencyCode);
+    console.log('PDF generated successfully, saving...');
+    doc.save(`Invoice-${invoiceData.invoice_number}.pdf`);
+    console.log('PDF saved successfully');
+  } catch (error) {
+    console.error('Error in downloadInvoicePDF:', error);
+    throw error;
+  }
 };
 
 /**

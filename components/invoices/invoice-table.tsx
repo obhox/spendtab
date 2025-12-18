@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 import { InvoiceActions } from "./invoice-actions"
+import { InvoicePreview } from "./invoice-preview"
 import { formatInvoiceDate, getDueDateStatus } from "@/lib/invoice-utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { Search, ChevronLeft, ChevronRight } from "lucide-react"
@@ -33,6 +34,8 @@ export function InvoiceTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   // Filter and search invoices
   const filteredInvoices = useMemo(() => {
@@ -135,7 +138,14 @@ export function InvoiceTable() {
               </TableHeader>
               <TableBody>
                 {paginatedInvoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
+                  <TableRow
+                    key={invoice.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => {
+                      setSelectedInvoice(invoice);
+                      setPreviewOpen(true);
+                    }}
+                  >
                     <TableCell className="font-medium">
                       {invoice.invoice_number}
                     </TableCell>
@@ -164,7 +174,7 @@ export function InvoiceTable() {
                     <TableCell className="text-right font-medium">
                       {selectedCurrency.symbol}{invoice.total_amount.toFixed(2)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <InvoiceActions invoice={invoice} />
                     </TableCell>
                   </TableRow>
@@ -206,6 +216,13 @@ export function InvoiceTable() {
           )}
         </>
       )}
+
+      {/* Invoice Preview Dialog */}
+      <InvoicePreview
+        invoice={selectedInvoice}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
     </div>
   );
 }
