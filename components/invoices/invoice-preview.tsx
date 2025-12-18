@@ -64,38 +64,11 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
     }
 
     try {
-      console.log('Starting PDF download...');
-      console.log('Full invoice:', fullInvoice);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      console.log('Fetching profile data...');
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        throw new Error(`Failed to fetch profile: ${profileError.message}`);
-      }
-
-      console.log('Profile data:', profileData);
-      console.log('Settings:', settings);
-
       const pdfData: InvoicePDFData = {
         ...fullInvoice,
-        userProfile: {
-          first_name: profileData.first_name,
-          last_name: profileData.last_name,
-          company_name: settings?.business_name || profileData.company_name
-        },
         businessSettings: settings || null
       };
 
-      console.log('Generating PDF with data:', pdfData);
       downloadInvoicePDF(pdfData, selectedCurrency.code);
       toast.success('Invoice PDF downloaded');
     } catch (error) {
