@@ -34,6 +34,7 @@ export interface Database {
           company_name?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -72,6 +73,7 @@ export interface Database {
           updated_at?: string
           user_id?: string
         }
+        Relationships: []
       }
       budgets: {
         Row: {
@@ -113,6 +115,7 @@ export interface Database {
           updated_at?: string
           user_id?: string
         }
+        Relationships: []
       }
       categories: {
         Row: {
@@ -148,6 +151,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       assets: {
         Row: {
@@ -195,6 +199,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       liabilities: {
         Row: {
@@ -245,8 +250,209 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          id: string
+          name: string
+          email: string | null
+          phone: string | null
+          address: string | null
+          city: string | null
+          state: string | null
+          postal_code: string | null
+          country: string
+          tax_id: string | null
+          notes: string | null
+          user_id: string
+          account_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          postal_code?: string | null
+          country?: string
+          tax_id?: string | null
+          notes?: string | null
+          user_id: string
+          account_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          postal_code?: string | null
+          country?: string
+          tax_id?: string | null
+          notes?: string | null
+          user_id?: string
+          account_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          id: string
+          invoice_number: string
+          client_id: string | null
+          status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+          invoice_date: string
+          due_date: string
+          paid_date: string | null
+          subtotal: number
+          tax_rate: number
+          tax_amount: number
+          total_amount: number
+          notes: string | null
+          terms: string | null
+          transaction_id: string | null
+          user_id: string
+          account_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          invoice_number: string
+          client_id?: string | null
+          status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+          invoice_date?: string
+          due_date: string
+          paid_date?: string | null
+          subtotal?: number
+          tax_rate?: number
+          tax_amount?: number
+          total_amount?: number
+          notes?: string | null
+          terms?: string | null
+          transaction_id?: string | null
+          user_id: string
+          account_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          invoice_number?: string
+          client_id?: string | null
+          status?: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+          invoice_date?: string
+          due_date?: string
+          paid_date?: string | null
+          subtotal?: number
+          tax_rate?: number
+          tax_amount?: number
+          total_amount?: number
+          notes?: string | null
+          terms?: string | null
+          transaction_id?: string | null
+          user_id?: string
+          account_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoice_items: {
+        Row: {
+          id: string
+          invoice_id: string
+          description: string
+          quantity: number
+          unit_price: number
+          amount: number
+          category: string | null
+          line_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          description: string
+          quantity?: number
+          unit_price?: number
+          amount?: number
+          category?: string | null
+          line_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          description?: string
+          quantity?: number
+          unit_price?: number
+          amount?: number
+          category?: string | null
+          line_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      invoice_sequences: {
+        Row: {
+          id: string
+          account_id: string
+          current_number: number
+          prefix: string
+          year: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          account_id: string
+          current_number?: number
+          prefix?: string
+          year?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          account_id?: string
+          current_number?: number
+          prefix?: string
+          year?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
+    Views: { [_ in never]: never }
+    Functions: {
+      get_next_invoice_number: {
+        Args: {
+          p_account_id: string
+        }
+        Returns: string
+      }
+      create_next_recurring_budget: {
+        Args: {
+          budget_uuid: string
+        }
+        Returns: Json
+      }
+    }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
 
@@ -258,5 +464,5 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey)
 export { createClient }

@@ -15,30 +15,6 @@ export interface Currency {
 // Top currencies + Nigerian Naira + Indian Rupees
 export const SUPPORTED_CURRENCIES: Currency[] = [
   {
-    code: "USD",
-    symbol: "$",
-    name: "US Dollar",
-    locale: "en-US"
-  },
-  {
-    code: "EUR",
-    symbol: "€",
-    name: "Euro",
-    locale: "de-DE"
-  },
-  {
-    code: "GBP",
-    symbol: "£",
-    name: "British Pound",
-    locale: "en-GB"
-  },
-  {
-    code: "INR",
-    symbol: "₹",
-    name: "Indian Rupee",
-    locale: "en-IN"
-  },
-  {
     code: "NGN",
     symbol: "₦",
     name: "Nigerian Naira",
@@ -56,22 +32,13 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 // Currency provider component
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(SUPPORTED_CURRENCIES[0]) // Default to USD
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(SUPPORTED_CURRENCIES[0]) // Default to NGN
 
   // Load saved currency from localStorage on mount
   useEffect(() => {
-    const savedCurrency = localStorage.getItem('selectedCurrency')
-    if (savedCurrency) {
-      try {
-        const currency = JSON.parse(savedCurrency)
-        const validCurrency = SUPPORTED_CURRENCIES.find(c => c.code === currency.code)
-        if (validCurrency) {
-          setSelectedCurrency(validCurrency)
-        }
-      } catch (error) {
-        console.error('Error loading saved currency:', error)
-      }
-    }
+    // Force default to NGN
+    setSelectedCurrency(SUPPORTED_CURRENCIES[0])
+    localStorage.setItem('selectedCurrency', JSON.stringify(SUPPORTED_CURRENCIES[0]))
   }, [])
 
   // Save currency to localStorage when it changes
@@ -161,10 +128,10 @@ export function formatCurrency(amount: number, currencyCode?: string, currencySy
     }
   }
 
-  // Fallback to USD formatting if no context available
-  return new Intl.NumberFormat('en-US', {
+  // Fallback to NGN formatting if no context available
+  return new Intl.NumberFormat('en-NG', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'NGN',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount)

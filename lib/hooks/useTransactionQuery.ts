@@ -75,10 +75,17 @@ export function useTransactionQuery() {
 
   const addTransaction = useMutation({
     mutationFn: async (newTransaction: Omit<Transaction, 'id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('transactions')
         .insert({
           ...newTransaction,
+          user_id: user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

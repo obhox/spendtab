@@ -55,11 +55,17 @@ export function useCategoryQuery() {
 
   const addCategory = useMutation({
     mutationFn: async (newCategory: Omit<Category, 'id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('categories')
         .insert({
           ...newCategory,
           account_id: currentAccount?.id,
+          user_id: user.id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

@@ -90,6 +90,11 @@ export function useBudgetQuery() {
         throw new Error('No account selected');
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const budgetData = {
         name: newBudget.name,
         amount: newBudget.amount,
@@ -98,6 +103,7 @@ export function useBudgetQuery() {
         period: newBudget.period,
         category_id: newBudget.category_id,
         account_id: currentAccount.id,
+        user_id: user.id,
         spent: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
