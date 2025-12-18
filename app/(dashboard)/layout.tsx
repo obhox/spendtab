@@ -11,7 +11,6 @@ import { CurrencySwitcher, useTaxFeaturesVisible, useSelectedCurrency } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
-import { formatTrialEndDate, checkTrialStatus, shouldShowTrialExpirationPopup } from "@/lib/trial-utils"
 import { getCookie } from "@/lib/cookie-utils"
 import { supabase } from "@/lib/supabase"
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -27,11 +26,6 @@ const AccountCreationModal = dynamic(
   { ssr: false }
 )
 
-const TrialExpirationPopup = dynamic(
-  () => import("@/components/trial-expiration-popup").then((mod) => mod.TrialExpirationPopup),
-  { ssr: false }
-)
-
 import { DataProvider } from "@/lib/context/DataProvider"
 import { AssetProvider } from "@/lib/context/AssetContext"
 import { LiabilityProvider } from "@/lib/context/LiabilityContext"
@@ -44,52 +38,12 @@ export default function DashboardLayout({
   const { currentAccount } = useAccounts();
   const isTaxFeaturesVisible = useTaxFeaturesVisible();
   const selectedCurrency = useSelectedCurrency();
- const [subscriptionTier, setSubscriptionTier] = useState('trial');
-  const [trialEndDate, setTrialEndDate] = useState<string | null>(null);
-  const [showTrialExpirationPopup, setShowTrialExpirationPopup] = useState(false);
-  
-  // Determine upgrade URL based on currency
-  const upgradeUrl = selectedCurrency.code === 'NGN' 
-    ? 'https://paystack.shop/pay/spendtab-pro'
-    : 'https://buy.polar.sh/polar_cl_X1FqBaICsJNrqs2KS6VIYBKzMgFtJuunckVUu24NsE3';
-  
-  const mobileUpgradeUrl = selectedCurrency.code === 'NGN'
-    ? 'https://paystack.shop/pay/spendtab-pro'
-    : 'https://buy.polar.sh/polar_cl_QP6eSG473oww6LecS9xOiFRhXkRhci3xD7BCk0qjjno';
-  
-  useEffect(() => {
-    const userSubscriptionTier = getCookie('userSubscriptionTier') || 'trial';
-    const userTrialEndDate = getCookie('userTrialEndDate');
-    setSubscriptionTier(userSubscriptionTier);
-    setTrialEndDate(userTrialEndDate);
-    
-    // Check trial status and show popup if needed
-    const checkAndShowTrialPopup = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          const trialStatus = await checkTrialStatus(session.user.id);
-          if (shouldShowTrialExpirationPopup(trialStatus.isTrialExpired)) {
-            setShowTrialExpirationPopup(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking trial status:', error);
-      }
-    };
-    
-    checkAndShowTrialPopup();
-   }, []);
 
   return (
     <DataProvider>
       <AssetProvider>
         <LiabilityProvider>
           <AccountCreationModal />
-          <TrialExpirationPopup 
-            isOpen={showTrialExpirationPopup}
-            onClose={() => setShowTrialExpirationPopup(false)}
-          />
           <div className="flex min-h-screen">
         <div className="lg:hidden fixed right-3 top-3 z-50">
           <Sheet>
@@ -105,22 +59,6 @@ export default function DashboardLayout({
                     <span className="text-lg">spendtab</span>
                   </Link>
                 </div>
-                {subscriptionTier === 'trial' && (
-                  <div className="px-4 pb-4">
-                    <div className="space-y-2">
-                      {trialEndDate && (
-                        <div className="text-xs text-muted-foreground text-center">
-                          {formatTrialEndDate(trialEndDate)}
-                        </div>
-                      )}
-                      <Link href={mobileUpgradeUrl} className="block">
-                        <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
-                          Upgrade to Pro
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                )}
                 <ScrollArea className="flex-1 px-3">
                   <div className="space-y-4 py-4">
                     <div className="px-3 py-2">
@@ -247,22 +185,6 @@ export default function DashboardLayout({
               <span>spendtab</span>
             </Link>
           </div>
-          {subscriptionTier === 'trial' && (
-            <div className="px-6 pb-4">
-              <div className="space-y-2">
-                {trialEndDate && (
-                  <div className="text-xs text-muted-foreground text-center">
-                    {formatTrialEndDate(trialEndDate)}
-                  </div>
-                )}
-                <Link href={upgradeUrl} className="block">
-                  <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white">
-                    Upgrade to Pro
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
           <ScrollArea className="flex-1 px-3">
             <div className="space-y-4 py-4">
               <div className="px-3 py-2">

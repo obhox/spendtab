@@ -48,8 +48,6 @@ import { toast } from "sonner"
 import { US_TAX_CATEGORIES, getTaxCategoriesByType, isTaxDeductibleCategory } from "@/lib/us-tax-categories"
 import { useTaxFeaturesVisible } from "@/components/currency-switcher"
 import { HexColorPicker } from "react-colorful"
-import { checkTrialStatus } from "@/lib/trial-utils"
-import { TrialExpirationPopup } from "@/components/ui/trial-expiration-popup"
 import { supabase } from "@/lib/supabase"
 
 // Schema for form validation with tax optimization fields
@@ -114,7 +112,6 @@ interface TransactionFormProps {
 export function TransactionForm({ children, transaction, onSuccess }: TransactionFormProps) {
   const [open, setOpen] = useState(false);
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [showTrialExpirationPopup, setShowTrialExpirationPopup] = useState(false);
   const { categories, incomeCategories, expenseCategories, addCategory } = useCategories();
   const { addTransaction, updateTransaction } = useTransactionQuery();
   const { budgets } = useBudgets();
@@ -275,18 +272,6 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   // Handle form submission
   async function onSubmit(data: TransactionFormValues) {
     try {
-      // Check trial status before allowing new transactions (skip for updates)
-      if (!transaction) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          const trialStatus = await checkTrialStatus(session.user.id);
-          if (trialStatus.isTrialExpired) {
-            setShowTrialExpirationPopup(true);
-            return;
-          }
-        }
-      }
-
       // Validate that categories exist for the selected type
       if (!hasCategoriesForType) {
         toast("Categories Required", {
@@ -889,12 +874,6 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
           </Form>
         </DialogContent>
       </Dialog>
-      
-      {/* Trial Expiration Popup */}
-      <TrialExpirationPopup
-        open={showTrialExpirationPopup}
-        onOpenChange={setShowTrialExpirationPopup}
-      />
     </>
   )
 }

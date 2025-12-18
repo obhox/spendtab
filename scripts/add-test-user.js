@@ -23,8 +23,7 @@ async function addTestUser() {
         {
           id: '00000000-0000-0000-0000-000000000001', // Test UUID
           email: 'test@example.com',
-          first_name: 'Test',
-          subscription_tier: 'trial'
+          first_name: 'Test'
         }
       ])
       .select();

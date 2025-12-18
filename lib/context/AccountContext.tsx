@@ -34,27 +34,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [isAccountSwitching, setIsAccountSwitching] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: userData } = useQuery({
-    queryKey: ['user-subscription'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return { subscription_tier: 'trial', trial_end_date: null };
-      
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscription_tier, trial_end_date')
-        .eq('id', session.user.id)
-        .single();
-      
-      if (error) {
-        return { subscription_tier: 'trial', trial_end_date: null };
-      }
-      return data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  });
-
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
@@ -115,15 +94,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setIsInitialLoad(false);
     }
   }, [accounts]);
-
-  useEffect(() => {
-    if (userData?.subscription_tier) {
-      setCookie('userSubscriptionTier', userData.subscription_tier);
-    }
-    if (userData?.trial_end_date) {
-      setCookie('userTrialEndDate', userData.trial_end_date);
-    }
-  }, [userData?.subscription_tier, userData?.trial_end_date]);
 
   const addAccountMutation = useMutation({
     mutationFn: async ({ name, description }: { name: string; description?: string }) => {
