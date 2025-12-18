@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
-import { useInvoiceSettings } from "@/lib/hooks/useInvoiceSettings"
+import { useInvoiceSettings, type InvoiceSettings } from "@/lib/hooks/useInvoiceSettings"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 import { formatInvoiceDate, formatInvoiceDateLong } from "@/lib/invoice-utils"
@@ -90,7 +90,7 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
     );
   }
 
-  const businessInfo = settings || {
+  const businessInfo: Partial<InvoiceSettings> = settings || {
     business_name: fullInvoice.userProfile?.company_name,
     business_email: fullInvoice.userProfile?.email
   };
