@@ -45,8 +45,6 @@ import { useAccounts } from "@/lib/context/AccountContext"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { toast } from "sonner"
-import { US_TAX_CATEGORIES, getTaxCategoriesByType, isTaxDeductibleCategory } from "@/lib/us-tax-categories"
-import { useTaxFeaturesVisible } from "@/components/currency-switcher"
 import { HexColorPicker } from "react-colorful"
 import { supabase } from "@/lib/supabase"
 
@@ -60,13 +58,7 @@ const transactionSchema = z.object({
   payment_source: z.string().min(1, { message: "Please select a payment source." }),
   notes: z.string().optional(),
   budget_id: z.string().nullable(),
-  account_id: z.string().min(1, { message: "An account is required." }),
-  // Tax optimization fields
-  tax_deductible: z.boolean().default(false),
-  tax_category: z.string().optional(),
-  business_purpose: z.string().optional(),
-  receipt_url: z.string().optional(),
-  mileage: z.coerce.number().optional()
+  account_id: z.string().min(1, { message: "An account is required." })
 });
 
 // Schema for category creation
@@ -95,12 +87,6 @@ interface Transaction {
   notes?: string
   budget_id?: string | null
   account_id: string
-  // Tax optimization fields
-  tax_deductible?: boolean
-  tax_category?: string
-  business_purpose?: string
-  receipt_url?: string
-  mileage?: number
 }
 
 interface TransactionFormProps {
@@ -116,7 +102,6 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
   const { addTransaction, updateTransaction } = useTransactionQuery();
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
-  const isTaxFeaturesVisible = useTaxFeaturesVisible();
   
   // Get current account ID for new transactions
   const currentAccountId = currentAccount?.id || "";
@@ -143,13 +128,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         payment_source: transaction.payment_source,
         notes: transaction.notes || "",
         budget_id: transaction.budget_id || null,
-        account_id: transaction.account_id,
-        // Tax optimization fields
-        tax_deductible: transaction.tax_deductible || false,
-        tax_category: transaction.tax_category || "",
-        business_purpose: transaction.business_purpose || "",
-        receipt_url: transaction.receipt_url || "",
-        mileage: transaction.mileage || undefined
+        account_id: transaction.account_id
       };
     }
     
@@ -162,13 +141,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       type: "expense",
       notes: "",
       budget_id: null,
-      account_id: currentAccountId,
-      // Tax optimization defaults
-      tax_deductible: false,
-      tax_category: "",
-      business_purpose: "",
-      receipt_url: "",
-      mileage: undefined
+      account_id: currentAccountId
     };
   };
   
@@ -215,25 +188,12 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       });
     }
   }, [categoryDialogOpen, transactionType, categoryForm]);
-  const taxDeductible = form.watch("tax_deductible");
   const filteredCategories = transactionType === "income" 
     ? incomeCategories 
     : expenseCategories;
 
   const hasCategoriesForType = filteredCategories.length > 0;
 
-  // Get tax categories based on transaction type and tax deductible status
-  const availableTaxCategories = React.useMemo(() => {
-    if (transactionType === "income") {
-      return getTaxCategoriesByType("income");
-    } else if (taxDeductible) {
-      return [
-        ...getTaxCategoriesByType("business_expense"),
-        ...getTaxCategoriesByType("personal_deduction")
-      ];
-    }
-    return [];
-  }, [transactionType, taxDeductible]);
 
   // Handle category form submission
   const onCategorySubmit = async (data: CategoryFormValues) => {
@@ -300,13 +260,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         payment_source: data.payment_source,
         notes: data.notes || "",
         budget_id: data.budget_id,
-        account_id: data.account_id,
-        // Tax optimization fields
-        tax_deductible: data.tax_deductible || false,
-        tax_category: data.tax_category || null,
-        business_purpose: data.business_purpose || null,
-        receipt_url: data.receipt_url || null,
-        mileage: data.mileage || null
+        account_id: data.account_id
       };
 
       if (transaction) {
@@ -589,145 +543,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                 )}
               />
 
-              {/* Tax Optimization Section */}
-              {isTaxFeaturesVisible && (
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-sm font-medium">Tax Information (US)</h3>
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="tax_deductible"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Tax Deductible
-                          </FormLabel>
-                          <FormDescription>
-                            Check if this transaction is tax deductible for US tax purposes
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
 
-                  {taxDeductible && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="tax_category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tax Category</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select tax category" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {availableTaxCategories.map((taxCat) => (
-                                  <SelectItem key={taxCat.name} value={taxCat.name}>
-                                    <div className="flex flex-col">
-                                      <span>{taxCat.name}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {taxCat.form} - {taxCat.description}
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>
-                              Select the appropriate IRS tax category for this transaction
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="business_purpose"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Business Purpose</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="e.g., Client meeting, office supplies for project X" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Describe the business purpose for tax documentation
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="receipt_url"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <ReceiptUpload
-                                  value={field.value}
-                                  onChange={field.onChange}
-                                  transactionId={transaction?.id}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                Upload receipt image or enter URL to supporting documentation
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {form.watch("tax_category") === "Car and Truck Expenses" && (
-                          <FormField
-                            control={form.control}
-                            name="mileage"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mileage</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    step="0.1" 
-                                    placeholder="0.0" 
-                                    {...field}
-                                    onChange={(e) => {
-                                      const value = e.target.value;
-                                      field.onChange(value === "" ? undefined : parseFloat(value));
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormDescription>
-                                  Business miles driven (for vehicle expenses)
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
 
               <FormField
                 control={form.control}

@@ -28,8 +28,6 @@ interface ParsedTransaction {
   type: "income" | "expense"
   payment_source: string
   notes?: string
-  business_purpose?: string
-  tax_deductible?: boolean
   row: number
 }
 
@@ -94,11 +92,7 @@ export function BulkTransactionUpload({ children, onSuccess }: BulkTransactionUp
       'type': 'type',
       'payment_source': 'payment_source',
       'payment source': 'payment_source',
-      'notes': 'notes',
-      'business_purpose': 'business_purpose',
-      'business purpose': 'business_purpose',
-      'tax_deductible': 'tax_deductible',
-      'tax deductible': 'tax_deductible'
+      'notes': 'notes'
     }
 
     const transactions: ParsedTransaction[] = []
@@ -115,8 +109,6 @@ export function BulkTransactionUpload({ children, onSuccess }: BulkTransactionUp
           // Type conversion
           if (mappedField === 'amount') {
             value = parseFloat(value)
-          } else if (mappedField === 'tax_deductible') {
-            value = value.toLowerCase() === 'true' || value === '1'
           } else if (mappedField === 'date') {
             // Try to parse date in various formats
             const dateValue = new Date(value)
@@ -224,8 +216,6 @@ export function BulkTransactionUpload({ children, onSuccess }: BulkTransactionUp
           type: transaction.type,
           payment_source: transaction.payment_source,
           notes: transaction.notes || '',
-          business_purpose: transaction.business_purpose || '',
-          tax_deductible: transaction.tax_deductible || false,
           account_id: currentAccount.id
         }
 
@@ -257,9 +247,9 @@ export function BulkTransactionUpload({ children, onSuccess }: BulkTransactionUp
   }
 
   const downloadTemplate = () => {
-    const template = `date,description,category,amount,type,payment_source,notes,business_purpose,tax_deductible
-2024-01-15,Coffee Shop,Food & Dining,12.50,expense,credit_card,Morning coffee,Business meeting,true
-2024-01-16,Freelance Payment,Income,500.00,income,bank_transfer,Project completion,,false`
+    const template = `date,description,category,amount,type,payment_source,notes
+2024-01-15,Coffee Shop,Food & Dining,12.50,expense,credit_card,Morning coffee
+2024-01-16,Freelance Payment,Income,500.00,income,bank_transfer,Project completion`
     
     const blob = new Blob([template], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -337,7 +327,7 @@ export function BulkTransactionUpload({ children, onSuccess }: BulkTransactionUp
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 <strong>CSV Format:</strong> Your file should include columns: date, description, category, amount, type, payment_source. 
-                Optional columns: notes, business_purpose, tax_deductible.
+                Optional columns: notes.
               </AlertDescription>
             </Alert>
           </div>

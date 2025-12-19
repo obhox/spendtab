@@ -14,12 +14,6 @@ export interface Transaction {
   account_id: string;
   payment_source?: string;
   budget_id?: string | null;
-  // Tax optimization fields
-  tax_deductible?: boolean;
-  tax_category?: string;
-  business_purpose?: string;
-  receipt_url?: string;
-  mileage?: number;
 }
 
 const CACHE_TIME = 30 * 60 * 1000; // 30 minutes

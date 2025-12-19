@@ -158,8 +158,3 @@ export function useFormatCurrency() {
   }
 }
 
-// Hook to determine if tax features should be shown (only for USD)
-export function useTaxFeaturesVisible() {
-  const selectedCurrency = useSelectedCurrency()
-  return selectedCurrency.code === 'USD'
-}

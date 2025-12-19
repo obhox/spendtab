@@ -27,13 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Edit, Trash, Calendar, DollarSign, Tag, CreditCard, FileText, Receipt, ExternalLink, Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Edit, Trash, Calendar, DollarSign, Tag, CreditCard, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { TransactionForm } from "./transaction-form"
 import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { toast } from "sonner"
 import Link from "next/link"
-import { useSelectedCurrency, formatCurrency as formatCurrencyUtil, useTaxFeaturesVisible } from "@/components/currency-switcher"
+import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
 interface Transaction {
   id: string
@@ -46,11 +46,6 @@ interface Transaction {
   notes?: string
   budget_id?: string | null
   account_id: string
-  tax_deductible?: boolean
-  tax_category?: string
-  business_purpose?: string
-  receipt_url?: string
-  mileage?: number
 }
 
 interface TransactionTableProps {
@@ -75,7 +70,6 @@ export function TransactionTable({ type, searchTerm }: TransactionTableProps) {
   const { transactions: allTransactions, deleteTransaction, isLoading, error, isError } = useTransactionQuery()
   const { currentAccount } = useAccounts()
   const selectedCurrency = useSelectedCurrency()
-  const isTaxFeaturesVisible = useTaxFeaturesVisible()
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
@@ -400,56 +394,6 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
                   {selectedTransaction.type === "income" ? "Income" : "Expense"}
                 </Badge>
               </div>
-
-              {/* Tax Information */}
-              {isTaxFeaturesVisible && (selectedTransaction.tax_deductible || selectedTransaction.tax_category || selectedTransaction.business_purpose || selectedTransaction.receipt_url || selectedTransaction.mileage) && (
-                <div className="border-t pt-4">
-                  <p className="text-sm font-medium mb-3">Tax Information</p>
-                  <div className="space-y-3">
-                    {selectedTransaction.tax_deductible && (
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <Badge variant="secondary" className="text-xs">
-                          Tax Deductible
-                        </Badge>
-                      </div>
-                    )}
-                    {selectedTransaction.tax_category && (
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Tax Category</p>
-                        <p className="text-sm">{selectedTransaction.tax_category}</p>
-                      </div>
-                    )}
-                    {selectedTransaction.business_purpose && (
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Business Purpose</p>
-                        <p className="text-sm">{selectedTransaction.business_purpose}</p>
-                      </div>
-                    )}
-                    {selectedTransaction.mileage && (
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Mileage</p>
-                        <p className="text-sm">{selectedTransaction.mileage} miles</p>
-                      </div>
-                    )}
-                    {selectedTransaction.receipt_url && (
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Receipt</p>
-                        <a 
-                          href={selectedTransaction.receipt_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          <Receipt className="h-4 w-4 mr-1" />
-                          View Receipt
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Notes */}
               {selectedTransaction.notes && (

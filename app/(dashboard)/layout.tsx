@@ -7,7 +7,7 @@ import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, C
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { CurrencySwitcher, useTaxFeaturesVisible, useSelectedCurrency } from "@/components/currency-switcher"
+import { CurrencySwitcher, useSelectedCurrency } from "@/components/currency-switcher"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
@@ -36,7 +36,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { currentAccount } = useAccounts();
-  const isTaxFeaturesVisible = useTaxFeaturesVisible();
+
   const selectedCurrency = useSelectedCurrency();
 
   return (
@@ -118,15 +118,7 @@ export default function DashboardLayout({
                           <FileText className="mr-2 h-4 w-4" />
                           <span>Reports</span>
                         </Link>
-                        {isTaxFeaturesVisible && (
-                          <Link
-                            href="/tax-reports"
-                            className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                          >
-                            <Calculator className="mr-2 h-4 w-4" />
-                            <span>Tax Reports</span>
-                          </Link>
-                        )}
+
                       </div>
                     </div>
                     <div className="px-3 py-2">
@@ -244,15 +236,7 @@ export default function DashboardLayout({
                     <FileText className="mr-2 h-4 w-4" />
                     <span>Reports</span>
                   </Link>
-                  {isTaxFeaturesVisible && (
-                    <Link
-                      href="/tax-reports"
-                      className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                    >
-                      <Calculator className="mr-2 h-4 w-4" />
-                      <span>Tax Reports</span>
-                    </Link>
-                  )}
+
                 </div>
               </div>
               <div className="px-3 py-2">
