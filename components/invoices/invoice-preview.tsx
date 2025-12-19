@@ -12,7 +12,7 @@ import { supabase } from "@/lib/supabase"
 import { useInvoiceSettings, type InvoiceSettings } from "@/lib/hooks/useInvoiceSettings"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
-import { formatInvoiceDate, formatInvoiceDateLong } from "@/lib/invoice-utils"
+import { formatInvoiceDate, formatInvoiceDateLong, formatAmount } from "@/lib/invoice-utils"
 import { FileDown, X, Mail, Phone, MapPin, Globe, Building2 } from "lucide-react"
 import { downloadInvoicePDF, type InvoicePDFData } from "@/lib/invoice-pdf-generator"
 import { toast } from "sonner"
@@ -231,8 +231,8 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
                   <tr key={index} className="border-b border-gray-200">
                     <td className="py-3 text-sm text-gray-900">{item.description}</td>
                     <td className="py-3 text-sm text-gray-600 text-right">{item.quantity}</td>
-                    <td className="py-3 text-sm text-gray-600 text-right">{selectedCurrency.symbol}{item.unit_price.toFixed(2)}</td>
-                    <td className="py-3 text-sm text-gray-900 text-right font-medium">{selectedCurrency.symbol}{item.amount.toFixed(2)}</td>
+                    <td className="py-3 text-sm text-gray-600 text-right">{selectedCurrency.symbol}{formatAmount(item.unit_price)}</td>
+                    <td className="py-3 text-sm text-gray-900 text-right font-medium">{selectedCurrency.symbol}{formatAmount(item.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -244,15 +244,15 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
             <div className="w-64 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Subtotal:</span>
-                <span className="text-gray-900 font-medium">{selectedCurrency.symbol}{fullInvoice.subtotal.toFixed(2)}</span>
+                <span className="text-gray-900 font-medium">{selectedCurrency.symbol}{formatAmount(fullInvoice.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Tax ({fullInvoice.tax_rate}%):</span>
-                <span className="text-gray-900 font-medium">{selectedCurrency.symbol}{fullInvoice.tax_amount.toFixed(2)}</span>
+                <span className="text-gray-900 font-medium">{selectedCurrency.symbol}{formatAmount(fullInvoice.tax_amount)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t-2 border-gray-900 pt-2">
                 <span className="text-gray-900">Total:</span>
-                <span className="text-gray-900">{selectedCurrency.symbol}{fullInvoice.total_amount.toFixed(2)}</span>
+                <span className="text-gray-900">{selectedCurrency.symbol}{formatAmount(fullInvoice.total_amount)}</span>
               </div>
             </div>
           </div>

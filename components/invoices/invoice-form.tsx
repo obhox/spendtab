@@ -32,7 +32,7 @@ import { CalendarIcon, Plus, FileText } from "lucide-react"
 import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
 import { ClientSelector } from "@/components/clients/client-selector"
 import { InvoiceLineItems } from "./invoice-line-items"
-import { calculateInvoiceTotals } from "@/lib/invoice-utils"
+import { calculateInvoiceTotals, formatAmount } from "@/lib/invoice-utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 
 // Schema for invoice form validation
@@ -335,15 +335,15 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
               <div className="bg-muted p-4 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span className="font-medium">{currencySymbol}{totals.subtotal.toFixed(2)}</span>
+                  <span className="font-medium">{selectedCurrency.symbol}{formatAmount(totals.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Tax ({taxRate}%):</span>
-                  <span className="font-medium">{currencySymbol}{totals.taxAmount.toFixed(2)}</span>
+                  <span className="font-medium">{selectedCurrency.symbol}{formatAmount(totals.taxAmount)}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
-                  <span>{currencySymbol}{totals.total.toFixed(2)}</span>
+                  <span>{selectedCurrency.symbol}{formatAmount(totals.total)}</span>
                 </div>
               </div>
 

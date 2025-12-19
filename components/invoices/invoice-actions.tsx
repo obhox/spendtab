@@ -46,6 +46,7 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
+import { formatAmount } from "@/lib/invoice-utils"
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -176,7 +177,7 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
           <DialogHeader>
             <DialogTitle>Mark Invoice as Paid</DialogTitle>
             <DialogDescription>
-              This will create an income transaction for {selectedCurrency.symbol}{invoice.total_amount.toFixed(2)}
+              This will create an income transaction for {selectedCurrency.symbol}{formatAmount(invoice.total_amount)}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

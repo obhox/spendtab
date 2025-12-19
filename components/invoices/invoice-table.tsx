@@ -22,7 +22,7 @@ import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 import { InvoiceActions } from "./invoice-actions"
 import { InvoicePreview } from "./invoice-preview"
-import { formatInvoiceDate, getDueDateStatus } from "@/lib/invoice-utils"
+import { formatInvoiceDate, getDueDateStatus, formatAmount } from "@/lib/invoice-utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { Search, ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -172,7 +172,7 @@ export function InvoiceTable() {
                       <InvoiceStatusBadge status={invoice.status} />
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {selectedCurrency.symbol}{invoice.total_amount.toFixed(2)}
+                      {selectedCurrency.symbol}{formatAmount(invoice.total_amount)}
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <InvoiceActions invoice={invoice} />

@@ -97,6 +97,16 @@ export const getDueDateStatus = (dueDate: string, status: string): string => {
 };
 
 /**
+ * Format number with commas and 2 decimal places
+ */
+export const formatAmount = (amount: number): string => {
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
+/**
  * Format invoice date for display
  */
 export const formatInvoiceDate = (dateString: string): string => {

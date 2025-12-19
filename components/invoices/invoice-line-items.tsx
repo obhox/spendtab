@@ -12,7 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Plus, Trash2 } from "lucide-react"
-import { calculateLineItemAmount } from "@/lib/invoice-utils"
+import { calculateLineItemAmount, formatAmount } from "@/lib/invoice-utils"
 
 interface InvoiceLineItemsProps {
   control: Control<any>;
@@ -164,7 +164,7 @@ export function InvoiceLineItems({ control, currency = 'NGN' }: InvoiceLineItems
                       <FormItem>
                         <FormLabel>Amount</FormLabel>
                         <div className="h-10 px-3 py-2 bg-muted rounded-md border text-sm font-medium">
-                          {currencySymbol}{amount.toFixed(2)}
+                          {currencySymbol}{formatAmount(amount)}
                         </div>
                       </FormItem>
                     );

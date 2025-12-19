@@ -282,6 +282,8 @@ export function useInvoiceQuery() {
           amount: invoice.total_amount,
           type: 'income',
           user_id: invoice.user_id,
+          account_id: invoice.account_id,
+          payment_source: paymentSource,
           notes: `Payment for invoice ${invoice.invoice_number} via ${paymentSource}`,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
