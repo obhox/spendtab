@@ -29,6 +29,7 @@ const AccountCreationModal = dynamic(
 import { DataProvider } from "@/lib/context/DataProvider"
 import { AssetProvider } from "@/lib/context/AssetContext"
 import { LiabilityProvider } from "@/lib/context/LiabilityContext"
+import { TaxProvider } from "@/lib/context/TaxContext"
 
 export default function DashboardLayout({
   children,
@@ -43,8 +44,9 @@ export default function DashboardLayout({
     <DataProvider>
       <AssetProvider>
         <LiabilityProvider>
-          <AccountCreationModal />
-          <div className="flex min-h-screen">
+          <TaxProvider>
+            <AccountCreationModal />
+            <div className="flex min-h-screen">
         <div className="lg:hidden fixed right-3 top-3 z-50">
           <Sheet>
             <SheetTrigger asChild>
@@ -137,6 +139,13 @@ export default function DashboardLayout({
                         >
                           <Tag className="mr-2 h-4 w-4" />
                           <span>Categories</span>
+                        </Link>
+                        <Link
+                          href="/tax-centre"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                        >
+                          <Calculator className="mr-2 h-4 w-4" />
+                          <span>Tax Centre</span>
                         </Link>
                       </div>
                     </div>
@@ -256,6 +265,13 @@ export default function DashboardLayout({
                     <Tag className="mr-2 h-4 w-4" />
                     <span>Categories</span>
                   </Link>
+                  <Link
+                    href="/tax-centre"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                  >
+                    <Calculator className="mr-2 h-4 w-4" />
+                    <span>Tax Centre</span>
+                  </Link>
                 </div>
               </div>
               <div className="px-3 py-2">
@@ -293,6 +309,7 @@ export default function DashboardLayout({
         <Analytics />
         <SpeedInsights />
       </div>
+          </TaxProvider>
         </LiabilityProvider>
       </AssetProvider>
     </DataProvider>

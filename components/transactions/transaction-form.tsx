@@ -58,7 +58,8 @@ const transactionSchema = z.object({
   payment_source: z.string().min(1, { message: "Please select a payment source." }),
   notes: z.string().optional(),
   budget_id: z.string().nullable(),
-  account_id: z.string().min(1, { message: "An account is required." })
+  account_id: z.string().min(1, { message: "An account is required." }),
+  tax_deductible: z.boolean().default(false)
 });
 
 // Schema for category creation
@@ -87,6 +88,7 @@ interface Transaction {
   notes?: string
   budget_id?: string | null
   account_id: string
+  tax_deductible?: boolean
 }
 
 interface TransactionFormProps {
@@ -128,7 +130,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         payment_source: transaction.payment_source,
         notes: transaction.notes || "",
         budget_id: transaction.budget_id || null,
-        account_id: transaction.account_id
+        account_id: transaction.account_id,
+        tax_deductible: transaction.tax_deductible || false
       };
     }
     
@@ -141,7 +144,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       type: "expense",
       notes: "",
       budget_id: null,
-      account_id: currentAccountId
+      account_id: currentAccountId,
+      tax_deductible: false
     };
   };
   
@@ -259,8 +263,9 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         type: data.type,
         payment_source: data.payment_source,
         notes: data.notes || "",
-        budget_id: data.budget_id,
-        account_id: data.account_id
+        budget_id: data.budget_id === "none" ? null : data.budget_id,
+        account_id: data.account_id,
+        tax_deductible: data.tax_deductible || false
       };
 
       if (transaction) {
@@ -370,6 +375,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                         step="0.01" 
                         placeholder="0.00" 
                         {...field} 
+                        value={field.value ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
                           field.onChange(value === "" ? undefined : parseFloat(value));
@@ -509,6 +515,31 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                         Associate this expense with a budget for tracking.
                       </FormDescription>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {transactionType === "expense" && (
+                <FormField
+                  control={form.control}
+                  name="tax_deductible"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Tax Deductible
+                        </FormLabel>
+                        <FormDescription>
+                          Mark this expense as tax deductible for tax reporting.
+                        </FormDescription>
+                      </div>
                     </FormItem>
                   )}
                 />
