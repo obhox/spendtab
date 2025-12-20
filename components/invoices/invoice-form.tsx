@@ -26,6 +26,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, FileText } from "lucide-react"
@@ -62,8 +69,11 @@ interface InvoiceFormProps {
   onSuccess?: () => void;
 }
 
+type TaxPreset = "custom" | "vat_7_5";
+
 export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
   const [open, setOpen] = useState(false);
+  const [taxPreset, setTaxPreset] = useState<TaxPreset>("custom");
   const { addInvoice, updateInvoice } = useInvoiceQuery();
   const selectedCurrency = useSelectedCurrency();
 
@@ -107,6 +117,7 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
           }
         ]
       });
+      setTaxPreset(invoice.tax_rate === 7.5 ? "vat_7_5" : "custom");
     } else if (open && !invoice) {
       form.reset({
         client_id: "",
@@ -124,6 +135,7 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
           }
         ]
       });
+      setTaxPreset("custom");
     }
   }, [open, invoice, form]);
 
@@ -175,8 +187,6 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
     })),
     taxRate
   );
-
-  const currencySymbol = selectedCurrency.symbol;
 
   return (
     <>
@@ -315,17 +325,48 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tax Rate (%)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="0"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Select
+                        value={taxPreset}
+                        onValueChange={(value) => {
+                          const nextPreset = value as TaxPreset;
+                          setTaxPreset(nextPreset);
+                          if (nextPreset === "vat_7_5") {
+                            form.setValue("tax_rate", 7.5, { shouldDirty: true, shouldValidate: true });
+                          }
+                          if (nextPreset === "custom" && (field.value ?? 0) === 7.5) {
+                            form.setValue("tax_rate", 0, { shouldDirty: true, shouldValidate: true });
+                          }
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectValue placeholder="Select tax preset" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="custom">Custom</SelectItem>
+                          <SelectItem value="vat_7_5">VAT (7.5%)</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0"
+                          {...field}
+                          onChange={(e) => {
+                            const nextValue = parseFloat(e.target.value);
+                            const normalized = Number.isFinite(nextValue) ? nextValue : 0;
+                            field.onChange(normalized);
+                            setTaxPreset(normalized === 7.5 ? "vat_7_5" : "custom");
+                          }}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

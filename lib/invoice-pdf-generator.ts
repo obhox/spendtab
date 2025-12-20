@@ -268,13 +268,14 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
       doc.setTextColor(black[0], black[1], black[2]);
       doc.text(formatCurrency(item.amount, currencyCode), pageWidth - margin, yPos, { align: 'right' });
 
-      yPos += 8;
+      const rowHeight = 8;
+      const separatorY = yPos + rowHeight / 2;
+      yPos += rowHeight;
 
-      // Subtle line between items
       if (index < invoiceData.items.length - 1) {
         doc.setDrawColor(lightGray[0], lightGray[1], lightGray[2]);
         doc.setLineWidth(0.1);
-        doc.line(margin, yPos - 1, pageWidth - margin, yPos - 1);
+        doc.line(margin, separatorY, pageWidth - margin, separatorY);
       }
     });
 
@@ -296,11 +297,14 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
     doc.setTextColor(black[0], black[1], black[2]);
     doc.text(formatCurrency(invoiceData.subtotal, currencyCode), pageWidth - margin, yPos, { align: 'right' });
 
-    yPos += 6;
-    doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-    doc.text(`Tax (${invoiceData.tax_rate}%)`, totalsX, yPos);
-    doc.setTextColor(black[0], black[1], black[2]);
-    doc.text(formatCurrency(invoiceData.tax_amount, currencyCode), pageWidth - margin, yPos, { align: 'right' });
+    // Only show tax if tax_rate > 0
+    if (invoiceData.tax_rate > 0) {
+      yPos += 6;
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.setFontSize(8);
+      doc.text(`Tax on Profit (${invoiceData.tax_rate}%)`, totalsX, yPos);
+      doc.text(`-${formatCurrency(invoiceData.tax_amount, currencyCode)}`, pageWidth - margin, yPos, { align: 'right' });
+    }
 
     yPos += 10;
     doc.setDrawColor(black[0], black[1], black[2]);
@@ -312,8 +316,17 @@ export const generateInvoicePDF = (invoiceData: InvoicePDFData, currencyCode: st
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(black[0], black[1], black[2]);
-    doc.text('Total', totalsX, yPos);
+    doc.text('Total Due', totalsX, yPos);
     doc.text(formatCurrency(invoiceData.total_amount, currencyCode), pageWidth - margin, yPos, { align: 'right' });
+
+    // Add note about tax if applicable
+    if (invoiceData.tax_rate > 0) {
+      yPos += 8;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text('* Tax deducted from business profit', totalsX, yPos);
+    }
 
     yPos += 25;
 

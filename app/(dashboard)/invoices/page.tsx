@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { InvoiceForm } from "@/components/invoices/invoice-form"
 import { InvoiceTable } from "@/components/invoices/invoice-table"
 import { useInvoiceQuery } from "@/lib/hooks/useInvoiceQuery"
+import { formatAmount } from "@/lib/invoice-utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { DollarSign, AlertTriangle, CheckCircle, FileText } from "lucide-react"
 
@@ -68,7 +69,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {selectedCurrency.symbol}{metrics.totalOutstanding.toFixed(2)}
+              {selectedCurrency.symbol}{formatAmount(metrics.totalOutstanding)}
             </div>
             <p className="text-xs text-muted-foreground">
               Unpaid invoices
@@ -86,7 +87,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${metrics.overdueAmount > 0 ? 'text-red-600' : ''}`}>
-              {selectedCurrency.symbol}{metrics.overdueAmount.toFixed(2)}
+              {selectedCurrency.symbol}{formatAmount(metrics.overdueAmount)}
             </div>
             <p className="text-xs text-muted-foreground">
               Past due date
@@ -104,7 +105,7 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {selectedCurrency.symbol}{metrics.paidThisMonth.toFixed(2)}
+              {selectedCurrency.symbol}{formatAmount(metrics.paidThisMonth)}
             </div>
             <p className="text-xs text-muted-foreground">
               Received in {new Date().toLocaleDateString('en-US', { month: 'long' })}
