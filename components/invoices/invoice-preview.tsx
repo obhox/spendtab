@@ -13,7 +13,7 @@ import { useInvoiceSettings, type InvoiceSettings } from "@/lib/hooks/useInvoice
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 import { formatInvoiceDate, formatInvoiceDateLong, formatAmount } from "@/lib/invoice-utils"
-import { FileDown, X, Mail, Phone, MapPin, Globe, Building2 } from "lucide-react"
+import { FileDown, X, Mail, Phone, MapPin, Globe, Building2, Send } from "lucide-react"
 import { downloadInvoicePDF, type InvoicePDFData } from "@/lib/invoice-pdf-generator"
 import { toast } from "sonner"
 import type { Invoice } from "@/lib/hooks/useInvoiceQuery"
@@ -29,6 +29,7 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
   const selectedCurrency = useSelectedCurrency();
   const [fullInvoice, setFullInvoice] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     if (invoice && open) {
@@ -78,6 +79,106 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
     }
   };
 
+  const handleResendInvoice = async () => {
+    if (!fullInvoice) {
+      toast.error('Invoice data not loaded');
+      return;
+    }
+
+    // Check if client has an email
+    if (!fullInvoice.client?.email) {
+      toast.error('Cannot send invoice: Client does not have an email address');
+      return;
+    }
+
+    setIsSendingEmail(true);
+
+    try {
+      // Ensure invoice has a share token
+      let shareToken = fullInvoice.share_token;
+
+      if (!shareToken) {
+        // Generate a secure random token
+        const randomBytes = new Uint8Array(24);
+        crypto.getRandomValues(randomBytes);
+        shareToken = btoa(String.fromCharCode(...randomBytes))
+          .replace(/\//g, '_')
+          .replace(/\+/g, '-')
+          .replace(/=/g, '');
+
+        // Update invoice with the new token
+        const { error: updateError } = await supabase
+          .from('invoices')
+          .update({ share_token: shareToken })
+          .eq('id', fullInvoice.id);
+
+        if (updateError) {
+          console.error('Error saving share token:', updateError);
+          toast.error('Failed to generate invoice link');
+          return;
+        }
+
+        // Update local state
+        setFullInvoice({ ...fullInvoice, share_token: shareToken });
+      }
+
+      // Format dates and amounts for email
+      const dueDate = new Date(fullInvoice.due_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const invoiceDate = new Date(fullInvoice.invoice_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const totalAmount = fullInvoice.total_amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const currencySymbol = selectedCurrency.code === 'USD' ? '$' : selectedCurrency.code;
+
+      // Send the invoice email
+      const response = await fetch('/api/email/send-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          invoiceNumber: fullInvoice.invoice_number,
+          clientEmail: fullInvoice.client.email,
+          clientName: fullInvoice.client.name,
+          businessName: settings?.business_name || 'Your Business',
+          totalAmount: totalAmount,
+          currencySymbol: currencySymbol,
+          dueDate: dueDate,
+          invoiceDate: invoiceDate,
+          shareToken: shareToken,
+          businessEmail: settings?.business_email || '',
+          status: fullInvoice.status
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Email send error:', errorData);
+        toast.error(`Failed to send email: ${errorData.error}`);
+        return;
+      }
+
+      toast.success(`Invoice sent successfully to ${fullInvoice.client.email}`);
+    } catch (error) {
+      console.error('Error sending invoice email:', error);
+      toast.error('Failed to send invoice email');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   if (!invoice || !fullInvoice) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,10 +202,21 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Invoice Preview</DialogTitle>
-            <Button onClick={handleDownloadPDF} size="sm">
-              <FileDown className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleResendInvoice}
+                size="sm"
+                variant="outline"
+                disabled={isSendingEmail || !fullInvoice.client?.email}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {isSendingEmail ? 'Sending...' : 'Send to Customer'}
+              </Button>
+              <Button onClick={handleDownloadPDF} size="sm">
+                <FileDown className="mr-2 h-4 w-4" />
+                Download PDF
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
