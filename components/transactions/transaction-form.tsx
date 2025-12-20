@@ -37,16 +37,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ReceiptUpload } from "@/components/ui/receipt-upload"
 import { cn } from "@/lib/utils"
 import { format, parse } from "date-fns"
-import { CalendarIcon, PlusCircle, HelpCircle, Receipt, FileText } from "lucide-react"
+import { CalendarIcon, PlusCircle, HelpCircle } from "lucide-react"
 import { useCategories } from "@/lib/context/CategoryContext"
 import { useTransactionQuery } from "@/lib/hooks/useTransactionQuery"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { Textarea } from "@/components/ui/textarea"
-import Link from "next/link"
 import { toast } from "sonner"
 import { HexColorPicker } from "react-colorful"
-import { supabase } from "@/lib/supabase"
 
 // Schema for form validation with tax optimization fields
 const transactionSchema = z.object({
@@ -59,7 +57,16 @@ const transactionSchema = z.object({
   notes: z.string().optional(),
   budget_id: z.string().nullable(),
   account_id: z.string().min(1, { message: "An account is required." }),
-  tax_deductible: z.boolean().default(false)
+  tax_deductible: z.boolean().default(false),
+  receipt_url: z.string().url({ message: "Receipt must be a valid URL." }).optional(),
+}).superRefine((data, ctx) => {
+  if (data.type === "expense" && data.tax_deductible && !data.receipt_url) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["receipt_url"],
+      message: "Receipt is required for tax deductible expenses.",
+    })
+  }
 });
 
 // Schema for category creation
@@ -89,6 +96,7 @@ interface Transaction {
   budget_id?: string | null
   account_id: string
   tax_deductible?: boolean
+  receipt_url?: string | null
 }
 
 interface TransactionFormProps {
@@ -131,7 +139,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         notes: transaction.notes || "",
         budget_id: transaction.budget_id || null,
         account_id: transaction.account_id,
-        tax_deductible: transaction.tax_deductible || false
+        tax_deductible: transaction.tax_deductible || false,
+        receipt_url: transaction.receipt_url ?? undefined,
       };
     }
     
@@ -145,7 +154,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       notes: "",
       budget_id: null,
       account_id: currentAccountId,
-      tax_deductible: false
+      tax_deductible: false,
+      receipt_url: undefined,
     };
   };
   
@@ -181,6 +191,7 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
 
   // Get the current transaction type and create filtered categories list
   const transactionType = form.watch("type");
+  const isTaxDeductible = form.watch("tax_deductible");
 
   // Reset category form when category dialog opens
   useEffect(() => {
@@ -255,6 +266,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
       const formattedDate = format(data.date, "yyyy-MM-dd");
       
       // Create the transaction data object
+      const isExpense = data.type === "expense";
+      const isTaxDeductibleExpense = isExpense && (data.tax_deductible || false);
       const processedData = {
         description: data.description,
         amount: data.amount,
@@ -265,7 +278,8 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
         notes: data.notes || "",
         budget_id: data.budget_id === "none" ? null : data.budget_id,
         account_id: data.account_id,
-        tax_deductible: data.tax_deductible || false
+        tax_deductible: isExpense ? (data.tax_deductible || false) : false,
+        receipt_url: isTaxDeductibleExpense ? (data.receipt_url ?? null) : null,
       };
 
       if (transaction) {
@@ -540,6 +554,29 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                           Mark this expense as tax deductible for tax reporting.
                         </FormDescription>
                       </div>
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {transactionType === "expense" && isTaxDeductible && (
+                <FormField
+                  control={form.control}
+                  name="receipt_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Receipt</FormLabel>
+                      <FormControl>
+                        <ReceiptUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          transactionId={transaction?.id}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload a receipt for this tax deductible expense.
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

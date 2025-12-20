@@ -113,8 +113,121 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
     }
   };
 
-  const handleMarkAsSent = () => {
-    updateStatus({ invoiceId: invoice.id, status: 'sent' });
+  const handleMarkAsSent = async () => {
+    try {
+      // First, fetch the complete invoice data
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*, client:clients(*)')
+        .eq('id', invoice.id)
+        .single();
+
+      if (invoiceError || !invoiceData) {
+        console.error('Error fetching invoice:', invoiceError);
+        toast.error('Failed to fetch invoice details');
+        return;
+      }
+
+      // Check if client has an email
+      if (!invoiceData.client?.email) {
+        toast.error('Cannot send invoice: Client does not have an email address');
+        return;
+      }
+
+      // Ensure invoice has a share token
+      let shareToken = invoiceData.share_token;
+
+      if (!shareToken) {
+        // Generate a secure random token
+        const randomBytes = new Uint8Array(24);
+        crypto.getRandomValues(randomBytes);
+        shareToken = btoa(String.fromCharCode(...randomBytes))
+          .replace(/\//g, '_')
+          .replace(/\+/g, '-')
+          .replace(/=/g, '');
+
+        // Update invoice with the new token
+        const { error: updateError } = await supabase
+          .from('invoices')
+          .update({ share_token: shareToken })
+          .eq('id', invoice.id);
+
+        if (updateError) {
+          console.error('Error saving share token:', updateError);
+          toast.error('Failed to generate invoice link');
+          return;
+        }
+      }
+
+      // Fetch business settings
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('You must be logged in to send invoices');
+        return;
+      }
+
+      const { data: settingsData } = await supabase
+        .from('invoice_settings')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      // Format dates and amounts for email
+      const dueDate = new Date(invoiceData.due_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const invoiceDate = new Date(invoiceData.invoice_date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const totalAmount = invoiceData.total_amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const currencySymbol = selectedCurrency.code === 'USD' ? '$' : selectedCurrency.code;
+
+      // Update the status first
+      updateStatus({ invoiceId: invoice.id, status: 'sent' });
+
+      // Then send the invoice email
+      const response = await fetch('/api/email/send-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          invoiceNumber: invoiceData.invoice_number,
+          clientEmail: invoiceData.client.email,
+          clientName: invoiceData.client.name,
+          businessName: settingsData?.business_name || 'Your Business',
+          totalAmount: totalAmount,
+          currencySymbol: currencySymbol,
+          dueDate: dueDate,
+          invoiceDate: invoiceDate,
+          shareToken: shareToken,
+          businessEmail: settingsData?.business_email || '',
+          status: 'sent'
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Email send error:', errorData);
+        toast.error(`Invoice marked as sent, but email failed to send: ${errorData.error}`);
+        return;
+      }
+
+      toast.success('Invoice marked as sent and email sent to customer');
+    } catch (error) {
+      console.error('Error sending invoice email:', error);
+      toast.error('Invoice marked as sent, but failed to send email');
+    }
   };
 
   const handleMarkAsCancelled = () => {

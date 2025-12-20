@@ -15,10 +15,10 @@ export interface Transaction {
   payment_source?: string;
   budget_id?: string | null;
   tax_deductible?: boolean;
-  tax_category?: string;
-  business_purpose?: string;
-  receipt_url?: string;
-  mileage?: number;
+  tax_category?: string | null;
+  business_purpose?: string | null;
+  receipt_url?: string | null;
+  mileage?: number | null;
 }
 
 const CACHE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -57,10 +57,10 @@ export function useTransactionQuery() {
       budget_id: item.budget_id || null,
       // Tax optimization fields
       tax_deductible: item.tax_deductible || false,
-      tax_category: item.tax_category || undefined,
-      business_purpose: item.business_purpose || undefined,
-      receipt_url: item.receipt_url || undefined,
-      mileage: item.mileage || undefined
+      tax_category: item.tax_category ?? undefined,
+      business_purpose: item.business_purpose ?? undefined,
+      receipt_url: item.receipt_url ?? undefined,
+      mileage: item.mileage ?? undefined
     })) || [];
   };
 
