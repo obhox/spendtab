@@ -6,12 +6,13 @@ import { useFormatCurrency } from "@/components/currency-switcher"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export function TaxBreakdown() {
-  const { 
-    taxLiability, 
-    turnoverYTD, 
-    taxableIncome, 
-    isSmallBusinessQualified, 
-    taxSettings 
+  const {
+    taxLiability,
+    vatLiability,
+    turnoverYTD,
+    taxableIncome,
+    isSmallBusinessQualified,
+    taxSettings
   } = useTax()
   const formatCurrency = useFormatCurrency()
 
@@ -81,11 +82,38 @@ export function TaxBreakdown() {
             </Table>
           </div>
           
+          {vatLiability.vatCollected > 0 && (
+            <div className="rounded-md border mt-6">
+              <div className="bg-muted/50 px-4 py-2 border-b">
+                <h3 className="font-semibold">VAT (Value Added Tax)</h3>
+              </div>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-medium">VAT Collected from Invoices</TableCell>
+                    <TableCell className="text-right">{formatCurrency(vatLiability.vatCollected)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">VAT Paid on Expenses</TableCell>
+                    <TableCell className="text-right">{formatCurrency(vatLiability.vatPaid)}</TableCell>
+                  </TableRow>
+                  <TableRow className="bg-muted/30">
+                    <TableCell className="font-bold">Net VAT Liability</TableCell>
+                    <TableCell className="text-right font-bold">{formatCurrency(vatLiability.netVatLiability)}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
           <div className="text-xs text-muted-foreground mt-4">
             <p>* This is an estimation based on your current transaction data and settings.</p>
             <p>* Small companies with turnover less than ₦50 Million are exempt from Company Income Tax.</p>
             {taxSettings?.business_type === 'individual' && (
                <p>* Personal Income Tax is calculated using the progressive tax bands and Consolidated Relief Allowance (CRA).</p>
+            )}
+            {vatLiability.vatCollected > 0 && (
+              <p>* VAT is calculated from paid invoices in the current year.</p>
             )}
           </div>
         </div>

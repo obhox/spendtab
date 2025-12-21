@@ -3,6 +3,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useTaxQuery, TaxSettings } from '../hooks/useTaxQuery';
 import { useTransactionQuery } from '../hooks/useTransactionQuery';
+import { useInvoiceQuery } from '../hooks/useInvoiceQuery';
 
 interface TaxContextType {
   taxSettings: TaxSettings | null | undefined;
@@ -19,6 +20,11 @@ interface TaxContextType {
     itLevy: number;
     totalTax: number;
   };
+  vatLiability: {
+    vatCollected: number;
+    vatPaid: number;
+    netVatLiability: number;
+  };
   isSmallBusinessQualified: boolean;
 }
 
@@ -27,6 +33,7 @@ const TaxContext = createContext<TaxContextType | undefined>(undefined);
 export function TaxProvider({ children }: { children: ReactNode }) {
   const { taxSettings, isLoading, updateSettings, isUpdating } = useTaxQuery();
   const { transactions } = useTransactionQuery();
+  const { invoices } = useInvoiceQuery();
 
   // Simple calculation logic
   const currentYear = new Date().getFullYear();
@@ -126,6 +133,24 @@ export function TaxProvider({ children }: { children: ReactNode }) {
 
   const totalTax = incomeTax + educationTax + itLevy;
 
+  // VAT Calculation
+  // Calculate VAT collected from paid invoices
+  const currentYearInvoices = invoices.filter(inv =>
+    inv.status === 'paid' &&
+    inv.paid_date &&
+    new Date(inv.paid_date).getFullYear() === currentYear
+  );
+
+  const vatCollected = currentYearInvoices.reduce((sum, inv) => {
+    return sum + Number(inv.tax_amount || 0);
+  }, 0);
+
+  // VAT paid on expenses (if tracked in transaction notes/description)
+  // For now, we'll set this to 0, but you can expand this later
+  const vatPaid = 0;
+
+  const netVatLiability = vatCollected - vatPaid;
+
   return (
     <TaxContext.Provider value={{
       taxSettings,
@@ -140,6 +165,11 @@ export function TaxProvider({ children }: { children: ReactNode }) {
         educationTax,
         itLevy,
         totalTax
+      },
+      vatLiability: {
+        vatCollected,
+        vatPaid,
+        netVatLiability
       },
       isSmallBusinessQualified
     }}>

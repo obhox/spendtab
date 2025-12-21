@@ -6,7 +6,7 @@ import { useFormatCurrency } from "@/components/currency-switcher"
 import { Loader2 } from "lucide-react"
 
 export function TaxSummary() {
-  const { taxLiability, isLoading } = useTax()
+  const { taxLiability, vatLiability, isLoading } = useTax()
   const formatCurrency = useFormatCurrency()
 
   if (isLoading) {
@@ -28,7 +28,20 @@ export function TaxSummary() {
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(taxLiability.totalTax)}</div>
           <p className="text-xs text-muted-foreground">
-            Estimated for the current year
+            Income, Education & IT Taxes
+          </p>
+        </CardContent>
+      </Card>
+      <Card style={{ backgroundColor: '#FEF3C7' }}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            VAT Liability
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatCurrency(vatLiability.netVatLiability)}</div>
+          <p className="text-xs text-muted-foreground">
+            Net VAT to remit
           </p>
         </CardContent>
       </Card>

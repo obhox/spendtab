@@ -290,7 +290,7 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
           <DialogHeader>
             <DialogTitle>Mark Invoice as Paid</DialogTitle>
             <DialogDescription>
-              This will create an income transaction for {selectedCurrency.symbol}{formatAmount(invoice.total_amount)}
+              This will create an income transaction for {selectedCurrency.symbol}{formatAmount(invoice.total_amount)} (including tax of {selectedCurrency.symbol}{formatAmount(invoice.tax_amount)})
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

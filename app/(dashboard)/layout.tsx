@@ -140,13 +140,13 @@ export default function DashboardLayout({
                           <Tag className="mr-2 h-4 w-4" />
                           <span>Categories</span>
                         </Link>
-                        <Link
+                        {/* <Link
                           href="/tax-centre"
                           className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                         >
                           <Calculator className="mr-2 h-4 w-4" />
                           <span>Tax Centre</span>
-                        </Link>
+                        </Link> */}
                       </div>
                     </div>
                     <div className="px-3 py-2">
@@ -265,13 +265,13 @@ export default function DashboardLayout({
                     <Tag className="mr-2 h-4 w-4" />
                     <span>Categories</span>
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/tax-centre"
                     className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
                   >
                     <Calculator className="mr-2 h-4 w-4" />
                     <span>Tax Centre</span>
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
               <div className="px-3 py-2">

@@ -284,7 +284,7 @@ export function useInvoiceQuery() {
           user_id: invoice.user_id,
           account_id: invoice.account_id,
           payment_source: paymentSource,
-          notes: `Payment for invoice ${invoice.invoice_number} via ${paymentSource}`,
+          notes: `Payment for invoice ${invoice.invoice_number} via ${paymentSource}. Subtotal: ${invoice.subtotal}, Tax: ${invoice.tax_amount}`,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
