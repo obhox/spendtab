@@ -56,7 +56,8 @@ export function useInvoiceQuery() {
       .from('invoices')
       .select(`
         *,
-        client:clients(id, name, email)
+        client:clients(id, name, email),
+        items:invoice_items(*)
       `)
       .eq('account_id', currentAccount.id)
       .order('created_at', { ascending: false });
@@ -71,7 +72,7 @@ export function useInvoiceQuery() {
   };
 
   const query = useQuery<Invoice[], Error>({
-    queryKey: ['invoices', currentAccount?.id],
+    queryKey: ['invoices', currentAccount?.id, 'with-items'],
     queryFn: fetchInvoices,
     enabled: !!currentAccount,
     gcTime: CACHE_TIME,
@@ -87,13 +88,43 @@ export function useInvoiceQuery() {
       const { items, client, ...invoiceData } = newInvoice;
       void client;
 
+      // Get prefix from settings
+      const { data: settings } = await supabase
+        .from('invoice_settings')
+        .select('invoice_prefix')
+        .eq('account_id', currentAccount.id)
+        .single();
+      
+      const prefix = settings?.invoice_prefix || 'INV';
+
+      // Update invoice_sequences table with the current prefix so the DB function uses it
+      // We do this best-effort, if it fails (e.g. row doesn't exist yet), the function will create it with default
+      await supabase
+        .from('invoice_sequences')
+        .update({ prefix: prefix })
+        .eq('account_id', currentAccount.id);
+
       // Get next invoice number
-      const { data: invoiceNumber, error: numberError } = await supabase
+      const { data: rawInvoiceNumber, error: numberError } = await supabase
         .rpc('get_next_invoice_number', { p_account_id: currentAccount.id });
 
       if (numberError) {
         console.error('Error generating invoice number:', numberError);
         throw numberError;
+      }
+
+      // Ensure the invoice number uses the correct prefix
+      // The DB function returns PREFIX-YEAR-NUMBER, but might use an old prefix if our update above failed or raced
+      // So we parse and reconstruct it to be safe
+      let invoiceNumber = rawInvoiceNumber;
+      if (rawInvoiceNumber && typeof rawInvoiceNumber === 'string') {
+        const parts = rawInvoiceNumber.split('-');
+        if (parts.length >= 3) {
+          const numberPart = parts.pop();
+          const yearPart = parts.pop();
+          // Reconstruct with correct prefix
+          invoiceNumber = `${prefix}-${yearPart}-${numberPart}`;
+        }
       }
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -147,8 +178,8 @@ export function useInvoiceQuery() {
 
       return invoice;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
       toast.success('Invoice created successfully');
     },
     onError: (error: Error) => {
@@ -214,8 +245,8 @@ export function useInvoiceQuery() {
         }
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
       toast.success('Invoice updated successfully');
     },
     onError: (error: Error) => {
@@ -236,8 +267,8 @@ export function useInvoiceQuery() {
         throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
       toast.success('Invoice deleted successfully');
     },
     onError: (error: Error) => {
@@ -313,9 +344,9 @@ export function useInvoiceQuery() {
 
       return { invoice, transaction };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
-      queryClient.invalidateQueries({ queryKey: ['transactions', currentAccount?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
+      await queryClient.invalidateQueries({ queryKey: ['transactions', currentAccount?.id] });
       toast.success('Invoice marked as paid and transaction created');
     },
     onError: (error: Error) => {
@@ -342,8 +373,8 @@ export function useInvoiceQuery() {
         throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['invoices', currentAccount?.id] });
       toast.success('Invoice status updated successfully');
     },
     onError: (error: Error) => {
@@ -363,6 +394,7 @@ export function useInvoiceQuery() {
     deleteInvoice: deleteInvoice.mutate,
     markAsPaid: markAsPaid.mutate,
     updateStatus: updateStatus.mutate,
+    updateStatusAsync: updateStatus.mutateAsync,
     refetch: query.refetch
   };
 }

@@ -37,7 +37,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { MoreVertical, FileDown, CheckCircle2, Trash2, Send, Ban, CalendarIcon } from "lucide-react"
+import { MoreVertical, FileDown, CheckCircle2, Trash2, Send, Ban, CalendarIcon, Pencil } from "lucide-react"
 import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
 import { useClientQuery } from "@/lib/hooks/useClientQuery"
 import { downloadInvoicePDF, type InvoicePDFData } from "@/lib/invoice-pdf-generator"
@@ -47,6 +47,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
 import { formatAmount } from "@/lib/invoice-utils"
+import { InvoiceForm } from "./invoice-form"
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -54,6 +55,7 @@ interface InvoiceActionsProps {
 
 export function InvoiceActions({ invoice }: InvoiceActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showMarkAsPaidDialog, setShowMarkAsPaidDialog] = useState(false);
   const [paidDate, setPaidDate] = useState<Date>(new Date());
   const [paymentSource, setPaymentSource] = useState<string>("bank_transfer");
@@ -169,7 +171,7 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
       const { data: settingsData } = await supabase
         .from('invoice_settings')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('account_id', invoice.account_id)
         .maybeSingle();
 
       // Format dates and amounts for email
@@ -252,10 +254,16 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
           </DropdownMenuItem>
 
           {invoice.status === 'draft' && (
-            <DropdownMenuItem onClick={handleMarkAsSent}>
-              <Send className="mr-2 h-4 w-4" />
-              Mark as Sent
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Invoice
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleMarkAsSent}>
+                <Send className="mr-2 h-4 w-4" />
+                Mark as Sent
+              </DropdownMenuItem>
+            </>
           )}
 
           {(invoice.status === 'draft' || invoice.status === 'sent' || invoice.status === 'overdue') && (
@@ -283,6 +291,13 @@ export function InvoiceActions({ invoice }: InvoiceActionsProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Edit Invoice Dialog */}
+      <InvoiceForm
+        invoice={invoice}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+      />
 
       {/* Mark as Paid Dialog */}
       <Dialog open={showMarkAsPaidDialog} onOpenChange={setShowMarkAsPaidDialog}>

@@ -37,6 +37,10 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, FileText } from "lucide-react"
 import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useInvoiceSettings } from "@/lib/hooks/useInvoiceSettings"
+import { useAccounts } from "@/lib/context/AccountContext"
 import { ClientSelector } from "@/components/clients/client-selector"
 import { InvoiceLineItems } from "./invoice-line-items"
 import { calculateInvoiceTotals, formatAmount } from "@/lib/invoice-utils"
@@ -67,15 +71,25 @@ interface InvoiceFormProps {
   invoice?: Invoice | null;
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 type TaxPreset = "custom" | "vat_7_5";
 
-export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
-  const [open, setOpen] = useState(false);
-  const [taxPreset, setTaxPreset] = useState<TaxPreset>("custom");
+export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen, onOpenChange: setControlledOpen }: InvoiceFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { addInvoice, updateInvoice } = useInvoiceQuery();
+  const { settings, isLoading: isLoadingSettings } = useInvoiceSettings();
+  const { currentAccount } = useAccounts();
+  const router = useRouter();
   const selectedCurrency = useSelectedCurrency();
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? setControlledOpen : setInternalOpen;
+
+  const [taxPreset, setTaxPreset] = useState<TaxPreset>("custom");
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -97,10 +111,40 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
     }
   });
 
+  // Check for invoice settings when opening "Create Invoice"
+  useEffect(() => {
+    if (open && !invoice && !isLoadingSettings && currentAccount) {
+      if (!settings || !settings.business_name) {
+        setOpen(false);
+        toast.error("Business details not set up", {
+          description: "Please configure your invoice settings before creating an invoice."
+        });
+        router.push("/invoice-settings");
+      }
+    }
+  }, [open, invoice, isLoadingSettings, settings, router, setOpen, currentAccount]);
+
   // Reset form when dialog opens/closes or invoice changes
   useEffect(() => {
     if (open && invoice) {
-      // TODO: Load invoice items when editing
+      // Map items from invoice or use default
+      // Explicitly map to ensure clean form values
+      const items = invoice.items && invoice.items.length > 0 
+        ? invoice.items.map((item, index) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            line_order: index // Ensure order is preserved or reset
+          }))
+        : [
+            {
+              description: "",
+              quantity: 1,
+              unit_price: 0,
+              line_order: 0
+            }
+          ];
+
       form.reset({
         client_id: invoice.client_id || "",
         invoice_date: new Date(invoice.invoice_date),
@@ -108,14 +152,7 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
         tax_rate: invoice.tax_rate,
         notes: invoice.notes || "",
         terms: invoice.terms || "",
-        items: invoice.items || [
-          {
-            description: "",
-            quantity: 1,
-            unit_price: 0,
-            line_order: 0
-          }
-        ]
+        items: items
       });
       setTaxPreset(invoice.tax_rate === 7.5 ? "vat_7_5" : "custom");
     } else if (open && !invoice) {
@@ -191,14 +228,16 @@ export function InvoiceForm({ invoice, trigger, onSuccess }: InvoiceFormProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {trigger || (
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Invoice
-            </Button>
-          )}
-        </DialogTrigger>
+        {(trigger || !isControlled) && (
+          <DialogTrigger asChild>
+            {trigger || (
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            )}
+          </DialogTrigger>
+        )}
         <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">

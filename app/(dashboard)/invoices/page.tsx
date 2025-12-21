@@ -2,12 +2,14 @@
 
 import React, { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/invoices/invoice-form"
 import { InvoiceTable } from "@/components/invoices/invoice-table"
 import { useInvoiceQuery } from "@/lib/hooks/useInvoiceQuery"
 import { formatAmount } from "@/lib/invoice-utils"
 import { useSelectedCurrency } from "@/components/currency-switcher"
-import { DollarSign, AlertTriangle, CheckCircle, FileText } from "lucide-react"
+import { DollarSign, AlertTriangle, CheckCircle, FileText, Settings } from "lucide-react"
+import Link from "next/link"
 
 export default function InvoicesPage() {
   const { invoices, isLoading } = useInvoiceQuery();
@@ -54,7 +56,14 @@ export default function InvoicesPage() {
             Create and manage your invoices
           </p>
         </div>
-        <InvoiceForm />
+        <div className="flex items-center gap-2">
+          <Link href="/invoice-settings">
+            <Button variant="outline" size="icon">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </Link>
+          <InvoiceForm />
+        </div>
       </div>
 
       {/* Metric Cards */}

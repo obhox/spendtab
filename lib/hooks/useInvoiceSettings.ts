@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import { toast } from 'sonner';
+import { useAccounts } from '../context/AccountContext';
 
 export interface InvoiceSettings {
   id: string;
@@ -31,8 +32,11 @@ const STALE_TIME = 5 * 60 * 1000; // 5 minutes
 
 export function useInvoiceSettings() {
   const queryClient = useQueryClient();
+  const { currentAccount } = useAccounts();
 
   const fetchSettings = async () => {
+    if (!currentAccount) return null;
+
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -42,7 +46,7 @@ export function useInvoiceSettings() {
     const { data, error } = await supabase
       .from('invoice_settings')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('account_id', currentAccount.id)
       .single();
 
     if (error) {
@@ -58,8 +62,9 @@ export function useInvoiceSettings() {
   };
 
   const query = useQuery<InvoiceSettings | null, Error>({
-    queryKey: ['invoice_settings'],
+    queryKey: ['invoice_settings', currentAccount?.id],
     queryFn: fetchSettings,
+    enabled: !!currentAccount,
     gcTime: CACHE_TIME,
     staleTime: STALE_TIME
   });
@@ -72,11 +77,15 @@ export function useInvoiceSettings() {
         throw new Error('User not authenticated');
       }
 
-      // Check if settings exist
+      if (!currentAccount) {
+        throw new Error('No account selected');
+      }
+
+      // Check if settings exist for this account
       const { data: existing } = await supabase
         .from('invoice_settings')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('account_id', currentAccount.id)
         .single();
 
       if (existing) {
@@ -84,7 +93,7 @@ export function useInvoiceSettings() {
         const { data, error } = await supabase
           .from('invoice_settings')
           .update(settings)
-          .eq('user_id', user.id)
+          .eq('id', existing.id)
           .select()
           .single();
 
@@ -96,7 +105,8 @@ export function useInvoiceSettings() {
           .from('invoice_settings')
           .insert({
             ...settings,
-            user_id: user.id
+            user_id: user.id,
+            account_id: currentAccount.id
           })
           .select()
           .single();
@@ -106,7 +116,7 @@ export function useInvoiceSettings() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoice_settings'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice_settings', currentAccount?.id] });
       toast.success('Invoice settings saved successfully');
     },
     onError: (error: Error) => {

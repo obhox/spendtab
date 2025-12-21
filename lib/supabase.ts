@@ -462,6 +462,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          account_id: string
           business_name?: string | null
           business_email?: string | null
           business_phone?: string | null

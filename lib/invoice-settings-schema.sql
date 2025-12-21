@@ -45,31 +45,55 @@ ALTER TABLE public.invoice_settings ENABLE ROW LEVEL SECURITY;
 
 -- Index for invoice_settings
 CREATE INDEX IF NOT EXISTS idx_invoice_settings_user_id ON public.invoice_settings(user_id);
+CREATE INDEX IF NOT EXISTS idx_invoice_settings_account_id ON public.invoice_settings(account_id);
+
+-- Ensure one settings record per account
+ALTER TABLE public.invoice_settings ADD CONSTRAINT invoice_settings_account_id_key UNIQUE (account_id);
 
 -- ============================================================
 -- ROW LEVEL SECURITY POLICIES
 -- ============================================================
 
--- Users can view their own settings
+-- Users can view their own settings (via account ownership)
 CREATE POLICY "Users can view their own invoice settings"
   ON public.invoice_settings FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (
+    account_id IN (SELECT id FROM public.accounts WHERE owner_id = auth.uid())
+    OR
+    (user_id = auth.uid() AND account_id IS NULL)
+  );
 
 -- Users can insert their own settings
 CREATE POLICY "Users can insert their own invoice settings"
   ON public.invoice_settings FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (
+    account_id IN (SELECT id FROM public.accounts WHERE owner_id = auth.uid())
+    OR
+    (user_id = auth.uid() AND account_id IS NULL)
+  );
 
 -- Users can update their own settings
 CREATE POLICY "Users can update their own invoice settings"
   ON public.invoice_settings FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING (
+    account_id IN (SELECT id FROM public.accounts WHERE owner_id = auth.uid())
+    OR
+    (user_id = auth.uid() AND account_id IS NULL)
+  )
+  WITH CHECK (
+    account_id IN (SELECT id FROM public.accounts WHERE owner_id = auth.uid())
+    OR
+    (user_id = auth.uid() AND account_id IS NULL)
+  );
 
 -- Users can delete their own settings
 CREATE POLICY "Users can delete their own invoice settings"
   ON public.invoice_settings FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (
+    account_id IN (SELECT id FROM public.accounts WHERE owner_id = auth.uid())
+    OR
+    (user_id = auth.uid() AND account_id IS NULL)
+  );
 
 -- ============================================================
 -- TRIGGERS

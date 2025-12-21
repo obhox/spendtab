@@ -16,7 +16,7 @@ import { formatInvoiceDate, formatInvoiceDateLong, formatAmount } from "@/lib/in
 import { FileDown, X, Mail, Phone, MapPin, Globe, Building2, Send } from "lucide-react"
 import { downloadInvoicePDF, type InvoicePDFData } from "@/lib/invoice-pdf-generator"
 import { toast } from "sonner"
-import type { Invoice } from "@/lib/hooks/useInvoiceQuery"
+import { useInvoiceQuery, type Invoice } from "@/lib/hooks/useInvoiceQuery"
 
 interface InvoicePreviewProps {
   invoice: Invoice | null;
@@ -26,6 +26,7 @@ interface InvoicePreviewProps {
 
 export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewProps) {
   const { settings } = useInvoiceSettings();
+  const { updateStatusAsync } = useInvoiceQuery();
   const selectedCurrency = useSelectedCurrency();
   const [fullInvoice, setFullInvoice] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -171,6 +172,17 @@ export function InvoicePreview({ invoice, open, onOpenChange }: InvoicePreviewPr
       }
 
       toast.success(`Invoice sent successfully to ${fullInvoice.client.email}`);
+
+      // If invoice was draft, update status to sent
+      if (fullInvoice.status === 'draft') {
+        try {
+          await updateStatusAsync({ invoiceId: fullInvoice.id, status: 'sent' });
+          setFullInvoice({ ...fullInvoice, status: 'sent' });
+          toast.info("Invoice marked as sent");
+        } catch (statusError) {
+          console.error("Error updating invoice status:", statusError);
+        }
+      }
     } catch (error) {
       console.error('Error sending invoice email:', error);
       toast.error('Failed to send invoice email');
