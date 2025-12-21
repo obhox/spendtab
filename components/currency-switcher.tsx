@@ -19,6 +19,12 @@ export const SUPPORTED_CURRENCIES: Currency[] = [
     symbol: "₦",
     name: "Nigerian Naira",
     locale: "en-NG"
+  },
+  {
+    code: "USD",
+    symbol: "$",
+    name: "US Dollar",
+    locale: "en-US"
   }
 ]
 
@@ -36,9 +42,21 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   // Load saved currency from localStorage on mount
   useEffect(() => {
-    // Force default to NGN
+    const savedCurrency = localStorage.getItem('selectedCurrency')
+    if (savedCurrency) {
+      try {
+        const parsed = JSON.parse(savedCurrency)
+        const found = SUPPORTED_CURRENCIES.find(c => c.code === parsed.code)
+        if (found) {
+          setSelectedCurrency(found)
+          return
+        }
+      } catch (e) {
+        // Invalid json
+      }
+    }
+    // Default to NGN
     setSelectedCurrency(SUPPORTED_CURRENCIES[0])
-    localStorage.setItem('selectedCurrency', JSON.stringify(SUPPORTED_CURRENCIES[0]))
   }, [])
 
   // Save currency to localStorage when it changes

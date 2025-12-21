@@ -1,8 +1,10 @@
 import jsPDF from 'jspdf';
+import { Currency } from '@/components/currency-switcher';
 
 interface ExportOptions {
   type: 'profit-loss' | 'cash-flow' | 'expense';
   data: any;
+  currency?: Currency;
 }
 
 const formatDate = (date: Date): string => {
@@ -107,7 +109,15 @@ const formatExpenseData = (data: any) => {
   }));
 };
 
-const formatCurrencyValue = (value: number): string => {
+const formatCurrencyValue = (value: number, currency?: Currency): string => {
+  if (currency) {
+    return new Intl.NumberFormat(currency.locale, {
+      style: 'currency',
+      currency: currency.code,
+      minimumFractionDigits: 2
+    }).format(value);
+  }
+
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',
@@ -115,7 +125,7 @@ const formatCurrencyValue = (value: number): string => {
   }).format(value);
 };
 
-export const exportReport = async ({ type, data }: ExportOptions): Promise<void> => {
+export const exportReport = async ({ type, data, currency }: ExportOptions): Promise<void> => {
   try {
     let formattedData;
     let fileName = `${type}-report-${formatDate(new Date())}.pdf`;
@@ -206,7 +216,7 @@ export const exportReport = async ({ type, data }: ExportOptions): Promise<void>
         
         // Format amount values
         if (header === 'amount' && !isNaN(row[header])) {
-          value = formatCurrencyValue(row[header]);
+          value = formatCurrencyValue(row[header], currency);
         }
         
         doc.text(

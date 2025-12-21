@@ -10,17 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AssetForm } from '@/components/assets/asset-form'
 import { AssetTable } from '@/components/assets/asset-table'
 import { useAssets } from '@/lib/context/AssetContext'
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-  }).format(amount)
-}
+import { useFormatCurrency } from '@/components/currency-switcher'
 
 export default function AssetsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const { assets, totalAssetValue, assetsByType, isLoading } = useAssets()
+  const formatCurrency = useFormatCurrency()
 
   const currentAssetsValue = assetsByType.current.reduce((sum, asset) => sum + asset.current_value, 0)
   const fixedAssetsValue = assetsByType.fixed.reduce((sum, asset) => sum + asset.current_value, 0)

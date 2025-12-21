@@ -8,6 +8,7 @@ import { Download } from 'lucide-react'
 import { useReports } from "@/lib/context/ReportsContext"
 import { exportReport } from "@/lib/export-utils"
 import { toast } from "sonner"
+import { useSelectedCurrency } from "@/components/currency-switcher"
 
 const CashFlowReport = dynamic(
   () => import("@/components/reports/cash-flow-report").then((mod) => mod.CashFlowReport),
@@ -26,6 +27,7 @@ const ProfitLossReport = dynamic(
 
 export default function ReportsPage() {
   const { profitLossData, cashFlowData, expenseData } = useReports();
+  const selectedCurrency = useSelectedCurrency();
 
   const handleExport = async () => {
     try {
@@ -43,21 +45,21 @@ export default function ReportsPage() {
             toast("No profit & loss data available to export.");
             return;
           }
-          await exportReport({ type: 'profit-loss', data: profitLossData });
+          await exportReport({ type: 'profit-loss', data: profitLossData, currency: selectedCurrency });
           break;
         case 'cash-flow':
           if (!cashFlowData) {
             toast("No cash flow data available to export.");
             return;
           }
-          await exportReport({ type: 'cash-flow', data: cashFlowData });
+          await exportReport({ type: 'cash-flow', data: cashFlowData, currency: selectedCurrency });
           break;
         case 'expense':
           if (!expenseData) {
             toast("No expense data available to export.");
             return;
           }
-          await exportReport({ type: 'expense', data: expenseData.expenses });
+          await exportReport({ type: 'expense', data: expenseData.expenses, currency: selectedCurrency });
           break;
         default:
           toast("Invalid report type selected.");

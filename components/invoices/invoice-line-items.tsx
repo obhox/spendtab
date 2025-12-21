@@ -27,9 +27,10 @@ export function InvoiceLineItems({ control, currency = 'NGN' }: InvoiceLineItems
 
   const getCurrencySymbol = (currencyCode: string) => {
     const symbols: { [key: string]: string } = {
-      NGN: '₦'
+      NGN: '₦',
+      USD: '$'
     };
-    return symbols[currencyCode] || '₦';
+    return symbols[currencyCode] || currencyCode;
   };
 
   const currencySymbol = getCurrencySymbol(currency);
