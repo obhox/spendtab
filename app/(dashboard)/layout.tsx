@@ -159,13 +159,7 @@ export default function DashboardLayout({
                           <Settings className="mr-2 h-4 w-4" />
                           <span>Profile</span>
                         </Link>
-                        <Link
-                          href="/invoice-settings"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Sliders className="mr-2 h-4 w-4" />
-                          <span>Invoice Settings</span>
-                        </Link>
+
                       </div>
                     </div>
                   </div>
@@ -284,13 +278,7 @@ export default function DashboardLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
-                  <Link
-                    href="/invoice-settings"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Sliders className="mr-2 h-4 w-4" />
-                    <span>Invoice Settings</span>
-                  </Link>
+
                 </div>
               </div>
             </div>
