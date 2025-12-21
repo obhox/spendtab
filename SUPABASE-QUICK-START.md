@@ -17,19 +17,14 @@ The app is already running at: http://localhost:3001
 1. Go to http://localhost:3001/signup
 2. Enter your email and password (minimum 6 characters)
 3. Click "Sign up"
-4. You'll see a success message saying "Please check your email to confirm your account"
-5. Go to http://localhost:3001/login
-6. Enter your email and password
-7. Click "Log in"
-8. You should be redirected to the dashboard
+4. You'll see a success message saying "Account created. Please complete payment to activate your account."
+5. You will be redirected to the payment page.
+6. After payment, you should be redirected to the dashboard.
 
-## Step 3: Confirm Your Supabase Email (if using Option B)
+## Step 3: Supabase Email Confirmation Note
 
-1. Go to your Supabase dashboard: https://app.supabase.com/
-2. Open your project
-3. Navigate to "Authentication" → "Users"
-4. Find your newly created user
-5. If needed, confirm the email manually from the dashboard
+Since we have removed the email confirmation requirement in the UI, ensure your Supabase project has "Enable email confirmations" DISABLED in Authentication -> Providers -> Email.
+Otherwise, users will not be able to log in without confirming their email manually.
 
 ## Step 4: Get Your User ID
 

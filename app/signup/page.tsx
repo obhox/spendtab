@@ -31,8 +31,8 @@ export default function SignUpPage() {
         throw new Error(error)
       }
       
-      toast("Account created. Please check your email to confirm your account.")
-      router.push("/login")
+      toast("Account created. Please complete payment to activate your account.")
+      router.push(`/payment?email=${encodeURIComponent(email)}`)
     } catch (error: any) {
       console.error("Signup error:", error)
       toast("Sign up failed: " + (error?.message || "There was a problem creating your account."))
