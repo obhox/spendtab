@@ -9,14 +9,24 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function PaymentForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
   const [email, setEmail] = useState("")
-  const [amount, setAmount] = useState(5000) // Default amount in NGN
+  const [planType, setPlanType] = useState<'monthly' | 'yearly'>('monthly')
+  const [amount, setAmount] = useState(3999.99) // Default amount in NGN
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (planType === 'monthly') {
+      setAmount(3999.99)
+    } else {
+      setAmount(39999.99)
+    }
+  }, [planType])
 
   useEffect(() => {
     const emailParam = searchParams.get("email")
@@ -32,7 +42,9 @@ export default function PaymentForm() {
     email: email,
     amount: amount * 100, // Paystack expects amount in kobo
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    plan: process.env.NEXT_PUBLIC_PAYSTACK_PLAN_CODE || '', // Add your plan code here
+    plan: planType === 'monthly' 
+      ? (process.env.NEXT_PUBLIC_PAYSTACK_PLAN_MONTHLY || process.env.NEXT_PUBLIC_PAYSTACK_PLAN_CODE || '') 
+      : (process.env.NEXT_PUBLIC_PAYSTACK_PLAN_YEARLY || ''),
   };
 
   const isPlaceholderKey = config.publicKey === 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
@@ -95,14 +107,42 @@ export default function PaymentForm() {
             )}
           </div>
           
-          <div className="rounded-lg border p-4 bg-muted/50">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">Monthly Subscription</span>
-              <span className="font-bold text-lg">₦{amount.toLocaleString()}</span>
+          <div className="grid gap-4">
+            <div 
+              className={cn(
+                "rounded-lg border p-4 cursor-pointer transition-all",
+                planType === 'monthly' 
+                  ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+              onClick={() => setPlanType('monthly')}
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium">Monthly Subscription</span>
+                <span className="font-bold text-lg">₦3,999.99</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Billed monthly. Unlimited access.
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Unlimited access to all SpendTab features.
-            </p>
+
+            <div 
+              className={cn(
+                "rounded-lg border p-4 cursor-pointer transition-all",
+                planType === 'yearly' 
+                  ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+              onClick={() => setPlanType('yearly')}
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium">Yearly Subscription</span>
+                <span className="font-bold text-lg">₦39,999.99</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Billed annually. Save ~17%.
+              </p>
+            </div>
           </div>
         </CardContent>
         <CardFooter>
