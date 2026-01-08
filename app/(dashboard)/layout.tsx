@@ -31,12 +31,40 @@ import { AssetProvider } from "@/lib/context/AssetContext"
 import { LiabilityProvider } from "@/lib/context/LiabilityContext"
 import { TaxProvider } from "@/lib/context/TaxContext"
 
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const { currentAccount } = useAccounts();
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        // Strict check: User must be active to access the dashboard
+        if (profile.subscription_status !== 'active') {
+          // Allow access if it's within grace period? No, "remove free trial" implies strictness.
+          toast.error("Please subscribe to access SpendTab.")
+          router.push(`/payment?email=${encodeURIComponent(user.email || '')}`)
+        }
+      }
+    }
+    
+    checkSubscription()
+  }, [router])
 
   const selectedCurrency = useSelectedCurrency();
 
@@ -159,7 +187,13 @@ export default function DashboardLayout({
                           <Settings className="mr-2 h-4 w-4" />
                           <span>Profile</span>
                         </Link>
-
+                        <Link
+                          href="/subscription"
+                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                        >
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          <span>Subscription</span>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -278,7 +312,13 @@ export default function DashboardLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
-
+                  <Link
+                    href="/subscription"
+                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Subscription</span>
+                  </Link>
                 </div>
               </div>
             </div>

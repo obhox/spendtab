@@ -12,6 +12,51 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          status: string
+          plan_code: string | null
+          subscription_code: string | null
+          customer_code: string | null
+          amount: number | null
+          currency: string | null
+          current_period_start: string | null
+          next_payment_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status: string
+          plan_code?: string | null
+          subscription_code?: string | null
+          customer_code?: string | null
+          amount?: number | null
+          currency?: string | null
+          current_period_start?: string | null
+          next_payment_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: string
+          plan_code?: string | null
+          subscription_code?: string | null
+          customer_code?: string | null
+          amount?: number | null
+          currency?: string | null
+          current_period_start?: string | null
+          next_payment_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           id: string
@@ -19,6 +64,9 @@ export interface Database {
           last_name?: string | null
           company_name?: string | null
           created_at: string
+          subscription_status?: string | null
+          trial_start?: string | null
+          trial_end?: string | null
         }
         Insert: {
           id: string
@@ -26,6 +74,9 @@ export interface Database {
           last_name?: string | null
           company_name?: string | null
           created_at?: string
+          subscription_status?: string | null
+          trial_start?: string | null
+          trial_end?: string | null
         }
         Update: {
           id?: string
@@ -33,6 +84,7 @@ export interface Database {
           last_name?: string | null
           company_name?: string | null
           created_at?: string
+          subscription_status?: string | null
         }
         Relationships: []
       }

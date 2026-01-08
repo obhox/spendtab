@@ -30,8 +30,8 @@ export default function SignUpPage() {
       if (!success) {
         throw new Error(error)
       }
-      
-      toast("Account created. Please complete payment to activate your account.")
+      toast("Account created. Please subscribe to continue.")
+      // Redirect to payment page instead of dashboard since dashboard is now protected
       router.push(`/payment?email=${encodeURIComponent(email)}`)
     } catch (error: any) {
       console.error("Signup error:", error)

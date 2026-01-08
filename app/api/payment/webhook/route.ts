@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
@@ -61,26 +60,20 @@ export async function POST(req: Request) {
 }
 
 async function handleChargeSuccess(data: any, supabase: any) {
-  // This event is sent for every successful payment (initial and recurring)
-  // We care about subscription updates.
-  
   const email = data.customer.email
   const customerCode = data.customer.customer_code
-  const subscriptionCode = data.subscription_code // might be null for one-time payments but we are doing subscriptions
-  const amount = data.amount
+  const subscriptionCode = data.subscription_code
+  const amount = data.amount / 100 // Convert kobo to currency unit
   const paidAt = data.paid_at
   const planCode = data.plan?.plan_code
+  const currency = data.currency
 
   console.log(`Processing charge.success for ${email}`)
 
   if (!email) return
 
-  // Find user by email (try public.users then auth.users like in success route)
-  // Or find by paystack_customer_code if we already have it?
-  
-  // Let's try to match by email for now as it's most reliable if customer code isn't saved yet.
+  // Find user by email
   let userId = null
-
   const { data: user } = await supabase
     .from('users')
     .select('id')
@@ -90,54 +83,76 @@ async function handleChargeSuccess(data: any, supabase: any) {
   if (user) {
     userId = user.id
   } else {
-    // Fallback to auth.users lookup if needed, similar to success route logic
-    // But for simplicity/speed in webhook, we hope public.users is up to date.
-    // If not, we log warning.
     console.warn(`User with email ${email} not found in public.users during webhook processing`)
     return
   }
 
-  // Update profile
-  // Calculate period end based on plan interval?
-  // Paystack doesn't always send 'next_payment_date' in charge.success, 
-  // but it might be in the authorization or subscription object if fetched.
-  // For now, let's assume monthly/yearly based on plan?
-  // Actually, 'charge.success' usually implies access granted for the next cycle.
-  
-  // If we have subscription_code, it's a subscription payment.
+  // Sync with subscriptions table
   if (subscriptionCode) {
-      // We should ideally fetch subscription details to get next_payment_date
-      // But we can also just update status to active.
-      
-      const updateData: any = {
-        subscription_status: 'active',
-        paystack_customer_code: customerCode,
-        paystack_subscription_code: subscriptionCode,
-        subscription_plan_code: planCode,
-        // We can update current_period_start to now
-        current_period_start: paidAt,
-        // We can't easily guess end date without plan details or paystack API call.
-        // But we can approximate or fetch.
-      }
-      
-      // Attempt to fetch subscription details from Paystack to get next_payment_date
-      // using NEXT_PAYMENT_DATE or similar if available in payload?
-      // event.data doesn't always have next_payment_date.
-      
+    const subscriptionData = {
+      user_id: userId,
+      status: 'active',
+      plan_code: planCode,
+      subscription_code: subscriptionCode,
+      customer_code: customerCode,
+      amount: amount,
+      currency: currency,
+      current_period_start: paidAt,
+      // next_payment_date: We might not have this in charge.success, 
+      // ideally we fetch from Paystack API or calculate based on plan
+      updated_at: new Date().toISOString()
+    }
+
+    // Check if subscription exists
+    const { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('subscription_code', subscriptionCode)
+      .single()
+
+    if (existingSub) {
       await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId)
+        .from('subscriptions')
+        .update(subscriptionData)
+        .eq('id', existingSub.id)
+    } else {
+      await supabase
+        .from('subscriptions')
+        .insert(subscriptionData)
+    }
+
+    // Update profile for backward compatibility
+    const updateData: any = {
+      subscription_status: 'active',
+      paystack_customer_code: customerCode,
+      paystack_subscription_code: subscriptionCode,
+      subscription_plan_code: planCode,
+      current_period_start: paidAt,
+    }
+
+    await supabase
+      .from('profiles')
+      .update(updateData)
+      .eq('id', userId)
   }
 }
 
 async function handleInvoicePaymentFailed(data: any, supabase: any) {
   const email = data.customer.email
+  const subscriptionCode = data.subscription_code
   console.log(`Processing invoice.payment_failed for ${email}`)
   
-  // Find user and update status
   const { data: user } = await supabase.from('users').select('id').eq('email', email).single()
   if (user) {
+    // Update subscriptions table
+    if (subscriptionCode) {
+      await supabase
+        .from('subscriptions')
+        .update({ status: 'past_due' })
+        .eq('subscription_code', subscriptionCode)
+    }
+
+    // Update profiles table
     await supabase
       .from('profiles')
       .update({ subscription_status: 'past_due' })
@@ -152,6 +167,15 @@ async function handleSubscriptionDisable(data: any, supabase: any) {
 
   const { data: user } = await supabase.from('users').select('id').eq('email', email).single()
   if (user) {
+    // Update subscriptions table
+    if (subscriptionCode) {
+      await supabase
+        .from('subscriptions')
+        .update({ status: 'cancelled' })
+        .eq('subscription_code', subscriptionCode)
+    }
+
+    // Update profiles table
     await supabase
       .from('profiles')
       .update({ subscription_status: 'cancelled' })

@@ -51,11 +51,35 @@ export default function PaymentForm() {
 
   const initializePayment = usePaystackPayment(config);
 
-  const onSuccess = (reference: any) => {
-    setLoading(false)
-    console.log(reference);
-    toast.success("Payment successful! Welcome to SpendTab.")
-    router.push("/dashboard")
+  const onSuccess = async (reference: any) => {
+    try {
+      // Call our API to verify and update subscription
+      const response = await fetch('/api/payment/success', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reference: reference.reference,
+          email: email
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Payment verification failed. Status:', response.status, 'Data:', JSON.stringify(errorData, null, 2))
+        throw new Error(errorData.error || 'Failed to verify payment')
+      }
+
+      setLoading(false)
+      console.log(reference);
+      toast.success("Payment successful! Welcome to SpendTab.")
+      router.push("/dashboard")
+    } catch (error) {
+      console.error('Payment verification error:', error)
+      toast.error("Payment successful but verification failed. Please contact support.")
+      setLoading(false)
+    }
   };
 
   const onClose = () => {
@@ -71,6 +95,13 @@ export default function PaymentForm() {
     
     if (isPlaceholderKey) {
        toast.warning("Paystack Public Key is not set. Please set NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in your .env file.")
+       // Allow to proceed for testing UI, but Paystack will fail or use test mode if key is partial
+    }
+
+    if (!config.plan) {
+        // If plan is missing, it will process as one-time payment. 
+        // We might want to warn the user or developer.
+        console.warn("No plan code provided. Payment will be processed as one-time payment.")
     }
 
     setLoading(true)
@@ -145,7 +176,7 @@ export default function PaymentForm() {
             </div>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-2">
           <Button 
             className="w-full" 
             onClick={handlePayment}
@@ -160,6 +191,12 @@ export default function PaymentForm() {
               `Pay ₦${amount.toLocaleString()}`
             )}
           </Button>
+          <div className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 text-green-600">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="currentColor"/>
+            </svg>
+            Secured by Paystack
+          </div>
         </CardFooter>
       </Card>
     </div>
