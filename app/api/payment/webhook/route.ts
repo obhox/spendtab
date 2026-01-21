@@ -124,6 +124,7 @@ async function handleChargeSuccess(data: any, supabase: any) {
     // Update profile for backward compatibility
     const updateData: any = {
       subscription_status: 'active',
+      trial_ends_at: null,
       paystack_customer_code: customerCode,
       paystack_subscription_code: subscriptionCode,
       subscription_plan_code: planCode,

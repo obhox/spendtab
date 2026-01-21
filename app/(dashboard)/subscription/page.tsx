@@ -8,13 +8,14 @@ import { Loader2, CreditCard, CheckCircle, AlertCircle, Calendar } from "lucide-
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
+import { differenceInCalendarDays, format } from "date-fns"
 
 interface SubscriptionDetails {
   subscription_status: string
   subscription_plan_code: string | null
   current_period_end: string | null
   paystack_subscription_code: string | null
+  trial_ends_at: string | null
 }
 
 export default function SubscriptionPage() {
@@ -37,7 +38,7 @@ export default function SubscriptionPage() {
 
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('subscription_status, subscription_plan_code, current_period_end, trial_end, paystack_subscription_code')
+          .select('subscription_status, subscription_plan_code, current_period_end, trial_ends_at, paystack_subscription_code')
           .eq('id', user.id)
           .single()
 
@@ -83,6 +84,13 @@ export default function SubscriptionPage() {
   const isActive = subscription?.subscription_status === 'active'
   const isPastDue = subscription?.subscription_status === 'past_due'
   const isCancelled = subscription?.subscription_status === 'cancelled'
+  const isTrial = subscription?.subscription_status === 'trial'
+
+  const trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+  const isTrialActive = isTrial && !!trialEndsAt && trialEndsAt.getTime() > Date.now()
+  const trialDaysLeft = isTrialActive && trialEndsAt
+    ? Math.max(0, differenceInCalendarDays(trialEndsAt, new Date()))
+    : null
 
   let statusColor = "bg-gray-500"
   let statusText = "Unknown"
@@ -90,6 +98,9 @@ export default function SubscriptionPage() {
   if (isActive) {
     statusColor = "bg-green-500"
     statusText = "Active"
+  } else if (isTrialActive) {
+    statusColor = "bg-blue-500"
+    statusText = "Trial"
   } else if (isPastDue) {
     statusColor = "bg-yellow-500"
     statusText = "Past Due"
@@ -105,6 +116,8 @@ export default function SubscriptionPage() {
   const endDate = subscription?.current_period_end 
     ? new Date(subscription.current_period_end) 
     : null
+
+  const canUpgrade = !isActive && !isTrialActive
 
   return (
     <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
@@ -142,6 +155,18 @@ export default function SubscriptionPage() {
               )}
             </div>
 
+            {isTrialActive && trialEndsAt && (
+              <div className="rounded-lg border p-4 bg-muted/50">
+                <p className="text-sm font-medium">Free trial</p>
+                <p className="text-sm text-muted-foreground">
+                  {trialDaysLeft === 0
+                    ? `Ends today (${format(trialEndsAt, 'PPP')})`
+                    : `Ends in ${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'} (${format(trialEndsAt, 'PPP')})`
+                  }
+                </p>
+              </div>
+            )}
+
             <div className="rounded-lg border p-4 bg-muted/50">
               <div className="flex items-center gap-4">
                 <div className="rounded-full bg-primary/10 p-2">
@@ -170,11 +195,11 @@ export default function SubscriptionPage() {
               <Button variant="outline" onClick={handleManage}>
                 Manage Subscription
               </Button>
-            ) : (
+            ) : canUpgrade ? (
               <Button onClick={handleUpgrade} className="w-full sm:w-auto">
                 Upgrade Plan
               </Button>
-            )}
+            ) : null}
           </CardFooter>
         </Card>
 

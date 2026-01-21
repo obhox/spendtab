@@ -49,15 +49,24 @@ export default function DashboardLayout({
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status')
+        .select('subscription_status, trial_ends_at')
         .eq('id', user.id)
         .single()
 
       if (profile) {
-        // Strict check: User must be active to access the dashboard
-        if (profile.subscription_status !== 'active') {
-          // Allow access if it's within grace period? No, "remove free trial" implies strictness.
-          toast.error("Please subscribe to access SpendTab.")
+        const status = profile.subscription_status
+        const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
+        const isTrialActive = status === 'trial' && !!trialEndsAt && trialEndsAt.getTime() > Date.now()
+        const isEntitled = status === 'active' || isTrialActive
+
+        if (!isEntitled) {
+          if (status === 'trial') {
+            await supabase
+              .from('profiles')
+              .update({ subscription_status: 'inactive' })
+              .eq('id', user.id)
+          }
+          toast.error("Your trial has ended. Please subscribe to continue.")
           router.push(`/payment?email=${encodeURIComponent(user.email || '')}`)
         }
       }

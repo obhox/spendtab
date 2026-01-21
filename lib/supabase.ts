@@ -65,8 +65,13 @@ export interface Database {
           company_name?: string | null
           created_at: string
           subscription_status?: string | null
-          trial_start?: string | null
-          trial_end?: string | null
+          trial_ends_at?: string | null
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          subscription_plan_code?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          paystack_auth_code?: string | null
         }
         Insert: {
           id: string
@@ -75,8 +80,13 @@ export interface Database {
           company_name?: string | null
           created_at?: string
           subscription_status?: string | null
-          trial_start?: string | null
-          trial_end?: string | null
+          trial_ends_at?: string | null
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          subscription_plan_code?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          paystack_auth_code?: string | null
         }
         Update: {
           id?: string
@@ -85,6 +95,13 @@ export interface Database {
           company_name?: string | null
           created_at?: string
           subscription_status?: string | null
+          trial_ends_at?: string | null
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
+          subscription_plan_code?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          paystack_auth_code?: string | null
         }
         Relationships: []
       }

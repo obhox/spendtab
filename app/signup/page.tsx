@@ -30,9 +30,8 @@ export default function SignUpPage() {
       if (!success) {
         throw new Error(error)
       }
-      toast("Account created. Please subscribe to continue.")
-      // Redirect to payment page instead of dashboard since dashboard is now protected
-      router.push(`/payment?email=${encodeURIComponent(email)}`)
+      toast("Account created. Your 14-day free trial has started.")
+      router.push("/dashboard")
     } catch (error: any) {
       console.error("Signup error:", error)
       toast("Sign up failed: " + (error?.message || "There was a problem creating your account."))

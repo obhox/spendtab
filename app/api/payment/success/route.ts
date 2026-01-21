@@ -111,8 +111,7 @@ export async function POST(req: Request) {
           .upsert({ 
             id: userId,
             subscription_status: 'trial',
-            trial_start: new Date().toISOString(),
-            trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
           })
            
         if (insertProfileError) {
@@ -132,6 +131,7 @@ export async function POST(req: Request) {
     // Update profile subscription status
     const updateData: any = { 
       subscription_status: 'active',
+      trial_ends_at: null,
     }
 
     if (paystackData) {
