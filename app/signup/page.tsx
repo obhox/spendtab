@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [companyName, setCompanyName] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -25,7 +26,7 @@ export default function SignUpPage() {
     setLoading(true)
     
     try {
-      const { success, error } = await signUp(email, password, firstName, lastName, companyName)
+      const { success, error } = await signUp(email, password, firstName, lastName, companyName, phoneNumber)
       
       if (!success) {
         throw new Error(error)
@@ -131,6 +132,18 @@ export default function SignUpPage() {
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber">Phone Number</Label>
+            <Input
+              id="phoneNumber"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               required
               disabled={loading}
             />

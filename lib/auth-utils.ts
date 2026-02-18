@@ -23,21 +23,24 @@ export async function getUserProfile() {
   return {
     first_name: user.user_metadata?.first_name || '',
     last_name: user.user_metadata?.last_name || '',
-    company_name: user.user_metadata?.company_name || ''
+    company_name: user.user_metadata?.company_name || '',
+    phone_number: user.user_metadata?.phone_number || ''
   }
 }
 
-export async function updateUserProfile({ first_name, last_name, company_name, password }: {
+export async function updateUserProfile({ first_name, last_name, company_name, phone_number, password }: {
   first_name?: string
   last_name?: string
   company_name?: string
+  phone_number?: string
   password?: string
 }) {
   const updateData: any = {
     data: {
       first_name,
       last_name,
-      company_name
+      company_name,
+      phone_number
     }
   }
 
@@ -49,6 +52,27 @@ export async function updateUserProfile({ first_name, last_name, company_name, p
   
   if (error) {
     throw error
+  }
+
+  // Update public.profiles table
+  const profileUpdates: any = {}
+  if (first_name !== undefined) profileUpdates.first_name = first_name
+  if (last_name !== undefined) profileUpdates.last_name = last_name
+  if (company_name !== undefined) profileUpdates.company_name = company_name
+  if (phone_number !== undefined) profileUpdates.phone_number = phone_number
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', user.id)
+        
+      if (profileError) {
+        console.error('Error updating public profile:', profileError)
+      }
+    }
   }
 }
 
@@ -69,7 +93,7 @@ export async function signIn(email: string, password: string) {
   return data
 }
 
-export async function signUp(email: string, password: string, firstName?: string, lastName?: string, companyName?: string) {
+export async function signUp(email: string, password: string, firstName?: string, lastName?: string, companyName?: string, phoneNumber?: string) {
   try {
     // Create the user account first
     const { data, error } = await supabase.auth.signUp({
@@ -79,7 +103,8 @@ export async function signUp(email: string, password: string, firstName?: string
         data: {
           first_name: firstName,
           last_name: lastName,
-          company_name: companyName
+          company_name: companyName,
+          phone_number: phoneNumber
         }
       }
     })

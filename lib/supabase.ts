@@ -63,6 +63,7 @@ export interface Database {
           first_name?: string | null
           last_name?: string | null
           company_name?: string | null
+          phone_number?: string | null
           created_at: string
           subscription_status?: string | null
           trial_ends_at?: string | null
@@ -78,6 +79,7 @@ export interface Database {
           first_name?: string | null
           last_name?: string | null
           company_name?: string | null
+          phone_number?: string | null
           created_at?: string
           subscription_status?: string | null
           trial_ends_at?: string | null
@@ -93,6 +95,7 @@ export interface Database {
           first_name?: string | null
           last_name?: string | null
           company_name?: string | null
+          phone_number?: string | null
           created_at?: string
           subscription_status?: string | null
           trial_ends_at?: string | null

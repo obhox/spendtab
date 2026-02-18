@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [companyName, setCompanyName] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -42,6 +43,7 @@ export default function ProfilePage() {
         setFirstName(profile.first_name || "")
         setLastName(profile.last_name || "")
         setCompanyName(profile.company_name || "")
+        setPhoneNumber(profile.phone_number || "")
       }
     }
     loadProfile()
@@ -56,6 +58,7 @@ export default function ProfilePage() {
         first_name: firstName,
         last_name: lastName,
         company_name: companyName,
+        phone_number: phoneNumber,
         ...(newPassword ? { password: newPassword } : {}),
       })
       toast("Your profile has been successfully updated")
@@ -288,6 +291,18 @@ export default function ProfilePage() {
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
                     required
                     disabled={loading}
                   />
