@@ -15,40 +15,84 @@ export default function BlogLayout({
   return (
     <>
       {/* ── Nav ── */}
-      <nav className="sticky top-0 left-0 right-0 z-50 bg-white border-b border-ibm-g20 h-14 flex items-center justify-center">
-        <div className="w-full max-w-[1120px] px-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <a
-              href="https://spendtab.com"
-              className="flex items-center gap-2 font-semibold text-[1rem] tracking-tight text-ibm-black mr-8"
-            >
-              <LogoMark size={22} /> SpendTab
-            </a>
-            <div className="hidden md:flex items-center">
-              {[
-                ["https://spendtab.com#features", "Features"],
-                ["https://spendtab.com#pricing", "Pricing"],
-                ["/blog", "Blog"],
-                ["https://app.spendtab.com/login", "Login"],
-              ].map(([href, label]) => (
-                <a
-                  key={label}
-                  href={href}
-                  className="text-sm text-ibm-g70 px-4 py-2 hover:text-ibm-black transition-colors"
-                >
-                  {label}
-                </a>
-              ))}
+      <nav className="sticky top-0 left-0 right-0 z-50 bg-white border-b border-ibm-g20">
+        <div className="h-14 flex items-center justify-center">
+          <div className="w-full max-w-[1120px] px-6 flex items-center justify-between">
+            <div className="flex items-center">
+              <a
+                href="https://spendtab.com"
+                className="flex items-center gap-2 font-semibold text-[1rem] tracking-tight text-ibm-black mr-8"
+              >
+                <LogoMark size={22} /> SpendTab
+              </a>
+              <div className="hidden md:flex items-center">
+                {[
+                  ["https://spendtab.com#features", "Features"],
+                  ["https://spendtab.com#pricing", "Pricing"],
+                  ["/blog", "Blog"],
+                  ["https://app.spendtab.com/login", "Login"],
+                ].map(([href, label]) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="text-sm text-ibm-g70 px-4 py-2 hover:text-ibm-black transition-colors"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href="https://app.spendtab.com/signup"
+                className="hidden sm:block bg-ibm-blue text-white px-5 py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors"
+              >
+                Get started
+              </a>
+              <button id="blog-hamburger" aria-label="Open menu" className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5">
+                <span className="block w-5 h-px bg-ibm-black" />
+                <span className="block w-5 h-px bg-ibm-black" />
+                <span className="block w-5 h-px bg-ibm-black" />
+              </button>
             </div>
           </div>
-          <a
-            href="https://app.spendtab.com/signup"
-            className="bg-ibm-blue text-white px-5 py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors"
-          >
-            Get started
-          </a>
+        </div>
+        {/* Mobile menu */}
+        <div id="blog-mobile-menu" className="hidden border-t border-ibm-g20 bg-white px-6 py-5 md:hidden">
+          <div className="flex flex-col gap-1">
+            {[
+              ["https://spendtab.com#features", "Features"],
+              ["https://spendtab.com#pricing", "Pricing"],
+              ["/blog", "Blog"],
+              ["https://app.spendtab.com/login", "Login"],
+            ].map(([href, label]) => (
+              <a
+                key={label}
+                href={href}
+                className="text-[0.9375rem] text-ibm-g70 py-2.5 border-b border-ibm-g20 hover:text-ibm-black transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+          <div className="mt-5">
+            <a
+              href="https://app.spendtab.com/signup"
+              className="block text-center bg-ibm-blue text-white py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors"
+            >
+              Get started
+            </a>
+          </div>
         </div>
       </nav>
+
+      <script dangerouslySetInnerHTML={{ __html: `
+        document.addEventListener('DOMContentLoaded', function() {
+          var btn = document.getElementById('blog-hamburger');
+          var menu = document.getElementById('blog-mobile-menu');
+          if (btn && menu) btn.addEventListener('click', function() { menu.classList.toggle('hidden'); });
+        });
+      `}} />
 
       <main>{children}</main>
 

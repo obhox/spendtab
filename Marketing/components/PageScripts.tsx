@@ -21,6 +21,14 @@ export default function PageScripts() {
         ?.classList.toggle("scrolled", window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
 
+    // Mobile hamburger menu
+    const hamburger = document.getElementById("nav-hamburger");
+    const mobileMenu = document.getElementById("nav-mobile-menu");
+    const mobileLinks = document.querySelectorAll(".nav-mobile-link");
+    const toggleMenu = () => mobileMenu?.classList.toggle("hidden");
+    hamburger?.addEventListener("click", toggleMenu);
+    mobileLinks.forEach((link) => link.addEventListener("click", toggleMenu));
+
     // FAQ accordion
     const faqHandler = (e: Event) => {
       const q = e.currentTarget as HTMLElement;
@@ -32,6 +40,8 @@ export default function PageScripts() {
     return () => {
       obs.disconnect();
       window.removeEventListener("scroll", onScroll);
+      hamburger?.removeEventListener("click", toggleMenu);
+      mobileLinks.forEach((link) => link.removeEventListener("click", toggleMenu));
       faqQuestions.forEach((q) => q.removeEventListener("click", faqHandler));
     };
   }, []);

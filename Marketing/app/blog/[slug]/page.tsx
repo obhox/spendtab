@@ -133,7 +133,7 @@ export default async function BlogPostPage({
       </div>
 
       {/* ── Two-column layout ── */}
-      <div className="max-w-[1120px] mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-0">
+      <div className="max-w-[1120px] mx-auto px-6 py-8 md:py-12 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-0">
 
         {/* ── Main article ── */}
         <div className="lg:pr-16 lg:border-r lg:border-ibm-g20">
@@ -154,7 +154,7 @@ export default async function BlogPostPage({
           </p>
 
           {/* Byline */}
-          <div className="flex items-center gap-4 pb-8 border-b border-ibm-g20 mb-10">
+          <div className="flex flex-wrap items-center gap-4 pb-8 border-b border-ibm-g20 mb-10">
             <div
               className="w-9 h-9 bg-ibm-black text-white flex items-center justify-center font-mono-ibm text-[0.68rem] font-bold shrink-0"
               aria-hidden="true"
@@ -200,7 +200,7 @@ export default async function BlogPostPage({
 
           {/* CTA */}
           <aside
-            className="mt-12 bg-ibm-black text-white p-10"
+            className="mt-12 bg-ibm-black text-white p-7 md:p-10"
             aria-label="Call to action"
           >
             <p className="font-mono-ibm text-[0.68rem] tracking-[0.18em] uppercase text-ibm-g50 mb-3">

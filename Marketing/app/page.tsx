@@ -47,25 +47,50 @@ export default function Home() {
       {/* ══════════════════════════════════════
           NAVIGATION
           ══════════════════════════════════════ */}
-      <nav id="nav" className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-ibm-g20 h-14 flex items-center justify-center">
-        <div className="w-full max-w-[1120px] px-6 flex items-center justify-between">
-          <div className="flex items-center gap-0">
-            <a href="https://spendtab.com" className="flex items-center gap-2 font-semibold text-[1rem] tracking-tight text-ibm-black mr-8">
-              <LogoMark size={22} /> SpendTab
-            </a>
-            <div className="hidden md:flex items-center">
-              {["#features", "#how", "#pricing", "#faq"].map((href, i) => (
-                <a key={i} href={href} className="text-sm text-ibm-g70 px-4 py-2 hover:text-ibm-black transition-colors">
-                  {["Features", "How it works", "Pricing", "FAQ"][i]}
-                </a>
-              ))}
+      <nav id="nav" className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-ibm-g20">
+        <div className="h-14 flex items-center justify-center">
+          <div className="w-full max-w-[1120px] px-6 flex items-center justify-between">
+            <div className="flex items-center gap-0">
+              <a href="https://spendtab.com" className="flex items-center gap-2 font-semibold text-[1rem] tracking-tight text-ibm-black mr-8">
+                <LogoMark size={22} /> SpendTab
+              </a>
+              <div className="hidden md:flex items-center">
+                {["#features", "#how", "#pricing", "#faq", "/blog"].map((href, i) => (
+                  <a key={i} href={href} className="text-sm text-ibm-g70 px-4 py-2 hover:text-ibm-black transition-colors">
+                    {["Features", "How it works", "Pricing", "FAQ", "Blog"][i]}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a href="https://app.spendtab.com/login" className="text-sm text-ibm-black px-4 py-2 hover:bg-ibm-g10 transition-colors hidden sm:block">
+                Sign in
+              </a>
+              <a href="https://app.spendtab.com/signup" className="bg-ibm-blue text-white px-5 py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors hidden sm:block">
+                Get started
+              </a>
+              <button id="nav-hamburger" aria-label="Open menu" className="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5">
+                <span className="block w-5 h-px bg-ibm-black transition-all" />
+                <span className="block w-5 h-px bg-ibm-black transition-all" />
+                <span className="block w-5 h-px bg-ibm-black transition-all" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center">
-            <a href="https://app.spendtab.com/login" className="text-sm text-ibm-black px-4 py-2 hover:bg-ibm-g10 transition-colors hidden sm:block">
+        </div>
+        {/* Mobile menu */}
+        <div id="nav-mobile-menu" className="hidden border-t border-ibm-g20 bg-white px-6 py-5 md:hidden">
+          <div className="flex flex-col gap-1">
+            {(["#features", "#how", "#pricing", "#faq", "/blog"] as const).map((href, i) => (
+              <a key={i} href={href} className="nav-mobile-link text-[0.9375rem] text-ibm-g70 py-2.5 border-b border-ibm-g20 hover:text-ibm-black transition-colors">
+                {["Features", "How it works", "Pricing", "FAQ", "Blog"][i]}
+              </a>
+            ))}
+          </div>
+          <div className="flex gap-3 mt-5">
+            <a href="https://app.spendtab.com/login" className="flex-1 text-center text-sm text-ibm-black py-2.5 border border-ibm-g20 hover:bg-ibm-g10 transition-colors">
               Sign in
             </a>
-            <a href="https://app.spendtab.com/signup" className="bg-ibm-blue text-white px-5 py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors">
+            <a href="https://app.spendtab.com/signup" className="flex-1 text-center bg-ibm-blue text-white py-2.5 text-sm font-semibold hover:bg-ibm-blueh transition-colors">
               Get started
             </a>
           </div>
@@ -75,9 +100,9 @@ export default function Home() {
       {/* ══════════════════════════════════════
           HERO
           ══════════════════════════════════════ */}
-      <section className="min-h-screen flex flex-col justify-end pt-[120px] pb-0 px-6 border-b border-ibm-g20">
+      <section className="min-h-screen flex flex-col justify-end pt-[80px] md:pt-[120px] pb-0 px-6 border-b border-ibm-g20">
         <div className="max-w-[1120px] mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-end">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start lg:items-end">
             {/* Left: headline */}
             <div>
               <span className="font-mono-ibm text-[0.68rem] tracking-[0.18em] uppercase font-medium text-ibm-blue flex items-center gap-2.5 mb-6">
@@ -107,15 +132,15 @@ export default function Home() {
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-3 border-t border-ibm-g20 mt-14 w-full">
+          <div className="grid grid-cols-3 border-t border-ibm-g20 mt-10 md:mt-14 w-full">
             {[
               { v: "₦3,500", l: "Per month, flat" },
               { v: "1-Click", l: "Tax report exports" },
               { v: "∞", l: "Accounts & transactions" },
             ].map((s, i) => (
-              <div key={i} className={`py-6 ${i > 0 ? "pl-8 border-l border-ibm-g20" : ""}`}>
-                <div className="text-[2.25rem] font-semibold tracking-[-0.03em] text-ibm-black">{s.v}</div>
-                <div className="text-[0.8rem] text-ibm-g60 mt-1">{s.l}</div>
+              <div key={i} className={`py-4 md:py-6 ${i > 0 ? "pl-4 md:pl-8 border-l border-ibm-g20" : ""}`}>
+                <div className="text-[1.5rem] md:text-[2.25rem] font-semibold tracking-[-0.03em] text-ibm-black">{s.v}</div>
+                <div className="text-[0.7rem] md:text-[0.8rem] text-ibm-g60 mt-1">{s.l}</div>
               </div>
             ))}
           </div>
@@ -139,7 +164,7 @@ export default function Home() {
           TRUST BAR
           ══════════════════════════════════════ */}
       <div className="bg-ibm-g10 border-b border-ibm-g20 py-4 px-6">
-        <div className="flex items-center justify-center gap-10 flex-wrap max-w-[1120px] mx-auto">
+        <div className="flex items-center justify-center gap-5 md:gap-10 flex-wrap max-w-[1120px] mx-auto">
           {[
             ["🔒", "Bank-level security"],
             ["⚡", "Real-time tracking"],
@@ -157,7 +182,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           PROBLEM
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-14 md:py-24 px-6 bg-white">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>The Problem</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
@@ -167,7 +192,7 @@ export default function Home() {
             Most Nigerian SMEs still track finances in Excel, notebooks, or not at all. That leads to real problems.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start mt-14">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-start mt-10 md:mt-14">
             {/* Problems list */}
             <div className="flex flex-col">
               {[
@@ -188,7 +213,7 @@ export default function Home() {
             </div>
 
             {/* Solution box */}
-            <div className="reveal bg-ibm-g10 border border-ibm-g20 p-12 sticky top-20">
+            <div className="reveal bg-ibm-g10 border border-ibm-g20 p-7 md:p-12 md:sticky md:top-20">
               <h3 className="text-2xl font-semibold tracking-[-0.02em] mb-3.5">SpendTab fixes all of this.</h3>
               <p className="text-[0.9375rem] text-ibm-g70 leading-[1.7]">
                 One dashboard. Every business. Every transaction. Every report. Clear, organized, and ready in seconds. No accounting jargon, no complex setup, no steep learning curve.
@@ -204,7 +229,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           BENTO FEATURES GRID
           ══════════════════════════════════════ */}
-      <section className="bg-ibm-g10 py-20 px-6" id="features">
+      <section className="bg-ibm-g10 py-12 md:py-20 px-6" id="features">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>Features</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
@@ -218,7 +243,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ibm-g20">
 
             {/* ── Expense Tracking (2-col wide, dark) ── */}
-            <div className="reveal lg:col-span-2 bg-ibm-black text-white p-10 flex flex-col justify-between min-h-[270px]">
+            <div className="reveal lg:col-span-2 bg-ibm-black text-white p-6 md:p-10 flex flex-col justify-between md:min-h-[270px]">
               <div>
                 <BcTag variant="dark">Expense Tracking</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -238,7 +263,7 @@ export default function Home() {
             </div>
 
             {/* ── Tax-Ready Reports ── */}
-            <div className="reveal bg-white p-10 flex flex-col justify-between min-h-[270px]">
+            <div className="reveal bg-white p-6 md:p-10 flex flex-col justify-between md:min-h-[270px]">
               <div>
                 <BcTag>Financial Reports</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -264,7 +289,7 @@ export default function Home() {
             </div>
 
             {/* ── Invoices ── */}
-            <div className="reveal bg-white p-10 flex flex-col justify-between min-h-[240px]">
+            <div className="reveal bg-white p-6 md:p-10 flex flex-col justify-between md:min-h-[240px]">
               <div>
                 <BcTag>Invoices</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -290,7 +315,7 @@ export default function Home() {
             </div>
 
             {/* ── Budget Management (blue) ── */}
-            <div className="reveal bg-ibm-blue text-white p-10 flex flex-col justify-between min-h-[240px]">
+            <div className="reveal bg-ibm-blue text-white p-6 md:p-10 flex flex-col justify-between md:min-h-[240px]">
               <div>
                 <BcTag variant="blue">Budget Management</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -315,7 +340,7 @@ export default function Home() {
             </div>
 
             {/* ── Multi-Business Dashboard ── */}
-            <div className="reveal bg-ibm-g10 p-10 flex flex-col justify-between min-h-[240px]">
+            <div className="reveal bg-ibm-g10 p-6 md:p-10 flex flex-col justify-between md:min-h-[240px]">
               <div>
                 <BcTag>Multi-Business</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -336,7 +361,7 @@ export default function Home() {
             </div>
 
             {/* ── Bank Reconciliation (2-col wide) ── */}
-            <div className="reveal lg:col-span-2 bg-white p-10 flex flex-col lg:flex-row gap-10 justify-between items-start lg:items-center min-h-[220px]">
+            <div className="reveal lg:col-span-2 bg-white p-6 md:p-10 flex flex-col lg:flex-row gap-6 lg:gap-10 justify-between items-start lg:items-center md:min-h-[220px]">
               <div>
                 <BcTag>Bank Reconciliation</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -360,7 +385,7 @@ export default function Home() {
             </div>
 
             {/* ── Tax Centre ── */}
-            <div className="reveal bg-ibm-black text-white p-10 flex flex-col justify-between min-h-[220px]">
+            <div className="reveal bg-ibm-black text-white p-6 md:p-10 flex flex-col justify-between md:min-h-[220px]">
               <div>
                 <BcTag variant="dark">Tax Centre</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -380,7 +405,7 @@ export default function Home() {
             </div>
 
             {/* ── Analytics & Insights ── */}
-            <div className="reveal bg-white p-10 flex flex-col justify-between min-h-[220px]">
+            <div className="reveal bg-white p-6 md:p-10 flex flex-col justify-between md:min-h-[220px]">
               <div>
                 <BcTag>Analytics</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -399,7 +424,7 @@ export default function Home() {
             </div>
 
             {/* ── Assets & Liabilities ── */}
-            <div className="reveal bg-ibm-g10 p-10 flex flex-col justify-between min-h-[220px]">
+            <div className="reveal bg-ibm-g10 p-6 md:p-10 flex flex-col justify-between md:min-h-[220px]">
               <div>
                 <BcTag>Assets &amp; Liabilities</BcTag>
                 <h3 className="text-xl font-semibold leading-[1.3] tracking-[-0.01em] mb-2.5">
@@ -428,7 +453,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           MID CTA 1
           ══════════════════════════════════════ */}
-      <section className="bg-ibm-black text-center py-20 px-6">
+      <section className="bg-ibm-black text-center py-12 md:py-20 px-6">
         <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-white max-w-[620px] mx-auto reveal">
           Stop guessing.<br />Start tracking.
         </h2>
@@ -448,9 +473,9 @@ export default function Home() {
       {/* ══════════════════════════════════════
           DETAIL: EXPENSE TRACKING
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-14 md:py-24 px-6 bg-white">
         <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center reveal">
             <div>
               <Eyebrow>Expense Tracking</Eyebrow>
               <h2 className="text-[clamp(1.75rem,3vw,2.375rem)] font-semibold leading-[1.15] tracking-[-0.02em] mt-2.5 mb-4">
@@ -486,9 +511,9 @@ export default function Home() {
       {/* ══════════════════════════════════════
           DETAIL: INCOME TRACKING (alt)
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-ibm-g10">
+      <section className="py-14 md:py-24 px-6 bg-ibm-g10">
         <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center reveal">
             {/* Vis first on desktop */}
             <div className="order-2 lg:order-1 bg-white border border-ibm-g20 p-7">
               <div className="font-mono-ibm text-[0.68rem] text-ibm-g60 uppercase tracking-wider mb-4">Revenue vs Expenses — Q1 2026</div>
@@ -529,9 +554,9 @@ export default function Home() {
       {/* ══════════════════════════════════════
           DETAIL: BUDGETS
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-14 md:py-24 px-6 bg-white">
         <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center reveal">
             <div>
               <Eyebrow>Budget Management</Eyebrow>
               <h2 className="text-[clamp(1.75rem,3vw,2.375rem)] font-semibold leading-[1.15] tracking-[-0.02em] mt-2.5 mb-4">
@@ -572,9 +597,9 @@ export default function Home() {
       {/* ══════════════════════════════════════
           DETAIL: INVOICES (alt)
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-ibm-g10">
+      <section className="py-14 md:py-24 px-6 bg-ibm-g10">
         <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center reveal">
             <div className="order-2 lg:order-1 bg-white border border-ibm-g20">
               <div className="flex justify-between items-start p-5 border-b border-ibm-g20">
                 <div>
@@ -628,7 +653,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           STATS BAR
           ══════════════════════════════════════ */}
-      <div className="bg-ibm-black py-16 px-6">
+      <div className="bg-ibm-black py-12 md:py-16 px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 max-w-[1120px] mx-auto">
           {[
             ["₦3,500", "Per month, flat"],
@@ -636,7 +661,7 @@ export default function Home() {
             ["∞", "Accounts & transactions"],
             ["14", "Day free trial"],
           ].map(([n, d], i) => (
-            <div key={i} className={`reveal px-10 ${i > 0 ? "border-l border-ibm-g80" : "pl-0"} ${i >= 2 ? "mt-10 lg:mt-0" : ""}`}>
+            <div key={i} className={`reveal px-5 md:px-10 py-4 lg:py-0 ${i > 0 ? "border-l border-ibm-g80" : "pl-0"} ${i >= 2 ? "mt-6 lg:mt-0" : ""}`}>
               <div className="text-[2.75rem] font-semibold text-white tracking-[-0.03em] leading-none">
                 <span className="text-ibm-blue">{n}</span>
               </div>
@@ -649,7 +674,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           HOW IT WORKS
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white" id="how">
+      <section className="py-14 md:py-24 px-6 bg-white" id="how">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>How it works</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
@@ -659,14 +684,14 @@ export default function Home() {
             No complicated setup. No training. No accounting background needed.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-t border-ibm-g20 mt-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border-t border-ibm-g20 mt-10 md:mt-14">
             {[
               ["01", "Sign up free", "Create your account in 30 seconds. No credit card, no commitment. Get started immediately."],
               ["02", "Add your businesses", "Set up each business, side project, or income stream as a separate account. SpendTab keeps them organized."],
               ["03", "Log transactions", "Record income and expenses as they happen. Categorize by project, client, or custom tags. It takes seconds."],
               ["04", "Get reports & insights", "Generate financial reports, monitor budgets, and see analytics. Share with your accountant or use for tax filings."],
             ].map(([num, title, desc], i) => (
-              <div key={i} className={`reveal py-9 ${i > 0 ? "lg:pl-9 lg:border-l border-ibm-g20" : ""} ${i === 1 ? "lg:px-9" : ""}`}>
+              <div key={i} className={`reveal py-6 md:py-9 border-b md:border-b-0 border-ibm-g20 ${i > 0 ? "lg:pl-9 lg:border-l" : ""} ${i === 1 ? "lg:px-9" : ""}`}>
                 <div className="font-mono-ibm text-[0.68rem] text-ibm-blue font-medium mb-5 tracking-wider">{num}</div>
                 <h3 className="text-[1rem] font-semibold mb-2.5">{title}</h3>
                 <p className="text-[0.875rem] text-ibm-g60 leading-[1.65]">{desc}</p>
@@ -683,14 +708,14 @@ export default function Home() {
       {/* ══════════════════════════════════════
           BENEFITS
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-ibm-g10">
+      <section className="py-14 md:py-24 px-6 bg-ibm-g10">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>Why SpendTab</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
             Why Nigerian business owners<br />choose SpendTab.
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ibm-g20 mt-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ibm-g20 mt-10 md:mt-14">
             {[
               ["01", "Replace messy spreadsheets", "Stop juggling multiple Excel files, notebooks, and bank statement screenshots. Everything in one searchable, organized place."],
               ["02", "Separate business & personal", "Know exactly how each business performs. Keep consulting income separate from e-commerce revenue. See true profit per venture."],
@@ -699,7 +724,7 @@ export default function Home() {
               ["05", "No learning curve", "SpendTab is designed for entrepreneurs, not accountants. Simple, intuitive, and fast. If you can use WhatsApp, you can use SpendTab."],
               ["06", "Affordable naira pricing", "No dollar-denominated pricing that fluctuates with exchange rates. Just ₦3,500/month for unlimited everything."],
             ].map(([num, title, desc]) => (
-              <div key={num} className="reveal bg-white p-10">
+              <div key={num} className="reveal bg-white p-6 md:p-10">
                 <div className="font-mono-ibm text-[0.68rem] text-ibm-blue mb-4 tracking-wider">{num}</div>
                 <h3 className="text-[1rem] font-semibold mb-2.5 tracking-[-0.01em]">{title}</h3>
                 <p className="text-[0.875rem] text-ibm-g60 leading-[1.65]">{desc}</p>
@@ -712,7 +737,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           AUDIENCE
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-14 md:py-24 px-6 bg-white">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>Who uses SpendTab</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
@@ -722,7 +747,7 @@ export default function Home() {
             Whether you&apos;re just starting out or scaling up, SpendTab adapts to your business.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ibm-g20 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ibm-g20 mt-8 md:mt-12">
             {[
               ["💼", "Consultants & Advisors", "Organize income from multiple clients. Monitor ongoing project expenses and track retainer payments."],
               ["🛒", "E-commerce Owners", "Track profits from multiple platforms. Monitor inventory costs, shipping fees, and marketing spend."],
@@ -734,7 +759,7 @@ export default function Home() {
               ["🔧", "Contractors & Tradespeople", "Manage multiple client accounts, material costs, and labor expenses across jobs."],
               ["🚀", "Startup Founders", "Track startup costs, runway, and burn rate. Set budgets for product development and marketing."],
             ].map(([emoji, title, desc]) => (
-              <div key={title as string} className="reveal bg-white p-8">
+              <div key={title as string} className="reveal bg-white p-5 md:p-8">
                 <span className="text-[1.25rem] mb-3 block">{emoji}</span>
                 <h3 className="text-[0.9375rem] font-semibold mb-2">{title}</h3>
                 <p className="text-[0.84rem] text-ibm-g60 leading-[1.6]">{desc}</p>
@@ -747,7 +772,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           MID CTA 2
           ══════════════════════════════════════ */}
-      <section className="bg-ibm-black text-center py-20 px-6">
+      <section className="bg-ibm-black text-center py-12 md:py-20 px-6">
         <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-white max-w-[620px] mx-auto reveal">
           Your business deserves<br />financial clarity.
         </h2>
@@ -764,7 +789,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           COMPARISON
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-ibm-g10">
+      <section className="py-14 md:py-24 px-6 bg-ibm-g10">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>SpendTab vs Others</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
@@ -774,7 +799,7 @@ export default function Home() {
             Enterprise accounting software is complex and expensive. SpendTab is purpose-built for how you actually work.
           </p>
 
-          <div className="mt-12 reveal overflow-x-auto">
+          <div className="mt-8 md:mt-12 reveal overflow-x-auto">
             <table className="w-full text-[0.875rem] border-collapse">
               <thead>
                 <tr>
@@ -811,20 +836,20 @@ export default function Home() {
       {/* ══════════════════════════════════════
           TESTIMONIALS
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-14 md:py-24 px-6 bg-white">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow>What business owners say</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] reveal">
             Trusted by entrepreneurs<br />across Nigeria.
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ibm-g20 mt-14">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ibm-g20 mt-10 md:mt-14">
             {[
               ["AO", "Adaeze O.", "Consultant & E-commerce Owner, Lagos", "SpendTab finally gave me clarity on which of my three businesses is actually making money. I used to guess — now I know exactly."],
               ["KB", "Kunle B.", "Real Estate Agent, Abuja", "Tax time used to take me a week of digging through spreadsheets. Now I export everything in one click. My accountant loves me."],
               ["FI", "Funke I.", "Event Planner, Port Harcourt", "The simplicity is what sold me. No confusing accounting jargon. I signed up and was tracking expenses within five minutes."],
             ].map(([init, name, role, quote]) => (
-              <div key={name as string} className="reveal bg-white p-10">
+              <div key={name as string} className="reveal bg-white p-6 md:p-10">
                 <div className="text-ibm-blue text-[0.875rem] tracking-[3px] mb-5">★★★★★</div>
                 <blockquote className="text-[0.9375rem] leading-[1.7] text-ibm-g70 mb-7">{quote}</blockquote>
                 <div className="flex items-center gap-3">
@@ -845,7 +870,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           PRICING
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-ibm-g10" id="pricing">
+      <section className="py-14 md:py-24 px-6 bg-ibm-g10" id="pricing">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow className="justify-center">Pricing</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-center reveal">
@@ -855,9 +880,9 @@ export default function Home() {
             Unlimited everything on every plan. Pay in Naira. Cancel anytime.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-ibm-g20 max-w-[800px] mx-auto mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-ibm-g20 max-w-[800px] mx-auto mt-8 md:mt-12">
             {/* Monthly */}
-            <div className="reveal bg-white p-12">
+            <div className="reveal bg-white p-7 md:p-12">
               <div className="text-[0.8rem] font-semibold uppercase tracking-[0.1em] text-ibm-g60 mb-4">Monthly</div>
               <div className="text-[2.5rem] font-semibold tracking-[-0.03em] leading-none mb-2">
                 ₦3,500 <small className="text-[1rem] font-normal text-ibm-g50">/mo</small>
@@ -873,7 +898,7 @@ export default function Home() {
             </div>
 
             {/* Yearly */}
-            <div className="reveal bg-ibm-black text-white p-12 relative">
+            <div className="reveal bg-ibm-black text-white p-7 md:p-12 relative">
               <span className="absolute top-5 right-5 bg-ibm-blue text-white text-[0.65rem] font-bold px-2.5 py-1 uppercase tracking-wider">Save 14%</span>
               <div className="text-[0.8rem] font-semibold uppercase tracking-[0.1em] text-ibm-g50 mb-4">Yearly</div>
               <div className="text-[2.5rem] font-semibold tracking-[-0.03em] leading-none mb-2 text-white">
@@ -895,14 +920,14 @@ export default function Home() {
       {/* ══════════════════════════════════════
           FAQ
           ══════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-white" id="faq">
+      <section className="py-14 md:py-24 px-6 bg-white" id="faq">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow className="justify-center">FAQ</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-center reveal">
             Frequently asked questions.
           </h2>
 
-          <div className="max-w-[720px] mx-auto mt-12">
+          <div className="max-w-[720px] mx-auto mt-8 md:mt-12">
             {[
               ["Do I need accounting experience to use SpendTab?", "Not at all. SpendTab is designed for business owners, not accountants. If you can use a banking app, you can use SpendTab."],
               ["Can I manage multiple businesses on one account?", "Yes. SpendTab lets you create unlimited separate business accounts within one dashboard. Each business has its own transactions, budgets, and reports."],
@@ -928,7 +953,7 @@ export default function Home() {
       {/* ══════════════════════════════════════
           FINAL CTA
           ══════════════════════════════════════ */}
-      <section className="bg-ibm-black py-24 px-6 text-center">
+      <section className="bg-ibm-black py-14 md:py-24 px-6 text-center">
         <div className="max-w-[1120px] mx-auto">
           <Eyebrow className="justify-center [&>span]:bg-ibm-g80">Get started</Eyebrow>
           <h2 className="text-[clamp(1.875rem,3.5vw,2.875rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-white max-w-[620px] mx-auto reveal">
@@ -952,8 +977,8 @@ export default function Home() {
       {/* ══════════════════════════════════════
           FOOTER
           ══════════════════════════════════════ */}
-      <footer className="border-t border-ibm-g20 pt-14 pb-8 px-6 bg-white">
-        <div className="max-w-[1120px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+      <footer className="border-t border-ibm-g20 pt-10 md:pt-14 pb-8 px-6 bg-white">
+        <div className="max-w-[1120px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           <div className="md:col-span-2">
             <a href="https://spendtab.com" className="flex items-center gap-2 font-semibold text-[1rem] text-ibm-black mb-4">
               <LogoMark size={22} /> SpendTab

@@ -76,9 +76,9 @@ export default async function BlogIndexPage() {
       />
 
       {/* ── Hero ── */}
-      <section className="border-b border-ibm-g20 pt-16 pb-0 px-6">
+      <section className="border-b border-ibm-g20 pt-10 md:pt-16 pb-0 px-6">
         <div className="max-w-[1120px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-end pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 items-end pb-8 md:pb-12">
             <div>
               <p className="font-mono-ibm text-[0.68rem] tracking-[0.18em] uppercase font-medium text-ibm-blue flex items-center gap-2.5 mb-6">
                 <span className="w-0.5 h-3.5 bg-ibm-blue" />
@@ -126,7 +126,7 @@ export default async function BlogIndexPage() {
       </div>
 
       {/* ── Post grid ── */}
-      <div className="max-w-[1120px] mx-auto px-6 py-14">
+      <div className="max-w-[1120px] mx-auto px-6 py-8 md:py-14">
         {posts.length === 0 ? (
           <div className="text-center py-20 text-ibm-g50 font-mono-ibm text-sm">
             No posts yet — check back soon.
@@ -138,7 +138,7 @@ export default async function BlogIndexPage() {
                 key={post.slug}
                 href={`/blog/${post.slug}`}
                 aria-label={`Read: ${post.title}`}
-                className={`group flex flex-col bg-white p-8 hover:bg-ibm-g10 transition-colors ${
+                className={`group flex flex-col bg-white p-5 md:p-8 hover:bg-ibm-g10 transition-colors ${
                   i === 0 ? "lg:col-span-2 lg:row-span-1" : ""
                 }`}
               >
@@ -185,7 +185,7 @@ export default async function BlogIndexPage() {
         )}
 
         {/* Bottom CTA */}
-        <div className="mt-px bg-ibm-black text-white p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="mt-px bg-ibm-black text-white p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <p className="font-mono-ibm text-[0.68rem] text-ibm-g50 tracking-wider uppercase mb-2">
               Ready to act on what you&apos;ve read?
