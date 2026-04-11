@@ -450,7 +450,13 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <div className="flex space-x-2">
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={(id) => {
+                          const cat = filteredCategories.find((c) => c.id === id);
+                          field.onChange(cat ? cat.name : id);
+                        }}
+                        value={filteredCategories.find((c) => c.name === field.value)?.id ?? ""}
+                      >
                         <FormControl>
                           <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Select a category" />
@@ -459,11 +465,11 @@ export function TransactionForm({ children, transaction, onSuccess }: Transactio
                         <SelectContent>
                           {hasCategoriesForType ? (
                             filteredCategories.map((category) => (
-                              <SelectItem key={category.id} value={category.name}>
+                              <SelectItem key={category.id} value={category.id}>
                                 <div className="flex items-center">
-                                  <div 
-                                    className="w-3 h-3 rounded-full mr-2" 
-                                    style={{ backgroundColor: category.color || '#888888' }} 
+                                  <div
+                                    className="w-3 h-3 rounded-full mr-2"
+                                    style={{ backgroundColor: category.color || '#888888' }}
                                   />
                                   {category.name}
                                 </div>

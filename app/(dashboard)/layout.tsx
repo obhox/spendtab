@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense } from "react"
 import dynamic from "next/dynamic"
-import { DollarSign, LayoutDashboard, PieChart, LineChart, FileText, Settings, CreditCard, Menu, X, Tag, Calculator, TrendingUp, TrendingDown, GitCompare, Receipt, Building2, Sliders } from "lucide-react"
+import { LayoutDashboard, FileText, LineChart, Tag, Settings, CreditCard, Menu, GitCompare, Receipt, Building2, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -11,10 +11,10 @@ import { CurrencySwitcher, useSelectedCurrency } from "@/components/currency-swi
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useState, useEffect } from "react"
-import { getCookie } from "@/lib/cookie-utils"
 import { supabase } from "@/lib/supabase"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
+import { usePathname } from "next/navigation"
 
 const AccountSelector = dynamic(
   () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
@@ -34,6 +34,94 @@ import { TaxProvider } from "@/lib/context/TaxContext"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+const navSections = [
+  {
+    label: "Main",
+    items: [
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/transactions", label: "Transactions", icon: CreditCard },
+      { href: "/assets-liabilities", label: "Assets & Liabilities", icon: TrendingUp },
+      { href: "/bank-reconciliation", label: "Bank Reconciliation", icon: GitCompare },
+      { href: "/invoices", label: "Invoices", icon: Receipt },
+      { href: "/customers", label: "Customers", icon: Building2 },
+    ],
+  },
+  {
+    label: "Analytics",
+    items: [
+      { href: "/reports", label: "Reports", icon: FileText },
+    ],
+  },
+  {
+    label: "Planning",
+    items: [
+      { href: "/budgets", label: "Budget", icon: LineChart },
+      { href: "/categories", label: "Categories", icon: Tag },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/profile", label: "Profile", icon: Settings },
+      { href: "/subscription", label: "Subscription", icon: CreditCard },
+    ],
+  },
+]
+
+function NavLink({ href, label, icon: Icon, onClick }: { href: string; label: string; icon: React.ElementType; onClick?: () => void }) {
+  const pathname = usePathname()
+  const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href))
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+        isActive
+          ? "border-l-2 border-ibm-blue bg-ibm-g10 pl-[calc(1rem-2px)] text-ibm-black font-medium"
+          : "text-ibm-g70 hover:bg-ibm-g10 hover:text-ibm-black"
+      }`}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      <span>{label}</span>
+    </Link>
+  )
+}
+
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
+  return (
+    <nav className="h-full flex flex-col bg-white border-r border-ibm-g20">
+      {/* Logo */}
+      <div className="flex h-14 items-center px-4 border-b border-ibm-g20">
+        <Link href="/dashboard" className="font-semibold text-ibm-black tracking-tight text-base">
+          spendtab
+        </Link>
+      </div>
+
+      {/* Nav sections */}
+      <ScrollArea className="flex-1">
+        <div className="py-4">
+          {navSections.map((section) => (
+            <div key={section.label} className="mb-1">
+              <p className="ibm-label px-4 py-2 mt-2">{section.label}</p>
+              {section.items.map((item) => (
+                <NavLink key={item.href} {...item} icon={item.icon} onClick={onNavClick} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {/* Bottom controls */}
+      <div className="border-t border-ibm-g20 p-4 space-y-3">
+        <Suspense fallback={<div className="text-ibm-g70 text-sm">Loading…</div>}>
+          <AccountSelector />
+        </Suspense>
+        <CurrencySwitcher />
+      </div>
+    </nav>
+  )
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -41,6 +129,7 @@ export default function DashboardLayout({
 }) {
   const { currentAccount } = useAccounts();
   const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
     const checkSubscription = async () => {
@@ -71,7 +160,7 @@ export default function DashboardLayout({
         }
       }
     }
-    
+
     checkSubscription()
   }, [router])
 
@@ -83,269 +172,35 @@ export default function DashboardLayout({
         <LiabilityProvider>
           <TaxProvider>
             <AccountCreationModal />
-            <div className="flex min-h-screen">
-        <div className="lg:hidden fixed right-3 top-3 z-50">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
-              <nav className="h-full flex flex-col text-black">
-                <div className="flex h-14 items-center px-4">
-                  <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
-                    <span className="text-lg">spendtab</span>
-                  </Link>
-                </div>
-                <ScrollArea className="flex-1 px-3">
-                  <div className="space-y-4 py-4">
-                    <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Main</h2>
-                      <div className="space-y-1">
-                        <Link
-                          href="/dashboard"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          <span>Dashboard</span>
-                        </Link>
-                        <Link
-                          href="/transactions"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/assets-liabilities"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <TrendingUp className="mr-2 h-4 w-4" />
-                          <span>Assets & Liabilities</span>
-                        </Link>
-                        <Link
-                          href="/bank-reconciliation"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <GitCompare className="mr-2 h-4 w-4" />
-                          <span>Bank Reconciliation</span>
-                        </Link>
-                        <Link
-                          href="/invoices"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Receipt className="mr-2 h-4 w-4" />
-                          <span>Invoices</span>
-                        </Link>
-                        <Link
-                          href="/customers"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Building2 className="mr-2 h-4 w-4" />
-                          <span>Customers</span>
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
-                      <div className="space-y-1">
-                        <Link
-                          href="/reports"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          <span>Reports</span>
-                        </Link>
+            <div className="flex min-h-screen bg-ibm-g10">
 
-                      </div>
-                    </div>
-                    <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Planning</h2>
-                      <div className="space-y-1">
-                        <Link
-                          href="/budgets"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <LineChart className="mr-2 h-4 w-4" />
-                          <span>Budget</span>
-                        </Link>
-                        <Link
-                          href="/categories"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Tag className="mr-2 h-4 w-4" />
-                          <span>Categories</span>
-                        </Link>
-                        {/* <Link
-                          href="/tax-centre"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Calculator className="mr-2 h-4 w-4" />
-                          <span>Tax Centre</span>
-                        </Link> */}
-                      </div>
-                    </div>
-                    <div className="px-3 py-2">
-                      <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Account</h2>
-                      <div className="space-y-1">
-                        <Link
-                          href="/profile"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                        <Link
-                          href="/subscription"
-                          className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          <span>Subscription</span>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollArea>
-                <div className="mt-auto p-4 space-y-4">
-                  <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
-                    <AccountSelector />
-                  </Suspense>
-                  <CurrencySwitcher />
-                </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-        <aside className="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:overflow-y-auto border-r border-gray-300" style={{ backgroundColor: '#ffffff' }}>
-          <div className="sticky top-0 flex h-16 items-center px-6" style={{ backgroundColor: '#ffffff' }}>
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-black">
-              <span>spendtab</span>
-            </Link>
-          </div>
-          <ScrollArea className="flex-1 px-3">
-            <div className="space-y-4 py-4">
-              <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Main</h2>
-                <div className="space-y-1">
-                  <Link
-                    href="/dashboard"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                  <Link
-                    href="/transactions"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Transactions</span>
-                  </Link>
-                  <Link
-                    href="/assets-liabilities"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    <span>Assets & Liabilities</span>
-                  </Link>
-                  <Link
-                    href="/bank-reconciliation"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <GitCompare className="mr-2 h-4 w-4" />
-                    <span>Bank Reconciliation</span>
-                  </Link>
-                  <Link
-                    href="/invoices"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Receipt className="mr-2 h-4 w-4" />
-                    <span>Invoices</span>
-                  </Link>
-                  <Link
-                    href="/customers"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Building2 className="mr-2 h-4 w-4" />
-                    <span>Customers</span>
-                  </Link>
-                </div>
+              {/* Mobile hamburger */}
+              <div className="lg:hidden fixed right-3 top-3 z-50">
+                <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-ibm-g20">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-64 p-0 border-r border-ibm-g20">
+                    <SidebarContent onNavClick={() => setMobileOpen(false)} />
+                  </SheetContent>
+                </Sheet>
               </div>
-              <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Analytics</h2>
-                <div className="space-y-1">
-                  <Link
-                    href="/reports"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    <span>Reports</span>
-                  </Link>
 
-                </div>
-              </div>
-              <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Planning</h2>
-                <div className="space-y-1">
-                  <Link
-                    href="/budgets"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <LineChart className="mr-2 h-4 w-4" />
-                    <span>Budget</span>
-                  </Link>
-                  <Link
-                    href="/categories"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Tag className="mr-2 h-4 w-4" />
-                    <span>Categories</span>
-                  </Link>
-                  {/* <Link
-                    href="/tax-centre"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Calculator className="mr-2 h-4 w-4" />
-                    <span>Tax Centre</span>
-                  </Link> */}
-                </div>
-              </div>
-              <div className="px-3 py-2">
-                <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-black">Account</h2>
-                <div className="space-y-1">
-                  <Link
-                    href="/profile"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                  <Link
-                    href="/subscription"
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-black hover:bg-gray-200 hover:text-black"
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Subscription</span>
-                  </Link>
-                </div>
-              </div>
+              {/* Desktop sidebar */}
+              <aside className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:flex-col">
+                <SidebarContent />
+              </aside>
+
+              {/* Main content */}
+              <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72">
+                <Suspense fallback={<div className="text-ibm-g70">Loading…</div>}>{children}</Suspense>
+              </main>
+
+              <Analytics />
+              <SpeedInsights />
             </div>
-          </ScrollArea>
-          <div className="mt-auto p-4 space-y-4">
-            <Suspense fallback={<div className="text-black">Loading account selector...</div>}>
-              <AccountSelector />
-            </Suspense>
-            <CurrencySwitcher />
-          </div>
-        </aside>
-        <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72">
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-        </main>
-        
-        <Analytics />
-        <SpeedInsights />
-      </div>
           </TaxProvider>
         </LiabilityProvider>
       </AssetProvider>

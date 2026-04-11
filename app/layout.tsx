@@ -1,7 +1,6 @@
 import type React from "react"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { GeistSans } from 'geist/font/sans'
 import type { Metadata } from 'next'
 
 import { PostHogProvider } from "@/components/posthog-provider"
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={GeistSans.variable}>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, nocache" />
         <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
@@ -46,9 +45,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="facebookexternalhit" content="noindex, nofollow" />
         <meta name="twitterbot" content="noindex, nofollow" />
         <meta name="pinterest" content="nopin" />
+        {/* IBM Plex fonts via Google Fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <PostHogProvider>
             <QueryProvider>
               <DataProvider>

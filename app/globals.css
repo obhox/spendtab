@@ -5,84 +5,120 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* IBM-mapped shadcn tokens */
+    --background: 0 0% 96%;           /* #f4f4f4 — ibm-g10 */
+    --foreground: 0 0% 8.6%;          /* #161616 — ibm-black */
+    --card: 0 0% 100%;                /* #ffffff */
+    --card-foreground: 0 0% 8.6%;    /* #161616 */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-    
+    --popover-foreground: 0 0% 8.6%;
+    --primary: 224 100% 53%;          /* #0f62fe — ibm-blue */
+    --primary-foreground: 0 0% 100%;  /* white */
+    --secondary: 0 0% 87.8%;         /* #e0e0e0 — ibm-g20 */
+    --secondary-foreground: 0 0% 8.6%;
+    --muted: 0 0% 87.8%;             /* #e0e0e0 */
+    --muted-foreground: 0 0% 32.2%;  /* #525252 — ibm-g70 */
+    --accent: 0 0% 95.7%;            /* #f4f4f4 — ibm-g10 */
+    --accent-foreground: 0 0% 8.6%;
+    --destructive: 354 100% 49.6%;   /* #da1e28 — ibm-red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 87.8%;            /* #e0e0e0 — ibm-g20 */
+    --input: 0 0% 87.8%;
+    --ring: 224 100% 53%;            /* #0f62fe — ibm-blue */
+    --radius: 0px;                   /* IBM uses sharp/square corners */
+
     /* Chart colors */
-    --chart-1: 221.2 83.2% 53.3%;
-    --chart-2: 142.1 76.2% 36.3%;
-    --chart-3: 32.1 94.6% 43.7%;
-    --chart-4: 262.1 83.3% 57.8%;
-    --chart-5: 1.9 83.2% 62.4%;
-    --chart-positive: 142 76% 36%;
-    --chart-negative: 0 72% 51%; 
+    --chart-1: 224 100% 53%;         /* ibm-blue */
+    --chart-2: 145 66% 35%;          /* ibm-green */
+    --chart-3: 32 95% 44%;           /* orange */
+    --chart-4: 262 83% 58%;          /* purple */
+    --chart-5: 354 100% 50%;         /* ibm-red */
+    --chart-positive: 145 66% 35%;
+    --chart-negative: 354 100% 50%;
   }
 
   * {
     @apply border-border;
   }
-  
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-ibm-g10 text-ibm-black antialiased;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   }
 }
 
 @layer components {
+  /* IBM Bento Card — base style */
+  .bento-card {
+    @apply bg-white border border-ibm-g20 p-6 md:p-8;
+  }
+
+  .bento-card-dark {
+    @apply bg-ibm-black text-white border border-ibm-black p-6 md:p-8;
+  }
+
+  .bento-card-blue {
+    @apply bg-ibm-blue text-white border border-ibm-blue p-6 md:p-8;
+  }
+
+  .bento-card-muted {
+    @apply bg-ibm-g10 border border-ibm-g20 p-6 md:p-8;
+  }
+
+  /* IBM Grid — gap-px on colored bg creates seamless 1px grid lines */
+  .bento-grid {
+    @apply grid gap-px bg-ibm-g20;
+  }
+
+  /* IBM Tag */
+  .ibm-tag {
+    @apply inline-flex items-center px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-wider bg-ibm-g10 text-ibm-g70 border border-ibm-g20;
+  }
+
+  /* IBM Section label */
+  .ibm-label {
+    @apply font-mono text-[0.65rem] uppercase tracking-[0.2em] text-ibm-g50;
+  }
+
   /* Responsive Typography */
   .text-responsive-h1 {
     @apply text-h6 md:text-h4 lg:text-h2 xl:text-h1 font-bold tracking-tight;
   }
-  
+
   .text-responsive-h2 {
     @apply text-h6 md:text-h5 lg:text-h3 xl:text-h2 font-bold tracking-tight;
   }
-  
+
   .text-responsive-h3 {
     @apply text-subheading md:text-h6 lg:text-h4 xl:text-h3 font-bold tracking-tight;
   }
 }
 
 @layer utilities {
-  /* Text scaling utilities for different screen sizes */
+  /* Text scaling utilities */
   .text-scale-sm {
     @apply text-xs sm:text-sm md:text-base;
   }
-  
+
   .text-scale-base {
     @apply text-sm sm:text-base md:text-lg;
   }
-  
+
   .text-scale-lg {
     @apply text-base sm:text-lg md:text-xl;
   }
-  
+
   .text-scale-xl {
     @apply text-lg sm:text-xl md:text-2xl;
   }
 
-  /* Position the line under h1 titles */
+  /* Page heading — full-width bottom rule */
   main h1 {
     position: relative;
     padding-bottom: 1rem;
     margin-bottom: 1.5rem !important;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   main h1::after {
@@ -92,10 +128,9 @@
     left: 0;
     right: 0;
     height: 1px;
-    background-color: hsl(var(--border));
+    background-color: #e0e0e0;
   }
 
-  /* Mobile: Line extends from left edge to right edge */
   @media (max-width: 767px) {
     main h1::after {
       left: -1rem;
@@ -103,17 +138,16 @@
     }
   }
 
-  /* Tablet and Desktop: Line extends from sidebar edge to right edge */
   @media (min-width: 768px) {
     main h1::after {
-      left: -4.5rem; /* Extends to sidebar edge */
+      left: -4.5rem;
       right: -2rem;
     }
   }
 
   @media (min-width: 1024px) {
     main h1::after {
-      left: -6rem; /* Extends to sidebar edge */
+      left: -6rem;
       right: -2rem;
     }
   }

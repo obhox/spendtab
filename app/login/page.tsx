@@ -64,8 +64,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-6 bg-white p-8 shadow-lg rounded-lg border">
+    <div className="flex min-h-screen items-center justify-center bg-ibm-g10 p-4">
+      <div className="w-full max-w-md space-y-6 bg-white p-8 border border-ibm-g20">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
           <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">OR CONTINUE WITH</span>
+            <span className="bg-ibm-g10 px-2 text-ibm-g50">OR CONTINUE WITH</span>
           </div>
         </div>
 

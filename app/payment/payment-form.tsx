@@ -111,7 +111,7 @@ export default function PaymentForm() {
   const isFromSignup = !!searchParams.get("email")
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-ibm-g10 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Complete Your Subscription</CardTitle>

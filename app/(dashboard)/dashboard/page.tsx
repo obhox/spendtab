@@ -1,9 +1,6 @@
 "use client"
 
 import { Suspense, useEffect, useState, memo, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-// Removed Tabs imports as they are not used currently
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowDown, ArrowUp, DollarSign, TrendingUp, CalendarIcon } from 'lucide-react'
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { IncomeExpenseChart } from "@/components/dashboard/income-expense-chart"
@@ -18,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { format, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval } from "date-fns"
 import { useSelectedCurrency, formatCurrency as formatCurrencyUtil } from "@/components/currency-switcher"
 
-// Time period options for the filter
 const timePeriods = [
   { value: "last_30_days", label: "Last 30 Days" },
   { value: "current_month", label: "This Month" },
@@ -29,52 +25,38 @@ const timePeriods = [
   { value: "last_12_months", label: "Last 12 Months" }
 ];
 
-// --- Helper: Loading Skeleton for Metric Cards ---
-// Moved outside DashboardMetrics to be accessible by DashboardSkeleton
+// Bento metric skeleton
 const MetricSkeleton = () => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-2 sm:p-3 md:p-4">
-            <Skeleton className="h-3 sm:h-4 w-2/4" />
-            <Skeleton className="h-3 sm:h-4 w-3 sm:w-4" />
-        </CardHeader>
-        <CardContent className="pt-0 p-2 sm:p-3 md:p-4">
-            <Skeleton className="h-6 sm:h-7 w-3/4 mb-1" />
-            <Skeleton className="h-2 sm:h-3 w-1/2" />
-        </CardContent>
-    </Card>
+  <div className="bg-white border border-ibm-g20 p-6">
+    <Skeleton className="h-3 w-24 mb-4" />
+    <Skeleton className="h-8 w-3/4 mb-2" />
+    <Skeleton className="h-3 w-1/2" />
+  </div>
 );
-
 
 // --- Metrics Component ---
 function DashboardMetrics() {
   const { transactions = [] } = useTransactions() || {};
   const { currentAccount } = useAccounts() || {};
-  const { setDateRange, dateRange } = useAnalytics();
+  const { setDateRange } = useAnalytics();
   const selectedCurrency = useSelectedCurrency();
   const [metrics, setMetrics] = useState({
-    revenue: 0,
-    expenses: 0,
-    profit: 0,
-    cashFlow: 0,
-    transactionCount: 0
+    revenue: 0, expenses: 0, profit: 0, cashFlow: 0, transactionCount: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState("last_30_days");
 
-  // Function to convert time period to date range
   const getDateRangeFromTimePeriod = useCallback((period: string) => {
     const now = new Date();
     let startDate: Date;
-    let endDate: Date = now; // Default end date to now
+    let endDate: Date = now;
 
     switch (period) {
       case "last_30_days":
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
-        endDate = now;
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         break;
       case "current_month":
         startDate = startOfMonth(now);
-        endDate = now;
         break;
       case "last_month":
         const lastMonthStart = startOfMonth(subMonths(now, 1));
@@ -83,205 +65,143 @@ function DashboardMetrics() {
         break;
       case "last_3_months":
         startDate = startOfMonth(subMonths(now, 3));
-        endDate = now;
         break;
       case "last_6_months":
         startDate = startOfMonth(subMonths(now, 6));
-        endDate = now;
         break;
       case "year_to_date":
         startDate = startOfYear(now);
-        endDate = now;
         break;
       case "last_12_months":
         startDate = startOfMonth(subMonths(now, 12));
-        endDate = now;
         break;
       default:
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to last 30 days
-        endDate = now;
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
     return { startDate, endDate };
   }, []);
 
-  // Update AnalyticsContext when time period changes
   useEffect(() => {
-    const newDateRange = getDateRangeFromTimePeriod(timePeriod);
-    setDateRange(newDateRange);
+    setDateRange(getDateRangeFromTimePeriod(timePeriod));
   }, [timePeriod, setDateRange, getDateRangeFromTimePeriod]);
 
-  // Reset metrics on account change
   useEffect(() => {
     setIsLoading(true);
-    setMetrics({
-      revenue: 0, expenses: 0, profit: 0, cashFlow: 0, transactionCount: 0
-    });
-    if (!currentAccount) {
-      setIsLoading(false); // Stop loading if no account
-    }
+    setMetrics({ revenue: 0, expenses: 0, profit: 0, cashFlow: 0, transactionCount: 0 });
+    if (!currentAccount) { setIsLoading(false); }
   }, [currentAccount]);
 
-  // Calculate metrics when dependencies change
   useEffect(() => {
-    // Skip calculation if no account
-    if (!currentAccount) {
-        // Ensure loading state is false if there's no account after initial check
-        if (isLoading) setIsLoading(false);
-        return;
-    }
-
-    // Ensure transactions is an array before proceeding
+    if (!currentAccount) { if (isLoading) setIsLoading(false); return; }
     const validTransactions = Array.isArray(transactions) ? transactions : [];
-
-    // Start calculation process (setIsLoading moved inside the effect that depends on account)
-    // Check if we need to set loading (e.g., if dependencies changed triggering a recalc)
-    // The effect listening to currentAccount handles the initial loading state change
     setIsLoading(true);
     try {
       const { startDate, endDate } = getDateRangeFromTimePeriod(timePeriod);
-
-      const filteredTransactions = validTransactions.filter(t => {
+      const filtered = validTransactions.filter(t => {
         if (t.account_id !== currentAccount.id) return false;
         try {
           if (!t.date || typeof t.date !== 'string') return false;
-          const transactionDate = new Date(t.date);
-          if (isNaN(transactionDate.getTime())) return false;
-          return isWithinInterval(transactionDate, { start: startDate, end: endDate });
-        } catch (error) {
-          console.error("Error parsing transaction date:", t.date, error);
-          return false;
-        }
+          const d = new Date(t.date);
+          if (isNaN(d.getTime())) return false;
+          return isWithinInterval(d, { start: startDate, end: endDate });
+        } catch { return false; }
       });
-
-      const revenue = filteredTransactions
-        .filter(t => t.type === "income")
-        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
-      const expenses = filteredTransactions
-        .filter(t => t.type === "expense")
-        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
-      const profit = revenue - expenses;
-      const cashFlow = revenue - expenses;
-
-      setMetrics({
-        revenue,
-        expenses,
-        profit,
-        cashFlow,
-        transactionCount: filteredTransactions.length
-      });
-
-    } catch (error) {
-      console.error("Error calculating metrics:", error);
+      const revenue = filtered.filter(t => t.type === "income").reduce((s, t) => s + (Number(t.amount) || 0), 0);
+      const expenses = filtered.filter(t => t.type === "expense").reduce((s, t) => s + (Number(t.amount) || 0), 0);
+      setMetrics({ revenue, expenses, profit: revenue - expenses, cashFlow: revenue - expenses, transactionCount: filtered.length });
+    } catch (e) {
+      console.error("Error calculating metrics:", e);
     } finally {
       setIsLoading(false);
     }
-  }, [transactions, currentAccount, timePeriod, getDateRangeFromTimePeriod]); // Rerun when these change
+  }, [transactions, currentAccount, timePeriod, getDateRangeFromTimePeriod]);
 
-  // Memoized helpers
-  const getTimePeriodLabel = useCallback(() => {
-    return timePeriods.find(p => p.value === timePeriod)?.label ?? "Selected Period";
-  }, [timePeriod]);
+  const getTimePeriodLabel = useCallback(() =>
+    timePeriods.find(p => p.value === timePeriod)?.label ?? "Selected Period",
+    [timePeriod]
+  );
 
   const formatCurrency = useCallback((value: number | undefined | null): string => {
-    const numValue = Number(value);
-    return isNaN(numValue) ? `${selectedCurrency.symbol}0.00` : formatCurrencyUtil(numValue, selectedCurrency.code, selectedCurrency.symbol);
+    const n = Number(value);
+    return isNaN(n) ? `${selectedCurrency.symbol}0.00` : formatCurrencyUtil(n, selectedCurrency.code, selectedCurrency.symbol);
   }, [selectedCurrency]);
 
-
   return (
-    <div className="space-y-4">
-      {/* Time Period Selector */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-start sm:justify-end">
+    <div className="space-y-px">
+      {/* Time period filter row */}
+      <div className="bg-white border border-ibm-g20 px-5 py-3 flex items-center justify-between">
+        <span className="ibm-label">Overview</span>
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] h-9">
-             <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
-            <SelectValue placeholder="Select time period" />
+          <SelectTrigger className="w-[180px] h-8 text-sm border-ibm-g20 bg-ibm-g10 text-ibm-black">
+            <CalendarIcon className="mr-2 h-3.5 w-3.5 opacity-60" />
+            <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent>
-            {timePeriods.map((period) => (
-              <SelectItem key={period.value} value={period.value}>
-                {period.label}
-              </SelectItem>
+            {timePeriods.map((p) => (
+              <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* --- Metrics Grid --- */}
-      {/* Grid: 1 col mobile, 2 cols tablet, 4 cols desktop - Smaller cards with alternating colors */}
-      <div className="grid gap-3 sm:gap-4 md:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Bento metric cards — 1px gap creates seamless grid lines */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-ibm-g20">
         {isLoading ? (
-          <>
-            {/* Use the globally defined MetricSkeleton - layout controlled by parent grid */}
-            <MetricSkeleton />
-            <MetricSkeleton />
-            <MetricSkeleton />
-            <MetricSkeleton />
-          </>
+          <><MetricSkeleton /><MetricSkeleton /><MetricSkeleton /><MetricSkeleton /></>
         ) : (
           <>
-            {/* Revenue Card - Color #E6F1FD */}
-            <Card className="shadow-md" style={{ backgroundColor: '#E6F1FD' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-5">
-                <CardTitle className="text-sm sm:text-base font-medium">Revenue</CardTitle>
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4 md:p-5">
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrency(metrics.revenue)}</div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  {getTimePeriodLabel()}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Revenue — white */}
+            <div className="bg-white p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <p className="ibm-label">Revenue</p>
+                <TrendingUp className="h-4 w-4 text-ibm-g50" />
+              </div>
+              <div>
+                <p className="text-2xl md:text-3xl font-semibold text-ibm-black tracking-tight">{formatCurrency(metrics.revenue)}</p>
+                <p className="text-xs text-ibm-g50 mt-1">{getTimePeriodLabel()}</p>
+              </div>
+            </div>
 
-            {/* Expenses Card - Color #EDEEFC */}
-            <Card className="shadow-md" style={{ backgroundColor: '#EDEEFC' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-5">
-                <CardTitle className="text-sm sm:text-base font-medium">Expenses</CardTitle>
-                <ArrowDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4 md:p-5">
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrency(metrics.expenses)}</div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                   {getTimePeriodLabel()}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Expenses — light gray */}
+            <div className="bg-ibm-g10 p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <p className="ibm-label">Expenses</p>
+                <ArrowDown className="h-4 w-4 text-ibm-g50" />
+              </div>
+              <div>
+                <p className="text-2xl md:text-3xl font-semibold text-ibm-black tracking-tight">{formatCurrency(metrics.expenses)}</p>
+                <p className="text-xs text-ibm-g50 mt-1">{getTimePeriodLabel()}</p>
+              </div>
+            </div>
 
-            {/* Profit Card - Color #E6F1FD */}
-            <Card className="shadow-md" style={{ backgroundColor: '#E6F1FD' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-5">
-                <CardTitle className="text-sm sm:text-base font-medium">
+            {/* Profit/Loss — IBM blue */}
+            <div className="bg-ibm-blue p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/60">
                   {metrics.profit >= 0 ? 'Profit' : 'Loss'}
-                </CardTitle>
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4 md:p-5">
-                <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${metrics.profit >= 0 ? 'text-foreground' : 'text-red-600'}`}>
-                    {formatCurrency(metrics.profit)}
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                   {getTimePeriodLabel()}
                 </p>
-              </CardContent>
-            </Card>
+                <DollarSign className="h-4 w-4 text-white/60" />
+              </div>
+              <div>
+                <p className={`text-2xl md:text-3xl font-semibold tracking-tight ${metrics.profit >= 0 ? 'text-white' : 'text-red-300'}`}>
+                  {formatCurrency(metrics.profit)}
+                </p>
+                <p className="text-xs text-white/60 mt-1">{getTimePeriodLabel()}</p>
+              </div>
+            </div>
 
-            {/* Cash Flow Card - Color #EDEEFC */}
-            <Card className="shadow-md" style={{ backgroundColor: '#EDEEFC' }}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-5">
-                <CardTitle className="text-sm sm:text-base font-medium">Cash Flow</CardTitle>
-                <ArrowUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="pt-0 p-3 sm:p-4 md:p-5">
-                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{formatCurrency(metrics.cashFlow)}</div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  {getTimePeriodLabel()}
-                </p>
-              </CardContent>
-            </Card>
+            {/* Cash Flow — IBM black */}
+            <div className="bg-ibm-black p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+              <div className="flex items-start justify-between">
+                <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/40">Cash Flow</p>
+                <ArrowUp className="h-4 w-4 text-white/40" />
+              </div>
+              <div>
+                <p className="text-2xl md:text-3xl font-semibold text-white tracking-tight">{formatCurrency(metrics.cashFlow)}</p>
+                <p className="text-xs text-white/40 mt-1">{getTimePeriodLabel()}</p>
+              </div>
+            </div>
           </>
         )}
       </div>
@@ -291,83 +211,59 @@ function DashboardMetrics() {
 
 const MemoizedDashboardMetrics = memo(DashboardMetrics);
 
-// --- Main Dashboard Page Component ---
+// --- Main Dashboard Page ---
 export default function DashboardPage() {
   const { currentAccount, isAccountSwitching } = useAccounts() || {};
 
-  // Loading overlay remains the same
   const LoadingOverlay = () => (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
-        <Skeleton className="h-8 w-32" />
-        <p className="text-lg font-medium text-foreground">Switching account...</p>
+    <div className="fixed inset-0 bg-ibm-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
+      <Skeleton className="h-8 w-32" />
+      <p className="text-base font-medium text-white">Switching account…</p>
     </div>
   );
 
-  // Main page Skeleton
   const DashboardSkeleton = () => (
-      <div className="p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
-          <Skeleton className="h-8 w-48 mb-4" /> {/* Heading */}
-          {/* Metrics Skeleton */}
-          {/* Updated grid class to match mobile layout */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-4">
-              <MetricSkeleton />
-              <MetricSkeleton />
-              <MetricSkeleton />
-              <MetricSkeleton />
-          </div>
-          {/* Charts/Overview Skeleton */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-1 md:col-span-1 lg:col-span-4"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[220px] sm:h-[300px] md:h-[350px]" /></CardContent></Card>
-              <Card className="col-span-1 md:col-span-1 lg:col-span-3"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[220px] sm:h-[300px] md:h-[350px]" /></CardContent></Card>
-              <Card className="col-span-1 md:col-span-1 lg:col-span-4"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px]" /></CardContent></Card>
-              <Card className="col-span-1 md:col-span-1 lg:col-span-3"><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px]" /></CardContent></Card>
-          </div>
+    <div className="space-y-px">
+      <div className="bg-white border border-ibm-g20 h-12" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-ibm-g20">
+        <MetricSkeleton /><MetricSkeleton /><MetricSkeleton /><MetricSkeleton />
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-ibm-g20 mt-px">
+        <div className="lg:col-span-4 bg-white p-6"><Skeleton className="h-[300px]" /></div>
+        <div className="lg:col-span-3 bg-ibm-g10 p-6"><Skeleton className="h-[300px]" /></div>
+      </div>
+    </div>
   );
 
   return (
     <DataProvider>
       {isAccountSwitching && <LoadingOverlay />}
       <Suspense fallback={<DashboardSkeleton />}>
-        <div className="pt-0 px-2 pb-2 sm:pt-0 sm:px-4 sm:pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Dashboard</h1>
-          <div className="space-y-3 sm:space-y-4 md:space-y-6">
-            <MemoizedDashboardMetrics />
-            
-            {/* Charts Grid - Responsive layout */}
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-7">
-              {/* Income vs Expenses Chart */}
-              <Card className="col-span-1 lg:col-span-4" style={{ backgroundColor: '#F9F9FA' }}>
-                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-sm sm:text-base md:text-lg">Income vs Expenses</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                  <IncomeExpenseChart />
-                </CardContent>
-              </Card>
-              
-              {/* Cash Flow Chart */}
-              <Card className="col-span-1 lg:col-span-3" style={{ backgroundColor: '#F9F9FA' }}>
-                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-2">
-                  <CardTitle className="text-sm sm:text-base md:text-lg">Cash Flow</CardTitle>
-                </CardHeader>
-                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                  <CashFlowChart />
-                </CardContent>
-              </Card>
+        <div className="space-y-4 md:space-y-6">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-ibm-black">Dashboard</h1>
+
+          {/* KPI Bento */}
+          <MemoizedDashboardMetrics />
+
+          {/* Charts bento — 1px gap grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-ibm-g20">
+            <div className="bg-white lg:col-span-4 p-5 md:p-6">
+              <p className="ibm-label mb-4">Income vs Expenses</p>
+              <IncomeExpenseChart />
             </div>
-            
-            {/* Bottom Grid - Recent Transactions and Budget */}
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-7">
-              {/* Recent Transactions */}
-              <div className="col-span-1 lg:col-span-4">
-                <RecentTransactions />
-              </div>
-              
-              {/* Budget Overview */}
-              <div className="col-span-1 lg:col-span-3">
-                <BudgetOverview />
-              </div>
+            <div className="bg-ibm-g10 lg:col-span-3 p-5 md:p-6">
+              <p className="ibm-label mb-4">Cash Flow</p>
+              <CashFlowChart />
+            </div>
+          </div>
+
+          {/* Bottom bento — transactions + budget */}
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-ibm-g20">
+            <div className="bg-white lg:col-span-4 p-5 md:p-6">
+              <RecentTransactions />
+            </div>
+            <div className="bg-ibm-g10 lg:col-span-3 p-5 md:p-6">
+              <BudgetOverview />
             </div>
           </div>
         </div>

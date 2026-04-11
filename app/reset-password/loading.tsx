@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-ibm-g10 p-4">
       <div className="w-full max-w-md space-y-6 bg-white p-8 shadow-lg rounded-lg border">
         <div className="text-center space-y-2">
           <div className="h-8 w-3/4 mx-auto bg-gray-200 animate-pulse rounded" />
