@@ -183,7 +183,34 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
   }
 
   if (isLoading && allTransactions.length === 0) {
-    return <div className="flex justify-center items-center py-8">Loading transactions...</div>
+    return (
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[80px]">Date</TableHead>
+                <TableHead className="min-w-[120px]">Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
+                <TableHead className="hidden md:table-cell">Payment Source</TableHead>
+                <TableHead className="text-right min-w-[80px]">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(8)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><div className="h-4 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell><div className="h-4 w-32 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><div className="h-4 w-20 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell className="hidden md:table-cell"><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                  <TableCell className="text-right"><div className="h-4 w-20 bg-muted animate-pulse rounded ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    )
   }
 
   // Format date safely without timezone conversion

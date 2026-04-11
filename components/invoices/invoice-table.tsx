@@ -69,8 +69,23 @@ export function InvoiceTable() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        Loading invoices...
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="h-10 bg-muted animate-pulse rounded flex-1" />
+          <div className="h-10 bg-muted animate-pulse rounded w-full md:w-[180px]" />
+        </div>
+        <div className="border rounded-lg">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-4 border-b last:border-0">
+              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-5 w-16 bg-muted animate-pulse rounded-full" />
+              <div className="h-4 w-24 bg-muted animate-pulse rounded ml-auto" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

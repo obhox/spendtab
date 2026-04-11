@@ -37,7 +37,8 @@ export function useTransactionQuery() {
       .from('transactions')
       .select('*')
       .eq('account_id', currentAccount.id)
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .limit(1000);
 
     if (error) {
       toast(error.message);

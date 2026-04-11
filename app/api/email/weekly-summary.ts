@@ -85,7 +85,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const responseData = await loopsResponse.json();
-    console.log('Email sent successfully via Loops.so:', responseData);
 
     return res.status(200).json({ message: 'Weekly summary email sent successfully' });
   } catch (error) {

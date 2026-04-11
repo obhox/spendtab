@@ -29,7 +29,7 @@ export function BudgetOverview() {
 
   if (isLoading) {
     return (
-      <Card style={{ backgroundColor: '#F9F9FA' }}>
+      <Card className="bg-transparent border-0 p-0 shadow-none">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">
             Budget Overview
@@ -44,7 +44,7 @@ export function BudgetOverview() {
 
   if (!budgets || budgets.length === 0) {
     return (
-      <Card style={{ backgroundColor: '#F9F9FA' }}>
+      <Card className="bg-transparent border-0 p-0 shadow-none">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">
             Budget Overview
@@ -93,7 +93,7 @@ export function BudgetOverview() {
   }).length
 
   return (
-    <Card style={{ backgroundColor: '#F9F9FA' }}>
+    <Card className="bg-transparent border-0 p-0 shadow-none">
       <CardHeader className="pb-3 sm:pb-6">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -185,7 +185,7 @@ export function BudgetOverview() {
 
         {/* Budget Summary */}
         <div className="border-t pt-3 sm:pt-4">
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
+          <div className="grid grid-cols-3 gap-1 sm:gap-4 text-xs">
             <div className="text-center">
               <div className="text-muted-foreground mb-1">Total Budget</div>
               <div className="font-medium text-sm sm:text-base truncate">{formatCurrency(totalBudgeted)}</div>

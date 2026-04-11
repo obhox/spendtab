@@ -33,46 +33,41 @@ export function useBudgetQuery() {
       return [];
     }
 
-    // Use the budget_summary view for better performance and data consistency
+    // Try budget_summary view first for better data (includes computed spent + category names)
     const { data: budgets, error: budgetsError } = await supabase
       .from('budget_summary')
       .select('*')
       .eq('account_id', currentAccount.id)
       .order('created_at', { ascending: false });
 
-    if (budgetsError) {
-      // Fallback to direct table query if view doesn't exist yet
-      const { data: fallbackBudgets, error: fallbackError } = await supabase
-        .from('budgets')
-        .select(`
-          *,
-          categories:category_id(name)
-        `)
-        .eq('account_id', currentAccount.id)
-        .order('created_at', { ascending: false });
-
-      if (fallbackError) {
-        toast.error('Failed to fetch budgets: ' + fallbackError.message);
-        throw fallbackError;
-      }
-
-      // Transform fallback data to match expected format
-      return (fallbackBudgets || []).map(budget => ({
+    if (!budgetsError && budgets) {
+      return budgets.map(budget => ({
         ...budget,
-        category_name: budget.categories?.name || null,
-        // Ensure spent is a number
-        spent: typeof budget.spent === 'number' ? budget.spent : 0
+        spent: typeof budget.spent === 'number' ? budget.spent : 0,
+        startDate: budget.start_date,
+        endDate: budget.end_date
       }));
     }
 
-    // Transform data to ensure consistency
-    return (budgets || []).map(budget => ({
+    // Fallback to direct table query if view doesn't exist
+    const { data: fallbackBudgets, error: fallbackError } = await supabase
+      .from('budgets')
+      .select(`
+        *,
+        categories:category_id(name)
+      `)
+      .eq('account_id', currentAccount.id)
+      .order('created_at', { ascending: false });
+
+    if (fallbackError) {
+      toast.error('Failed to fetch budgets: ' + fallbackError.message);
+      throw fallbackError;
+    }
+
+    return (fallbackBudgets || []).map(budget => ({
       ...budget,
-      // Ensure spent is a number
-      spent: typeof budget.spent === 'number' ? budget.spent : 0,
-      // Convert date fields for compatibility
-      startDate: budget.start_date,
-      endDate: budget.end_date
+      category_name: budget.categories?.name || null,
+      spent: typeof budget.spent === 'number' ? budget.spent : 0
     }));
   };
 

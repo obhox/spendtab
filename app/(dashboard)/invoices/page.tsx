@@ -47,16 +47,14 @@ export default function InvoicesPage() {
   }, [invoices]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
-          <p className="text-muted-foreground">
-            Create and manage your invoices
-          </p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Invoices</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Create and manage your invoices</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Link href="/invoice-settings">
             <Button variant="outline" size="icon">
               <Settings className="h-4 w-4" />
@@ -66,79 +64,57 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Outstanding */}
-        <Card style={{ backgroundColor: '#E6F1FD' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Outstanding
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+      {/* Metric Cards — bento grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-ibm-g20">
+        <div className="bg-white p-4 sm:p-6 min-h-[110px] flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <p className="ibm-label">Outstanding</p>
+            <DollarSign className="h-3.5 w-3.5 text-ibm-g50" />
+          </div>
+          <div>
+            <p className="text-lg sm:text-2xl font-semibold text-ibm-black tracking-tight">
               {selectedCurrency.symbol}{formatAmount(metrics.totalOutstanding)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Unpaid invoices
             </p>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-ibm-g50 mt-0.5">Unpaid invoices</p>
+          </div>
+        </div>
 
-        {/* Overdue Amount */}
-        <Card style={{ backgroundColor: metrics.overdueAmount > 0 ? '#FEE2E2' : '#EDEEFC' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Overdue Amount
-            </CardTitle>
-            <AlertTriangle className={`h-4 w-4 ${metrics.overdueAmount > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${metrics.overdueAmount > 0 ? 'text-red-600' : ''}`}>
+        <div className={`p-4 sm:p-6 min-h-[110px] flex flex-col justify-between ${metrics.overdueAmount > 0 ? 'bg-ibm-red' : 'bg-ibm-g10'}`}>
+          <div className="flex items-start justify-between">
+            <p className={`ibm-label ${metrics.overdueAmount > 0 ? 'text-white/60' : ''}`}>Overdue</p>
+            <AlertTriangle className={`h-3.5 w-3.5 ${metrics.overdueAmount > 0 ? 'text-white/60' : 'text-ibm-g50'}`} />
+          </div>
+          <div>
+            <p className={`text-lg sm:text-2xl font-semibold tracking-tight ${metrics.overdueAmount > 0 ? 'text-white' : 'text-ibm-black'}`}>
               {selectedCurrency.symbol}{formatAmount(metrics.overdueAmount)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Past due date
             </p>
-          </CardContent>
-        </Card>
+            <p className={`text-xs mt-0.5 ${metrics.overdueAmount > 0 ? 'text-white/60' : 'text-ibm-g50'}`}>Past due date</p>
+          </div>
+        </div>
 
-        {/* Paid This Month */}
-        <Card style={{ backgroundColor: '#E6F1FD' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Paid This Month
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+        <div className="bg-ibm-blue p-4 sm:p-6 min-h-[110px] flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/60">Paid</p>
+            <CheckCircle className="h-3.5 w-3.5 text-white/60" />
+          </div>
+          <div>
+            <p className="text-lg sm:text-2xl font-semibold text-white tracking-tight">
               {selectedCurrency.symbol}{formatAmount(metrics.paidThisMonth)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Received in {new Date().toLocaleDateString('en-US', { month: 'long' })}
             </p>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-white/60 mt-0.5">{new Date().toLocaleDateString('en-US', { month: 'long' })}</p>
+          </div>
+        </div>
 
-        {/* Draft Invoices */}
-        <Card style={{ backgroundColor: '#EDEEFC' }}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Draft Invoices
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.draftCount}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Not yet sent
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-ibm-black p-4 sm:p-6 min-h-[110px] flex flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/40">Drafts</p>
+            <FileText className="h-3.5 w-3.5 text-white/40" />
+          </div>
+          <div>
+            <p className="text-lg sm:text-2xl font-semibold text-white tracking-tight">{metrics.draftCount}</p>
+            <p className="text-xs text-white/40 mt-0.5">Not yet sent</p>
+          </div>
+        </div>
       </div>
 
       {/* Invoice Table */}

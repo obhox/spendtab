@@ -74,7 +74,7 @@ export function RecentTransactions() {
   // Loading state
   if (isLoading) {
     return (
-      <Card style={{ backgroundColor: '#F9F9FA' }}>
+      <Card className="bg-transparent border-0 p-0 shadow-none">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
@@ -97,7 +97,7 @@ export function RecentTransactions() {
   // Empty state
   if (!recentTransactions || recentTransactions.length === 0) {
     return (
-      <Card style={{ backgroundColor: '#F9F9FA' }}>
+      <Card className="bg-transparent border-0 p-0 shadow-none">
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
@@ -121,7 +121,7 @@ export function RecentTransactions() {
   }
 
   return (
-    <Card style={{ backgroundColor: '#F9F9FA' }}>
+    <Card className="bg-transparent border-0 p-0 shadow-none">
       <CardHeader className="pb-3 sm:pb-6">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">

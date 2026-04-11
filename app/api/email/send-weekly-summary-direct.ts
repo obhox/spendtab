@@ -66,8 +66,6 @@ async function getWeeklyData(userId: string, startDate: Date, endDate: Date) {
 
 export async function sendWeeklySummariesDirect() {
   try {
-    console.log('Starting weekly summary email automation...');
-    
     // Get all active users (weekly summaries are compulsory for everyone)
     const { data: users, error: userError } = await supabase
       .from('users')
@@ -78,11 +76,9 @@ export async function sendWeeklySummariesDirect() {
     }
 
     if (!users || users.length === 0) {
-      console.log('No users found with weekly summaries enabled');
       return { success: true, message: 'No users to process', count: 0 };
     }
 
-    console.log(`Found ${users.length} users with weekly summaries enabled`);
 
     const endDate = subDays(new Date(), 1); // Yesterday
     const startDate = startOfWeek(endDate, { weekStartsOn: 1 }); // Monday
@@ -93,11 +89,8 @@ export async function sendWeeklySummariesDirect() {
     // Process each user
     for (const user of users) {
       try {
-        console.log(`Processing user: ${user.email}`);
-        
         const weeklyData = await getWeeklyData(user.id, startDate, endDate);
         if (!weeklyData) {
-          console.log(`No data found for user ${user.email}, skipping...`);
           continue;
         }
 
@@ -141,7 +134,6 @@ export async function sendWeeklySummariesDirect() {
           console.error(`Failed to send email to ${user.email}:`, errorText);
           errorCount++;
         } else {
-          console.log(`Weekly summary sent successfully to ${user.email}`);
           successCount++;
         }
       } catch (error) {
@@ -158,7 +150,6 @@ export async function sendWeeklySummariesDirect() {
       totalUsers: users.length
     };
 
-    console.log('Weekly summary automation completed:', result);
     return result;
   } catch (error) {
     console.error('Error in sendWeeklySummariesDirect:', error);

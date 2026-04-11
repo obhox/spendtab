@@ -67,20 +67,18 @@ export default function TransactionsPage() {
 
   return (
     <DataProvider>
-      <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-        <div className="flex flex-col space-y-4">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Transactions</h1>
-          
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="w-full sm:w-auto">
-              <Input
-                placeholder="Search transactions..."
-                className="w-full sm:w-[200px] lg:w-[300px] text-xs sm:text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-row gap-2">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col space-y-3 sm:space-y-4">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Transactions</h1>
+
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <Input
+              placeholder="Search transactions…"
+              className="w-full sm:w-[240px] lg:w-[320px] text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="flex gap-2">
               <AddTransactionDialog />
               <BulkImportDialog />
             </div>
@@ -88,13 +86,11 @@ export default function TransactionsPage() {
         </div>
 
         <Tabs defaultValue="all" className="space-y-3 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="all" className="flex-1 sm:flex-none text-xs sm:text-sm">All</TabsTrigger>
-              <TabsTrigger value="income" className="flex-1 sm:flex-none text-xs sm:text-sm">Income</TabsTrigger>
-              <TabsTrigger value="expenses" className="flex-1 sm:flex-none text-xs sm:text-sm">Expenses</TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none text-xs sm:text-sm">All</TabsTrigger>
+            <TabsTrigger value="income" className="flex-1 sm:flex-none text-xs sm:text-sm">Income</TabsTrigger>
+            <TabsTrigger value="expenses" className="flex-1 sm:flex-none text-xs sm:text-sm">Expenses</TabsTrigger>
+          </TabsList>
           
           <TabsContent value="all" className="space-y-3 sm:space-y-4">
             <div className="space-y-4">
@@ -134,6 +130,7 @@ export default function TransactionsPage() {
         </Tabs>
       </div>
     </DataProvider>
+
   )
 }
 

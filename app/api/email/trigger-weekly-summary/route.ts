@@ -5,15 +5,16 @@ export async function POST(request: NextRequest) {
   try {
     // Simple authentication check
     const authHeader = request.headers.get('authorization');
-    const expectedToken = process.env.AUTOMATION_SECRET_KEY || 'your-secret-key';
+    const expectedToken = process.env.AUTOMATION_SECRET_KEY;
+    if (!expectedToken) {
+      return NextResponse.json({ error: 'AUTOMATION_SECRET_KEY not configured' }, { status: 500 });
+    }
     
     if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Starting weekly summary automation...');
     const result = await sendWeeklySummariesDirect();
-    console.log('Weekly summary automation completed successfully');
     
     return NextResponse.json({ 
       ...result,

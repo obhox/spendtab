@@ -32,10 +32,9 @@ export default function LoginPage() {
     
     try {
       await signIn(email, password)
-      toast("Successfully logged in", {
-        description: "Welcome back to your account",
-      })
-      router.push("/dashboard")
+      toast.success("Successfully logged in")
+      // Full page navigation ensures the middleware picks up the new session cookies
+      window.location.href = "/dashboard"
     } catch (error: any) {
       console.error("Login error:", error)
       toast("Login failed", {

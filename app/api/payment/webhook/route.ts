@@ -23,8 +23,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    const event = JSON.parse(body)
-    console.log('Received Paystack event:', event.event)
+    let event: { event: string; data: Record<string, any> }
+    try {
+      event = JSON.parse(body)
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
 
     // Initialize Supabase Admin Client
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
         await handleSubscriptionDisable(event.data, supabase)
         break
       default:
-        console.log('Unhandled event type:', event.event)
+        break
     }
 
     return NextResponse.json({ received: true })
@@ -68,7 +72,6 @@ async function handleChargeSuccess(data: any, supabase: any) {
   const planCode = data.plan?.plan_code
   const currency = data.currency
 
-  console.log(`Processing charge.success for ${email}`)
 
   if (!email) return
 
@@ -83,7 +86,6 @@ async function handleChargeSuccess(data: any, supabase: any) {
   if (user) {
     userId = user.id
   } else {
-    console.warn(`User with email ${email} not found in public.users during webhook processing`)
     return
   }
 
@@ -141,7 +143,6 @@ async function handleChargeSuccess(data: any, supabase: any) {
 async function handleInvoicePaymentFailed(data: any, supabase: any) {
   const email = data.customer.email
   const subscriptionCode = data.subscription_code
-  console.log(`Processing invoice.payment_failed for ${email}`)
   
   const { data: user } = await supabase.from('users').select('id').eq('email', email).single()
   if (user) {
@@ -164,7 +165,6 @@ async function handleInvoicePaymentFailed(data: any, supabase: any) {
 async function handleSubscriptionDisable(data: any, supabase: any) {
   const email = data.customer.email
   const subscriptionCode = data.subscription_code
-  console.log(`Processing subscription.disable for ${email}`)
 
   const { data: user } = await supabase.from('users').select('id').eq('email', email).single()
   if (user) {

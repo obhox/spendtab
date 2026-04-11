@@ -2,8 +2,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTransactions } from '../context/TransactionContext';
 import { useAccounts } from '../context/AccountContext';
 import { format, isWithinInterval } from 'date-fns';
-import { toast } from 'sonner';
-import { useState } from 'react';
 import { Transaction } from './useTransactionQuery';
 
 export interface MonthlyData {
@@ -34,7 +32,6 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
   const { transactions } = useTransactions();
   const { currentAccount } = useAccounts();
   const queryClient = useQueryClient();
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
 
   const calculateAnalyticsData = async () => {
     if (!currentAccount || !transactions || transactions.length === 0) {
@@ -60,11 +57,10 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
         end: dateRange.endDate,
       })
     );
-    setFilteredTransactions(filtered);
 
     // Calculate monthly data
     const monthlyMap = new Map<string, MonthlyData>();
-    filteredTransactions.forEach(transaction => {
+    filtered.forEach(transaction => {
       const month = format(new Date(transaction.date), 'yyyy-MM');
       const existing = monthlyMap.get(month) || {
         month,
@@ -92,7 +88,7 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
     let totalIncome = 0;
     let totalExpenses = 0;
 
-    filteredTransactions.forEach(transaction => {
+    filtered.forEach(transaction => {
       const map = transaction.type === 'income' ? incomeMap : expensesMap;
       const amount = transaction.amount;
       map.set(
@@ -149,8 +145,7 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
     gcTime: CACHE_TIME,
     staleTime: STALE_TIME,
     retry: 2,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true
+    refetchOnWindowFocus: false
   });
 
   return {
@@ -164,7 +159,7 @@ export function useAnalyticsQuery(dateRange: { startDate: Date; endDate: Date })
       profitMargin: 0,
       cashFlow: 0,
     },
-    transactions: filteredTransactions,
+    transactions: query.data ? [] : [],
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error instanceof Error ? query.error.message : 'An error occurred',

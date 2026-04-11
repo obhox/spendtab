@@ -90,6 +90,7 @@ export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen,
   const setOpen = isControlled ? setControlledOpen : setInternalOpen;
 
   const [taxPreset, setTaxPreset] = useState<TaxPreset>("custom");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -177,6 +178,7 @@ export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen,
   }, [open, invoice, form]);
 
   const onSubmit = async (data: InvoiceFormValues) => {
+    setIsSubmitting(true);
     try {
       const invoiceData = {
         client_id: data.client_id,
@@ -196,11 +198,11 @@ export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen,
       }));
 
       if (invoice) {
-        // Update existing invoice
         await updateInvoice({ id: invoice.id, data: invoiceData, items });
+        toast.success("Invoice updated successfully");
       } else {
-        // Add new invoice
         await addInvoice({ ...invoiceData, items });
+        toast.success("Invoice created successfully");
       }
 
       setOpen(false);
@@ -210,7 +212,9 @@ export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen,
         onSuccess();
       }
     } catch (error) {
-      console.error('Error saving invoice:', error);
+      toast.error("Failed to save invoice");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -475,11 +479,12 @@ export function InvoiceForm({ invoice, trigger, onSuccess, open: controlledOpen,
                     setOpen(false);
                     form.reset();
                   }}
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {invoice ? 'Update Invoice' : 'Create Invoice'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : (invoice ? 'Update Invoice' : 'Create Invoice')}
                 </Button>
               </DialogFooter>
             </form>

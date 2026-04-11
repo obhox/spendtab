@@ -29,6 +29,7 @@ import { useTransactions } from "@/lib/context/TransactionContext"
 import { toast } from "sonner"
 import { useBudgets } from "@/lib/context/BudgetContext"
 import { useAccounts } from "@/lib/context/AccountContext";
+import { useCategories } from "@/lib/context/CategoryContext";
 
 const formSchema = z.object({
   date: z.date(),
@@ -70,14 +71,11 @@ interface TransactionFormProps {
 
 export function TransactionForm({ children, transaction }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { addTransaction, updateTransaction } = useTransactions()
   const { budgets } = useBudgets();
   const { currentAccount } = useAccounts();
-  const [selectedBudgetId, setSelectedBudgetId] = useState<string | null>(transaction?.budget_id || null);
-
-  useEffect(() => {
-    console.log("Budgets fetched:", budgets);
-  }, [budgets]);
+  const { incomeCategories, expenseCategories } = useCategories();
 
   const defaultValues: Partial<FormValues> = transaction
     ? {
@@ -105,38 +103,38 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
     resolver: zodResolver(formSchema),
     defaultValues,
   })
-  function onSubmit(values: FormValues) {
-    // Format amount based on transaction type
-    const finalAmount = values.type === "expense" ? -Math.abs(values.amount) : Math.abs(values.amount)
+  async function onSubmit(values: FormValues) {
+    setIsSubmitting(true)
+    try {
+      const finalAmount = values.type === "expense" ? -Math.abs(values.amount) : Math.abs(values.amount)
 
-    // Create the transaction object
-    const transactionData = {
-      date: format(values.date, "yyyy-MM-dd"),
-      description: values.description,
-      category: values.category,
-      amount: finalAmount,
-      type: values.type,
-      notes: values.notes,
-      budget_id: values.budget_id ?? null,
-      payment_source: values.payment_source,
-      account_id: currentAccount?.id
+      const transactionData = {
+        date: format(values.date, "yyyy-MM-dd"),
+        description: values.description,
+        category: values.category,
+        amount: finalAmount,
+        type: values.type,
+        notes: values.notes,
+        budget_id: values.budget_id ?? null,
+        payment_source: values.payment_source,
+        account_id: currentAccount?.id
+      }
+
+      if (transaction) {
+        updateTransaction(transaction.id, transactionData)
+        toast.success("Transaction updated successfully")
+      } else {
+        addTransaction(transactionData)
+        toast.success("Transaction added successfully")
+      }
+
+      setOpen(false)
+      form.reset()
+    } catch (error) {
+      toast.error("Failed to save transaction")
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Either update existing or add new transaction
-    if (transaction) {
-      updateTransaction(transaction.id, transactionData)
-      toast("Transaction updated", {
-        description: "Your transaction has been updated successfully."
-      })
-    } else {
-      addTransaction(transactionData)
-      toast("Transaction added", {
-        description: "Your new transaction has been added successfully."
-      })
-    }
-
-    setOpen(false)
-    form.reset()
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -248,7 +246,11 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {form.watch("type") === "income" ? (
+                      {(form.watch("type") === "income" ? incomeCategories : expenseCategories).length > 0 ? (
+                        (form.watch("type") === "income" ? incomeCategories : expenseCategories).map((cat) => (
+                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                        ))
+                      ) : form.watch("type") === "income" ? (
                         <>
                           <SelectItem value="Sales">Sales</SelectItem>
                           <SelectItem value="Consulting">Consulting</SelectItem>
@@ -328,7 +330,9 @@ export function TransactionForm({ children, transaction }: TransactionFormProps)
               )}
             />
             <DialogFooter>
-              <Button type="submit">Save Transaction</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Transaction"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -1,44 +1,60 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  // Create a Supabase client configured for use with middleware
-  const response = NextResponse.next()
-  
-  // AUTHENTICATION CHECKS DISABLED
-  // This allows access to all routes without authentication
-  // Remove this code and restore the original implementation when you want to re-enable authentication
-  return response;
-  
-  /* Original authentication code (commented out)
-  const supabase = createMiddlewareClient({ req: request, res: response })
-  
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
   try {
-    // Refresh session if exists
-    await supabase.auth.getSession()
+    // getUser() validates the session with the Supabase server (more secure than getSession)
+    const { data: { user } } = await supabase.auth.getUser()
 
-    // Get the latest session state
-    const { data: { session }, error } = await supabase.auth.getSession()
-
-    if (error) throw error
-
-    // Check if user is trying to access auth pages while logged in
-    if (session) {
+    // Logged-in users on auth pages → redirect to dashboard
+    if (user) {
       if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup') {
         return NextResponse.redirect(new URL('/dashboard', request.url))
       }
       return response
     }
-    // If no session and trying to access protected routes, redirect to login
-    if (!session && 
-      !request.nextUrl.pathname.startsWith('/_next') &&
-      !request.nextUrl.pathname.startsWith('/api') &&
-      request.nextUrl.pathname !== '/login' &&
-      request.nextUrl.pathname !== '/signup' &&
-      request.nextUrl.pathname !== '/' &&
-      !request.nextUrl.pathname.includes('.')
-    ) {
+
+    // Public routes that don't require auth
+    const isPublicRoute =
+      request.nextUrl.pathname === '/' ||
+      request.nextUrl.pathname === '/login' ||
+      request.nextUrl.pathname === '/signup' ||
+      request.nextUrl.pathname === '/payment' ||
+      request.nextUrl.pathname.startsWith('/invoice/') ||
+      request.nextUrl.pathname.startsWith('/reset-password') ||
+      request.nextUrl.pathname.startsWith('/_next') ||
+      request.nextUrl.pathname.startsWith('/api') ||
+      request.nextUrl.pathname.includes('.')
+
+    if (!user && !isPublicRoute) {
       const redirectUrl = new URL('/login', request.url)
       redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
@@ -46,12 +62,9 @@ export async function middleware(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error('Auth error:', error)
-    // Clear any invalid session state
-    await supabase.auth.signOut()
-    return NextResponse.redirect(new URL('/login', request.url))
+    console.error('Auth middleware error:', error)
+    return response
   }
-  */
 }
 
 export const config = {

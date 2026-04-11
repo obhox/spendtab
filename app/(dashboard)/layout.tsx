@@ -75,6 +75,7 @@ function NavLink({ href, label, icon: Icon, onClick }: { href: string; label: st
     <Link
       href={href}
       onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
       className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
         isActive
           ? "border-l-2 border-ibm-blue bg-ibm-g10 pl-[calc(1rem-2px)] text-ibm-black font-medium"
@@ -178,7 +179,7 @@ export default function DashboardLayout({
               <div className="lg:hidden fixed right-3 top-3 z-50">
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-ibm-g20">
+                    <Button variant="outline" size="icon" className="h-10 w-10 bg-white border-ibm-g20" aria-label="Open navigation menu">
                       <Menu className="h-5 w-5" />
                     </Button>
                   </SheetTrigger>
@@ -194,8 +195,8 @@ export default function DashboardLayout({
               </aside>
 
               {/* Main content */}
-              <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72">
-                <Suspense fallback={<div className="text-ibm-g70">Loading…</div>}>{children}</Suspense>
+              <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72" role="main">
+                <Suspense fallback={<div className="text-ibm-g70" aria-live="polite">Loading…</div>}>{children}</Suspense>
               </main>
 
               <Analytics />

@@ -143,23 +143,23 @@ export function CashFlowChart() {
           <XAxis
             dataKey="month"
             stroke="hsl(var(--muted-foreground))"
-            fontSize={10}
+            fontSize={9}
             tickLine={false}
             axisLine={false}
-            dy={5}
+            dy={4}
             interval={0}
-            angle={-45}
+            angle={-30}
             textAnchor="end"
-            height={60}
+            height={44}
           />
           <YAxis
             stroke="hsl(var(--muted-foreground))"
-            fontSize={10}
+            fontSize={9}
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => `${selectedCurrency.symbol}${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(value)}`}
-            width={45}
-            dx={-5}
+            width={38}
+            dx={-2}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', fillOpacity: 0.1 }}
@@ -184,7 +184,7 @@ export function CashFlowChart() {
   }
 
   return (
-    <div className="h-[220px] sm:h-[280px] md:h-[320px] lg:h-[350px] w-full">
+    <div className="h-[180px] sm:h-[240px] md:h-[290px] lg:h-[320px] w-full">
       {renderContent()}
     </div>
   )

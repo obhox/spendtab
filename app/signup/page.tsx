@@ -5,7 +5,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signUp, signInWithGoogle } from "@/lib/auth-utils"
@@ -31,8 +30,8 @@ export default function SignUpPage() {
       if (!success) {
         throw new Error(error)
       }
-      toast("Account created. Your 14-day free trial has started.")
-      router.push("/dashboard")
+      toast.success("Account created. Your 14-day free trial has started.")
+      window.location.href = "/dashboard"
     } catch (error: any) {
       console.error("Signup error:", error)
       toast("Sign up failed: " + (error?.message || "There was a problem creating your account."))
@@ -172,7 +171,7 @@ export default function SignUpPage() {
               disabled={loading}
             />
             <div className="text-xs text-muted-foreground">
-              Password requirements
+              At least 8 characters with a mix of uppercase, lowercase, and numbers
             </div>
           </div>
 

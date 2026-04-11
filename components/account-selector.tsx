@@ -173,10 +173,11 @@ export function AccountSelector() {
       </Select>
 
       {/* Account management */}
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         size="icon"
         onClick={() => setOpen(true)}
+        aria-label="Add new account"
       >
         +
       </Button>

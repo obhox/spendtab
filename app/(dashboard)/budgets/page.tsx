@@ -17,31 +17,20 @@ import { DataProvider } from "@/lib/context/DataProvider"
 export default function BudgetsPage() {
   return (
     <DataProvider>
-      <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8">
-        <div className="flex flex-col gap-3 sm:gap-6">
-          <div className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Budgets</h1>
-            <div className="flex justify-end">
-              <BudgetForm>
-                <Button className="w-full sm:w-auto text-xs sm:text-sm">
-                  <Plus className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  Create Budget
-                </Button>
-              </BudgetForm>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-base sm:text-lg font-semibold">Budget Management</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">Create and manage your budgets to keep your finances on track.</p>
-            </div>
-            <Suspense fallback={<Skeleton className="h-[300px] sm:h-[400px] w-full" />}>
-              <BudgetList />
-            </Suspense>
-          </div>
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Budgets</h1>
+          <BudgetForm>
+            <Button className="w-full sm:w-auto text-sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Budget
+            </Button>
+          </BudgetForm>
         </div>
+        <Suspense fallback={<Skeleton className="h-48 sm:h-64 w-full" />}>
+          <BudgetList />
+        </Suspense>
       </div>
     </DataProvider>
   )
 }
-

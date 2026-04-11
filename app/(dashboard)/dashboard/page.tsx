@@ -6,7 +6,6 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { IncomeExpenseChart } from "@/components/dashboard/income-expense-chart"
 import { CashFlowChart } from "@/components/dashboard/cash-flow-chart"
 import { BudgetOverview } from "@/components/dashboard/budget-overview"
-import { DataProvider } from "@/lib/context/DataProvider"
 import { useTransactions } from "@/lib/context/TransactionContext"
 import { useAccounts } from "@/lib/context/AccountContext"
 import { useAnalytics } from "@/lib/context/AnalyticsContext"
@@ -130,10 +129,10 @@ function DashboardMetrics() {
   return (
     <div className="space-y-px">
       {/* Time period filter row */}
-      <div className="bg-white border border-ibm-g20 px-5 py-3 flex items-center justify-between">
+      <div className="bg-white border border-ibm-g20 px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
         <span className="ibm-label">Overview</span>
         <Select value={timePeriod} onValueChange={setTimePeriod}>
-          <SelectTrigger className="w-[180px] h-8 text-sm border-ibm-g20 bg-ibm-g10 text-ibm-black">
+          <SelectTrigger className="w-full sm:w-[180px] h-8 text-sm border-ibm-g20 bg-ibm-g10 text-ibm-black">
             <CalendarIcon className="mr-2 h-3.5 w-3.5 opacity-60" />
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
@@ -152,7 +151,7 @@ function DashboardMetrics() {
         ) : (
           <>
             {/* Revenue — white */}
-            <div className="bg-white p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+            <div className="bg-white p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
               <div className="flex items-start justify-between">
                 <p className="ibm-label">Revenue</p>
                 <TrendingUp className="h-4 w-4 text-ibm-g50" />
@@ -164,7 +163,7 @@ function DashboardMetrics() {
             </div>
 
             {/* Expenses — light gray */}
-            <div className="bg-ibm-g10 p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+            <div className="bg-ibm-g10 p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
               <div className="flex items-start justify-between">
                 <p className="ibm-label">Expenses</p>
                 <ArrowDown className="h-4 w-4 text-ibm-g50" />
@@ -176,7 +175,7 @@ function DashboardMetrics() {
             </div>
 
             {/* Profit/Loss — IBM blue */}
-            <div className="bg-ibm-blue p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+            <div className="bg-ibm-blue p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
               <div className="flex items-start justify-between">
                 <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/60">
                   {metrics.profit >= 0 ? 'Profit' : 'Loss'}
@@ -192,7 +191,7 @@ function DashboardMetrics() {
             </div>
 
             {/* Cash Flow — IBM black */}
-            <div className="bg-ibm-black p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+            <div className="bg-ibm-black p-4 sm:p-6 md:p-8 min-h-[120px] sm:min-h-[140px] flex flex-col justify-between">
               <div className="flex items-start justify-between">
                 <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-white/40">Cash Flow</p>
                 <ArrowUp className="h-4 w-4 text-white/40" />
@@ -236,7 +235,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <DataProvider>
+    <>
       {isAccountSwitching && <LoadingOverlay />}
       <Suspense fallback={<DashboardSkeleton />}>
         <div className="space-y-4 md:space-y-6">
@@ -247,27 +246,27 @@ export default function DashboardPage() {
 
           {/* Charts bento — 1px gap grid */}
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-ibm-g20">
-            <div className="bg-white lg:col-span-4 p-5 md:p-6">
-              <p className="ibm-label mb-4">Income vs Expenses</p>
+            <div className="bg-white lg:col-span-4 p-4 sm:p-5 md:p-6">
+              <p className="ibm-label mb-3 sm:mb-4">Income vs Expenses</p>
               <IncomeExpenseChart />
             </div>
-            <div className="bg-ibm-g10 lg:col-span-3 p-5 md:p-6">
-              <p className="ibm-label mb-4">Cash Flow</p>
+            <div className="bg-ibm-g10 lg:col-span-3 p-4 sm:p-5 md:p-6">
+              <p className="ibm-label mb-3 sm:mb-4">Cash Flow</p>
               <CashFlowChart />
             </div>
           </div>
 
           {/* Bottom bento — transactions + budget */}
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-px bg-ibm-g20">
-            <div className="bg-white lg:col-span-4 p-5 md:p-6">
+            <div className="bg-white lg:col-span-4 p-4 sm:p-5 md:p-6">
               <RecentTransactions />
             </div>
-            <div className="bg-ibm-g10 lg:col-span-3 p-5 md:p-6">
+            <div className="bg-ibm-g10 lg:col-span-3 p-4 sm:p-5 md:p-6">
               <BudgetOverview />
             </div>
           </div>
         </div>
       </Suspense>
-    </DataProvider>
+    </>
   )
 }

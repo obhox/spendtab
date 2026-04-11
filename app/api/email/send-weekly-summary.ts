@@ -95,7 +95,6 @@ export async function sendWeeklySummaries() {
           throw new Error(`Failed to send email to ${user.email}`);
         }
 
-        console.log(`Weekly summary sent successfully to ${user.email}`);
       } catch (error) {
         console.error(`Error processing user ${user.id}:`, error);
       }

@@ -13,7 +13,6 @@ export async function POST(req: Request) {
     }
 
     const { reference, email } = body;
-    console.log('Payment success webhook received:', { reference, email });
 
     if (!reference || !email) {
       console.error('Missing reference or email:', { reference, email });
@@ -27,7 +26,6 @@ export async function POST(req: Request) {
     
     if (secretKey) {
       try {
-        console.log('Verifying payment with Paystack for reference:', reference)
         const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
           method: 'GET',
           headers: {
@@ -44,14 +42,12 @@ export async function POST(req: Request) {
         }
         
         paystackData = data.data
-        console.log('Paystack verification successful for:', reference)
         
       } catch (error) {
         console.error('Paystack verification error:', error)
         return NextResponse.json({ error: 'Payment verification error', details: error instanceof Error ? error.message : error }, { status: 500 })
       }
     } else {
-      console.warn('PAYSTACK_SECRET_KEY not set. Skipping server-side verification.')
     }
 
     // Initialize Supabase Admin Client
@@ -78,7 +74,6 @@ export async function POST(req: Request) {
     if (user) {
       userId = user.id
     } else {
-      console.warn('User not found in public.users, checking auth.users...', userError)
       
       // Fallback: check auth.users via admin API
       const { data: authData, error: authError } = await supabase.auth.admin.listUsers({
@@ -94,7 +89,6 @@ export async function POST(req: Request) {
       
       if (authUser) {
         userId = authUser.id
-        console.log('Found user in auth.users:', userId)
         
         // Self-heal: Insert into public.users
         const { error: insertUserError } = await supabase

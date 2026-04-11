@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 // Define types for our database
 export type Json =
@@ -609,5 +610,7 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// Use createBrowserClient from @supabase/ssr so auth sessions are stored in cookies
+// (required for middleware auth to work — bare createClient only uses localStorage)
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey)
 export { createClient }
