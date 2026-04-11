@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-ibm-g10 p-4">
-      <div className="w-full max-w-md space-y-6 bg-white p-8 border border-ibm-g20">
+      <div className="w-full max-w-md space-y-5 bg-white p-6 sm:p-8 border border-ibm-g20">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
           <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>

@@ -184,7 +184,7 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
 
   if (isLoading && allTransactions.length === 0) {
     return (
-      <div className="rounded-md border overflow-hidden">
+      <div className="border border-ibm-g20 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -258,7 +258,7 @@ filterTransactions(allTransactions as Transaction[], type, searchTerm);
 
   return (
     <>
-      <div className="rounded-md border overflow-hidden">
+      <div className="border border-ibm-g20 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

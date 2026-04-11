@@ -49,10 +49,10 @@ export default function AssetsLiabilitiesPage() {
   const netWorth = totalAssetValue - totalLiabilityBalance
 
   return (
-    <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header with responsive layout */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Assets & Liabilities</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Assets & Liabilities</h1>
         
         {/* Search - moved to header for better mobile layout */}
         <div className="relative w-full sm:max-w-sm">

@@ -74,54 +74,48 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-      <div className="space-y-4">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Financial Reports</h1>
-        <div className="flex items-center gap-2 justify-end">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        </div>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Financial Reports</h1>
+        <Button variant="outline" size="sm" onClick={handleExport} className="w-full sm:w-auto">
+          <Download className="mr-2 h-4 w-4" />
+          Export PDF
+        </Button>
       </div>
       <Tabs defaultValue="profit-loss" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="profit-loss">Profit & Loss</TabsTrigger>
-          <TabsTrigger value="cash-flow">Cash Flow</TabsTrigger>
-          <TabsTrigger value="expense">Expense Report</TabsTrigger>
-        </TabsList>
-        <TabsContent value="profit-loss" className="space-y-4">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Profit & Loss Statement</h2>
-              <p className="text-sm md:text-base text-muted-foreground mb-4">
-                View your business&apos;s revenue, costs, and expenses over a specific time period.
-              </p>
-            </div>
-            <ProfitLossReport />
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="w-full sm:w-auto inline-flex min-w-max">
+            <TabsTrigger value="profit-loss" className="text-xs sm:text-sm">Profit & Loss</TabsTrigger>
+            <TabsTrigger value="cash-flow" className="text-xs sm:text-sm">Cash Flow</TabsTrigger>
+            <TabsTrigger value="expense" className="text-xs sm:text-sm">Expenses</TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="profit-loss" className="space-y-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-semibold">Profit & Loss Statement</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Revenue, costs, and expenses over a specific time period.
+            </p>
           </div>
+          <ProfitLossReport />
         </TabsContent>
-        <TabsContent value="cash-flow" className="space-y-4">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Cash Flow Statement</h2>
-              <p className="text-sm md:text-base text-muted-foreground mb-4">
-                Track your cash inflows and outflows over time.
-              </p>
-            </div>
-            <CashFlowReport />
+        <TabsContent value="cash-flow" className="space-y-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-semibold">Cash Flow Statement</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Cash inflows and outflows over time.
+            </p>
           </div>
+          <CashFlowReport />
         </TabsContent>
-        <TabsContent value="expense" className="space-y-4">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Expense Report</h2>
-              <p className="text-sm md:text-base text-muted-foreground mb-4">
-                Analyze your spending patterns and expense categories.
-              </p>
-            </div>
-            <ExpenseReport />
+        <TabsContent value="expense" className="space-y-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-semibold">Expense Report</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              Spending patterns and expense categories.
+            </p>
           </div>
+          <ExpenseReport />
         </TabsContent>
       </Tabs>
     </div>

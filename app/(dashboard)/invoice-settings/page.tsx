@@ -142,7 +142,7 @@ export default function InvoiceSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Invoice Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Invoice Settings</h1>
         <p className="text-muted-foreground">
           Configure your business details and invoice preferences
         </p>

@@ -178,8 +178,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="pt-0 px-4 pb-4 md:pt-0 md:px-6 md:pb-6 lg:pt-0 lg:px-8 lg:pb-8 space-y-6">
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Profile</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <h1 className="text-xl sm:text-2xl font-semibold tracking-tight mb-6">Profile</h1>
       <Tabs defaultValue="accounts" className="space-y-4">
         <TabsList>
           <TabsTrigger value="accounts">Account</TabsTrigger>

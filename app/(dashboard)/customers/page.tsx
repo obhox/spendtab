@@ -30,7 +30,7 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Customers</h1>
           <p className="text-muted-foreground">
             Manage your client contacts and information
           </p>

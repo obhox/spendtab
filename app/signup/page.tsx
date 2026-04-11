@@ -55,9 +55,9 @@ export default function SignUpPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-ibm-g10 p-4">
-      <div className="w-full max-w-md space-y-6 bg-white p-8 border border-ibm-g20">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">Create an account</h2>
+      <div className="w-full max-w-md space-y-5 bg-white p-6 sm:p-8 border border-ibm-g20">
+        <div className="text-center space-y-1">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">Create an account</h2>
           <p className="text-sm text-muted-foreground">Enter your information below to create your account</p>
         </div>
 
@@ -99,7 +99,7 @@ export default function SignUpPage() {
         */}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
               <Input
