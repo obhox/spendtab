@@ -7,14 +7,20 @@ import { LayoutDashboard, FileText, LineChart, Tag, Settings, CreditCard, Menu, 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { CurrencySwitcher, useSelectedCurrency } from "@/components/currency-switcher"
+import { CurrencySwitcher } from "@/components/currency-switcher"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useAccounts } from "@/lib/context/AccountContext"
-import { useState, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
+
+import { DataProvider } from "@/lib/context/DataProvider"
+import { AssetProvider } from "@/lib/context/AssetContext"
+import { LiabilityProvider } from "@/lib/context/LiabilityContext"
+import { TaxProvider } from "@/lib/context/TaxContext"
 
 const AccountSelector = dynamic(
   () => import("@/components/account-selector").then((mod) => mod.AccountSelector),
@@ -25,14 +31,6 @@ const AccountCreationModal = dynamic(
   () => import("@/components/account-creation-modal").then((mod) => mod.AccountCreationModal),
   { ssr: false }
 )
-
-import { DataProvider } from "@/lib/context/DataProvider"
-import { AssetProvider } from "@/lib/context/AssetContext"
-import { LiabilityProvider } from "@/lib/context/LiabilityContext"
-import { TaxProvider } from "@/lib/context/TaxContext"
-
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
 
 const navSections = [
   {
@@ -123,55 +121,63 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   )
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const { currentAccount } = useAccounts();
+// Subscription guard — cached via React Query so it runs once per session, not on every mount
+function SubscriptionGuard() {
   const router = useRouter()
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const redirectedRef = useRef(false)
 
-  useEffect(() => {
-    const checkSubscription = async () => {
+  const { data: subscriptionStatus } = useQuery({
+    queryKey: ['subscription-status'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) return 'active' // middleware handles unauthed — treat as fine here
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('subscription_status, trial_ends_at')
+        .select('subscription_status, trial_ends_at, email')
         .eq('id', user.id)
         .single()
 
-      if (profile) {
-        const status = profile.subscription_status
-        const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
-        const isTrialActive = status === 'trial' && !!trialEndsAt && trialEndsAt.getTime() > Date.now()
-        const isEntitled = status === 'active' || isTrialActive
+      return { profile, user }
+    },
+    staleTime: 5 * 60 * 1000,  // Only re-check every 5 minutes
+    gcTime: 10 * 60 * 1000,
+  })
 
-        if (!isEntitled) {
-          if (status === 'trial') {
-            await supabase
-              .from('profiles')
-              .update({ subscription_status: 'inactive' })
-              .eq('id', user.id)
-          }
-          toast.error("Your trial has ended. Please subscribe to continue.")
-          router.push(`/payment?email=${encodeURIComponent(user.email || '')}`)
-        }
+  useEffect(() => {
+    if (!subscriptionStatus || redirectedRef.current) return
+    if (subscriptionStatus === 'active') return // string sentinel for no-user case
+
+    const { profile, user } = subscriptionStatus as any
+    if (!profile) return
+
+    const status = profile.subscription_status
+    const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
+    const isTrialActive = status === 'trial' && !!trialEndsAt && trialEndsAt.getTime() > Date.now()
+    const isEntitled = status === 'active' || isTrialActive
+
+    if (!isEntitled) {
+      redirectedRef.current = true
+      if (status === 'trial') {
+        supabase.from('profiles').update({ subscription_status: 'inactive' }).eq('id', user.id)
       }
+      toast.error("Your trial has ended. Please subscribe to continue.")
+      router.push(`/payment?email=${encodeURIComponent(user.email || '')}`)
     }
+  }, [subscriptionStatus, router])
 
-    checkSubscription()
-  }, [router])
+  return null
+}
 
-  const selectedCurrency = useSelectedCurrency();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <DataProvider>
       <AssetProvider>
         <LiabilityProvider>
           <TaxProvider>
+            <SubscriptionGuard />
             <AccountCreationModal />
             <div className="flex min-h-screen bg-ibm-g10">
 
@@ -196,7 +202,9 @@ export default function DashboardLayout({
 
               {/* Main content */}
               <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:p-8 lg:pl-72" role="main">
-                <Suspense fallback={<div className="text-ibm-g70" aria-live="polite">Loading…</div>}>{children}</Suspense>
+                <Suspense fallback={<div className="text-ibm-g70" aria-live="polite">Loading…</div>}>
+                  {children}
+                </Suspense>
               </main>
 
               <Analytics />

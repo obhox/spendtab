@@ -79,7 +79,6 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     enabled: !!currentAccount && !isAccountSwitching,
     gcTime: CACHE_TIME,
     staleTime: STALE_TIME,
-    refetchInterval: 30000 // Refetch every 30 seconds
   })
 
   // Calculate derived categories

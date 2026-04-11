@@ -12,25 +12,21 @@ const BudgetList = dynamic(
   { ssr: false }
 )
 
-import { DataProvider } from "@/lib/context/DataProvider"
-
 export default function BudgetsPage() {
   return (
-    <DataProvider>
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Budgets</h1>
-          <BudgetForm>
-            <Button className="w-full sm:w-auto text-sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Budget
-            </Button>
-          </BudgetForm>
-        </div>
-        <Suspense fallback={<Skeleton className="h-48 sm:h-64 w-full" />}>
-          <BudgetList />
-        </Suspense>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Budgets</h1>
+        <BudgetForm>
+          <Button className="w-full sm:w-auto text-sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Budget
+          </Button>
+        </BudgetForm>
       </div>
-    </DataProvider>
+      <Suspense fallback={<Skeleton className="h-48 sm:h-64 w-full" />}>
+        <BudgetList />
+      </Suspense>
+    </div>
   )
 }

@@ -6,7 +6,6 @@ import type { Metadata } from 'next'
 import { PostHogProvider } from "@/components/posthog-provider"
 import { ThemeProvider } from "@/app/providers/theme-provider"
 import { QueryProvider } from "@/app/providers/query-provider"
-import { DataProvider } from "@/lib/context/DataProvider"
 import { CurrencyProvider } from "@/components/currency-switcher"
 import { Toaster } from "sonner"
 import { LoadingBar } from "@/components/ui/loading-bar"
@@ -45,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="facebookexternalhit" content="noindex, nofollow" />
         <meta name="twitterbot" content="noindex, nofollow" />
         <meta name="pinterest" content="nopin" />
-        {/* IBM Plex fonts via Google Fonts */}
+        {/* IBM Plex fonts — preload for fast render */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -57,13 +56,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <PostHogProvider>
             <QueryProvider>
-              <DataProvider>
-                <CurrencyProvider>
-                  <LoadingBar />
-                  {children}
-                  <Toaster richColors closeButton />
-                </CurrencyProvider>
-              </DataProvider>
+              <CurrencyProvider>
+                <LoadingBar />
+                {children}
+                <Toaster richColors closeButton />
+              </CurrencyProvider>
             </QueryProvider>
           </PostHogProvider>
         </ThemeProvider>

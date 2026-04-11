@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
-import { DataProvider } from "@/lib/context/DataProvider"
 import { TransactionForm } from "@/components/transactions/transaction-form"
 import { BulkTransactionUpload } from "@/components/transactions/bulk-transaction-upload"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -66,8 +65,7 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
   return (
-    <DataProvider>
-      <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col space-y-3 sm:space-y-4">
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Transactions</h1>
 
@@ -129,8 +127,6 @@ export default function TransactionsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </DataProvider>
-
   )
 }
 
