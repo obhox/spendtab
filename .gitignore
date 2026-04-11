@@ -13,6 +13,8 @@ node_modules/
 # next.js
 /.next/
 /out/
+Marketing/.next/
+Marketing/out/
 
 # production
 /build
@@ -35,8 +37,16 @@ yarn-error.log*
 # IDE
 .idea/
 .vscode/
+.trae/
 *.swp
 *.swo
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Marketing site deps & build
+Marketing/node_modules/
+Marketing/next-env.d.ts
 
 # vercel
 .vercel

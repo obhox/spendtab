@@ -7,7 +7,7 @@ export default async function Home() {
   const cookieStore = await cookies();
   // @ts-ignore - The library expects a Promise but we need to pass the awaited value for it to work synchronously
   const supabase = createServerComponentClient({ cookies: () => cookieStore as any });
-  
+
   // Check for an active session
   const { data: { session } } = await supabase.auth.getSession();
 
