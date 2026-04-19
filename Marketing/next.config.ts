@@ -11,6 +11,9 @@ if (
 
 const nextConfig: NextConfig = {
   output: "export",
+  turbopack: {
+    root: ".",
+  },
 };
 
 export default nextConfig;
